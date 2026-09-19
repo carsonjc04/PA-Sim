@@ -8,10 +8,17 @@ This is an educational prototype, not clinical decision support. All patients an
 
 ```bash
 npm install
-npm run dev
+cp .env.example .env   # optional; only needed for AI voice mode
+npm run dev            # frontend on :5173, backend on :8787
 ```
 
-Other checks: `npm run build`, `npm run lint`, `npm test`, and `npm run preview`.
+`npm run dev:web` and `npm run dev:server` run the halves separately. Other
+checks: `npm run typecheck`, `npm run build`, `npm run lint`, `npm test`.
+
+The app runs fully without an `OPENAI_API_KEY`. Guided mode needs no key, no
+network and no microphone; AI voice mode is disabled with a setup hint until a
+key is configured. Keep the key in `.env` (gitignored) and never prefix it with
+`VITE_`, which would ship it to the browser.
 
 ## Architecture
 
@@ -24,6 +31,20 @@ Other checks: `npm run build`, `npm run lint`, `npm test`, and `npm run preview`
 - `src/App.tsx` owns the route-level screens and encounter interaction state.
 
 Routes: `/`, `/cases`, `/encounter/:scenarioId`, and `/results/:attemptId`.
+
+### Backend
+
+`server/` is an Express app holding the answer key out of the browser. It
+imports the same pure grading engine from `src/domain/grading.ts`, so there is
+one scoring implementation rather than two that can drift.
+
+- `server/config/env.ts` validates environment with Zod and is the sole accessor for the API key.
+- `server/encounters/projection.ts` builds browser payloads by allowlist, withholding the answer key.
+- `server/tools/` accepts stable IDs only, enforces phase locks, and stays idempotent.
+- `server/api/routes.ts` exposes encounters, tool calls, phase advance and submit.
+
+See `docs/architecture.md` for hidden-state rules, confirmation requirements,
+known limitations, and what the voice layer still needs.
 
 ## Scenario data and adding a sixth case
 
