@@ -5,9 +5,12 @@ const schema = z.object({
   CLIENT_ORIGIN: z.string().url().default('http://localhost:5173'),
   OPENAI_API_KEY: z.string().min(1).optional(),
   OPENAI_LIVE_MODEL: z.string().default('gpt-live-1'),
-  OPENAI_REASONING_MODEL: z.string().default('gpt-5.6-sol'),
+  OPENAI_DELEGATE_MODEL: z.string().default('gpt-5.6-terra'),
   OPENAI_VOICE: z.string().optional(),
-  OPENAI_DELEGATION_MODE: z.enum(['client', 'responses']).default('client'),
+  OPENAI_DELEGATION_MODE: z.enum(['client', 'responses']).default('responses'),
+  /** Live sessions allowed per window, per client. Each one is billed. */
+  LIVE_SESSION_RATE_LIMIT: z.coerce.number().int().positive().default(5),
+  LIVE_SESSION_RATE_WINDOW_MS: z.coerce.number().int().positive().default(60_000),
   ENABLE_AI_CASE_GENERATION: z.coerce.boolean().default(false),
   AI_CASE_MODE: z.enum(['bounded', 'handcrafted']).default('bounded'),
   MAX_LIVE_SESSION_MINUTES: z.coerce.number().int().positive().max(60).default(20),
@@ -45,7 +48,7 @@ export function publicCapabilities() {
   return {
     aiEnabled,
     liveModel: env.OPENAI_LIVE_MODEL,
-    reasoningModel: env.OPENAI_REASONING_MODEL,
+    delegateModel: env.OPENAI_DELEGATE_MODEL,
     delegationMode: env.OPENAI_DELEGATION_MODE,
     caseGenerationEnabled: aiEnabled && env.ENABLE_AI_CASE_GENERATION,
     maxSessionMinutes: env.MAX_LIVE_SESSION_MINUTES,

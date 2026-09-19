@@ -55,7 +55,7 @@ router.post('/encounters', (req, res) => {
   const record = createEncounter({
     ...parsed.data,
     liveModel: env.OPENAI_LIVE_MODEL,
-    reasoningModel: env.OPENAI_REASONING_MODEL,
+    reasoningModel: env.OPENAI_DELEGATE_MODEL,
   })
   res.status(201).json(toPublicEncounter(record))
 })

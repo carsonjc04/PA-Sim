@@ -53,6 +53,21 @@ export const toolContracts = {
 
 export type ToolName = keyof typeof toolContracts
 
+/** Which planOption groups each plan-facing tool may select from. */
+export const planGroupsByTool: Partial<Record<ToolName, string[]>> = {
+  propose_treatment_plan: ['treatment', 'counseling'],
+  record_disposition: ['disposition'],
+  record_follow_up: ['follow-up', 'return'],
+}
+
+/** Tools whose selections are graded only after the student confirms them. */
+export const requiresConfirmation = new Set<ToolName>([
+  'propose_diagnosis',
+  'propose_treatment_plan',
+  'record_disposition',
+  'record_follow_up',
+])
+
 export const toolNames = Object.keys(toolContracts) as ToolName[]
 
 export function isToolName(value: string): value is ToolName {

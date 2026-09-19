@@ -1,7 +1,7 @@
 import type { PhaseId, ScenarioDefinition } from '../../src/domain/types'
 import { EncounterError } from '../encounters/store'
 import type { EncounterRecord } from '../encounters/model'
-import { toolContracts, type ToolName } from './contracts'
+import { planGroupsByTool, requiresConfirmation, toolContracts, type ToolName } from './contracts'
 
 export interface ToolResult {
   tool: ToolName
@@ -14,20 +14,6 @@ export interface ToolResult {
   /** Authorized reveal text, resolved from the locked scenario. */
   reveals: { id: string; text: string }[]
 }
-
-const planGroupsByTool: Partial<Record<ToolName, string[]>> = {
-  propose_treatment_plan: ['treatment', 'counseling'],
-  record_disposition: ['disposition'],
-  record_follow_up: ['follow-up', 'return'],
-}
-
-/** Tools whose selections are graded only after the student confirms them. */
-const requiresConfirmation = new Set<ToolName>([
-  'propose_diagnosis',
-  'propose_treatment_plan',
-  'record_disposition',
-  'record_follow_up',
-])
 
 function resolveId(scenario: ScenarioDefinition, tool: ToolName, phase: PhaseId, id: string) {
   if (tool === 'propose_diagnosis') {

@@ -15,10 +15,68 @@ npm run dev            # frontend on :5173, backend on :8787
 `npm run dev:web` and `npm run dev:server` run the halves separately. Other
 checks: `npm run typecheck`, `npm run build`, `npm run lint`, `npm test`.
 
+Requires Node 22 or newer (the `openai` SDK and the server both assume it).
+
 The app runs fully without an `OPENAI_API_KEY`. Guided mode needs no key, no
 network and no microphone; AI voice mode is disabled with a setup hint until a
 key is configured. Keep the key in `.env` (gitignored) and never prefix it with
 `VITE_`, which would ship it to the browser.
+
+## AI voice mode
+
+The student speaks to an AI patient over WebRTC. The browser holds a microphone,
+a speaker and a transcript; every secret stays on the server.
+
+### Getting a key
+
+1. Sign in at `platform.openai.com` and create a project.
+2. Create an API key in that project.
+3. Add billing credit to the project.
+
+**API billing is separate from a ChatGPT subscription.** A ChatGPT Plus, Pro or
+Team plan grants no API credit, and API usage is invoiced on its own. Set a
+project spend limit and a usage alert before your first session.
+
+Put the key in `.env`:
+
+```dotenv
+OPENAI_API_KEY=sk-...            # server only, never VITE_
+OPENAI_LIVE_MODEL=gpt-live-1
+OPENAI_DELEGATE_MODEL=gpt-5.6-terra
+CLIENT_ORIGIN=http://localhost:5173
+```
+
+Restart the backend after editing `.env`. `GET /api/ai/status` reports whether
+the server sees a key; it never returns the key itself.
+
+### What costs money
+
+| Action | Billed |
+| --- | --- |
+| Guided mode, dashboard, results, tests, build | No |
+| `npm test` | No — the SDK is mocked and the smoke test is skipped |
+| Clicking **Connect voice** | Yes, per second, until the session closes |
+| Muting | **Yes** — mute only disables your microphone track |
+| Delegated reasoning and tool calls | Yes, billed separately from the voice minute |
+| `npm run test:live` | Yes, a small authentication check |
+
+`gpt-live-1` is billed per second of session duration. Close the session when
+you are done; leaving the tab open keeps it open. The server also enforces
+`MAX_LIVE_SESSION_MINUTES` and rate-limits session creation.
+
+### Testing your microphone
+
+WebRTC requires a secure context: `http://localhost:5173` counts, a LAN IP does
+not. On the first **Connect voice** the browser prompts for microphone access —
+choose Allow. If you blocked it earlier, clear the site permission and retry.
+Denied or missing microphones surface a recoverable error with a retry button,
+and guided mode stays available underneath.
+
+### Falling back to guided mode
+
+Guided mode is always present on the same encounter screen. If voice mode is
+unconfigured, the microphone is denied, or a session fails, the guided flow
+below the panel still completes the encounter and grades it identically.
 
 ## Architecture
 
@@ -42,6 +100,19 @@ one scoring implementation rather than two that can drift.
 - `server/encounters/projection.ts` builds browser payloads by allowlist, withholding the answer key.
 - `server/tools/` accepts stable IDs only, enforces phase locks, and stays idempotent.
 - `server/api/routes.ts` exposes encounters, tool calls, phase advance and submit.
+- `server/api/live.ts` creates GPT-Live sessions and relays delegated tool calls.
+- `server/prompts/patient.ts` builds the patient persona from patient-knowable facts only.
+
+### Voice transport
+
+`POST /api/live/session` takes `{ sdp, encounterId }`, calls `openai.live.create`
+with Responses delegation, and returns only `{ sessionId, sdp }`. The browser
+never sees the key, the answer key, or the prompts.
+
+- `src/voice/liveClient.ts` owns the `RTCPeerConnection`, the `oai-events` data channel, and cleanup.
+- `src/voice/transcript.ts` reassembles delta fragments per speaker, so full-duplex overlap stays attributed.
+- `src/voice/useVoiceEncounter.ts` binds that lifecycle to React and closes the session on unmount.
+- `src/features/encounter/VoicePanel.tsx` renders connect, permission, live, mute, end, error and retry states.
 
 See `docs/architecture.md` for hidden-state rules, confirmation requirements,
 known limitations, and what the voice layer still needs.
@@ -73,3 +144,13 @@ Reference metadata points to CDC outpatient antibiotic guidance, ADA Standards o
 ## Tests
 
 `src/domain/grading.test.ts` covers all five schema validations, spoiler-safe summaries, partial weighted credit, idempotence, critical-error capping, and data-driven visibility evaluation.
+
+`server/` and `src/voice/` add coverage for hidden-answer leakage, tool
+validation and idempotence, the live session endpoint with the OpenAI SDK
+mocked, missing-key behaviour, provider-error sanitization, rate limiting,
+transcript aggregation across overlapping speakers, and the WebRTC lifecycle
+with a mocked `RTCPeerConnection` including microphone denial and cleanup.
+
+`npm test` never contacts OpenAI. `npm run test:live` is opt-in and billable; it
+verifies the credential and the SDK surface but cannot open a session, because
+`live.create` needs a browser-generated SDP offer.

@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import cors from 'cors'
 import express, { type NextFunction, type Request, type Response } from 'express'
+import { liveRouter } from './api/live'
 import { router } from './api/routes'
 import { env } from './config/env'
 import { EncounterError } from './encounters/store'
@@ -17,6 +18,7 @@ export function createApp() {
   })
 
   app.get('/api/health', (_req, res) => res.json({ ok: true }))
+  app.use('/api/live', liveRouter)
   app.use('/api', router)
 
   app.use((_req, res) => {

@@ -5,7 +5,7 @@
 | Mode | Needs a key | Status |
 | --- | --- | --- |
 | `guided` | No | Working. The existing deterministic, button-driven encounter. |
-| `voice-handcrafted` | Yes | Backend contracts in place; GPT-Live transport not yet implemented. |
+| `voice-handcrafted` | Yes | Working. Full-duplex WebRTC conversation with an AI patient. |
 | `voice-generated` | Yes | Not started. Bounded variants of approved blueprints. |
 
 With no `OPENAI_API_KEY` the app installs, builds, tests and runs, and guided
@@ -83,19 +83,54 @@ regardless of raw score. No AI output may alter this.
   server path is rigorous about hidden state; the voice modes use it.
 - **No GPT-Live transport yet.** See below.
 
+## Voice transport
+
+The browser creates the offer; the server creates the session. `POST
+/api/live/session` receives `{ sdp, encounterId }`, calls `openai.live.create`
+with the patient instructions and Responses delegation, and returns only
+`{ sessionId, sdp }`.
+
+Ordering matters in two places. The `oai-events` data channel is created
+**before** the offer so it is negotiated in the same SDP. And the UI does not
+report "live" until `session.started` arrives — the HTTP response only means the
+session was created. There is no `session.start` event on the WebRTC path;
+creating the session starts it.
+
+Audio rides the media tracks, not the data channel. The client never sends
+`session.input_audio.append` and never expects `session.output_audio.delta`.
+
+Transcript deltas are fragments, not turns, and the two speakers overlap because
+the session is full duplex. `TranscriptAggregator` therefore accumulates each
+speaker independently, extending that speaker's open segment or starting a new
+one after a pause, then orders segments by start time.
+
+### Tool calls
+
+Delegated tool calls arrive wrapped in a `response.event` envelope whose real
+type is nested at `event.type`. A completed `response.output_item.done` carrying
+a `function_call` is relayed to `POST /api/live/tool`, executed against hidden
+state on the server, and returned as a `function_call_output`. `response.create`
+is sent only once every outstanding output has been supplied.
+
+The browser is a relay, not an authority: it forwards the call and carries the
+result back. All validation and hidden state stay on the server, so a
+server-side sideband WebSocket can take ownership later without the encounter
+components changing. Only one path may execute a given tool.
+
+### Prompt boundaries
+
+The patient prompt contains only patient-knowable facts. The answer key is never
+included, so the model cannot reveal what it was never given. Exam findings and
+test results are withheld too — a patient does not know their own lung sounds —
+and are released only by tools. The delegated reasoning prompt enforces clinical
+consistency and is explicitly forbidden from sounding like a preceptor.
+
 ## Not yet implemented
 
-The voice layer needs the session-creation payload, the SDP exchange, the event
-names beyond `session.started`, and the delegation tool format. Those live in
-the GPT-Live **WebRTC quickstart**, **Delegation and tools**, and **Managing
-sessions** pages, which were unreachable from the build environment. This is
-deliberately not written from memory: `gpt-live-1` shipped 2026-09-10, so
-guessed payloads and event names would be wrong.
-
-Confirmed so far: GPT-Live runs on `v1/live/sessions` (not `v1/realtime`),
-supports WebRTC for browsers with a server-side **sideband** WebSocket for
-private monitoring, emits `session.started`, and bills per second of session
-duration. Delegation mode defaults to `client` so hidden case state stays here.
+- **Oral defense.** The preceptor persona after submission is not built.
+- **AI narrative debrief.** Deterministic feedback only for now.
+- **Generated case variants.** `voice-generated` mode is still unimplemented.
+- **Sideband tool execution.** Tools currently relay through the browser.
 
 This prototype is educational. Patients are synthetic. Clinician review is
 required before any curricular use.
