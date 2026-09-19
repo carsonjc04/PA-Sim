@@ -30,6 +30,7 @@ import { phaseOrder } from "./domain/types";
 import { gradeAttempt } from "./domain/grading";
 import { staticScenarioProvider } from "./providers/static";
 import { loadAttempts, resetAttempts, saveAttempts } from "./storage";
+import { VoicePanel } from "./features/encounter/VoicePanel";
 
 const categories: { id: Category; label: string }[] = [
   { id: "history", label: "History taking" },
@@ -516,6 +517,7 @@ function Encounter({ onSubmit }: { onSubmit: (a: Attempt) => void }) {
             </div>
           ))}
         </div>
+        <VoicePanel scenarioId={scenario.id} />
         <div className="encounter-grid">
           <aside className="speaker-side clinician-side">
             <Portrait config={scenario.clinician} />
