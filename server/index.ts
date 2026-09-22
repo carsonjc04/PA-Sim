@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import { createApp } from './app'
 import { aiEnabled, env } from './config/env'
 
