@@ -8,13 +8,15 @@ const schema = z.object({
   OPENAI_DELEGATE_MODEL: z.string().default('gpt-5.6-terra'),
   OPENAI_VOICE: z.string().optional(),
   OPENAI_DELEGATION_MODE: z.enum(['client', 'responses']).default('responses'),
+
   /** Live sessions allowed per window, per client. Each one is billed. */
   LIVE_SESSION_RATE_LIMIT: z.coerce.number().int().positive().default(5),
   LIVE_SESSION_RATE_WINDOW_MS: z.coerce.number().int().positive().default(60_000),
-  ENABLE_AI_CASE_GENERATION: z.coerce.boolean().default(false),
+
+  ENABLE_AI_CASE_GENERATION: z.stringbool().default(false),
   AI_CASE_MODE: z.enum(['bounded', 'handcrafted']).default('bounded'),
   MAX_LIVE_SESSION_MINUTES: z.coerce.number().int().positive().max(60).default(20),
-  STORE_TRANSCRIPTS: z.coerce.boolean().default(false),
+  STORE_TRANSCRIPTS: z.stringbool().default(false),
   LIVE_VOICE_RATE_PER_MINUTE_USD: z.coerce.number().nonnegative().default(0.05),
 })
 
@@ -22,24 +24,29 @@ export type Env = z.infer<typeof schema>
 
 function load(source: NodeJS.ProcessEnv = process.env): Env {
   const parsed = schema.safeParse(source)
+
   if (!parsed.success) {
-    const detail = parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; ')
+    const detail = parsed.error.issues
+      .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
+      .join('; ')
+
     throw new Error(`Invalid server environment: ${detail}`)
   }
+
   return parsed.data
 }
 
 export const env = load()
 
-/** True when a key is present. The key itself never leaves this module. */
+/** Indicates whether an API key was configured without exposing its value. */
 export const aiEnabled = Boolean(env.OPENAI_API_KEY)
 
-/**
- * Sole accessor for the secret. Throws rather than returning undefined so a
- * missing key can never be silently interpolated into a request header.
- */
+/** Returns the API key or throws when it has not been configured. */
 export function requireApiKey(): string {
-  if (!env.OPENAI_API_KEY) throw new Error('OPENAI_API_KEY is not configured')
+  if (!env.OPENAI_API_KEY) {
+    throw new Error('OPENAI_API_KEY is not configured')
+  }
+
   return env.OPENAI_API_KEY
 }
 
