@@ -61,8 +61,9 @@ the server sees a key; it never returns the key itself.
 | `npm run test:live` | Yes, a small authentication check |
 
 `gpt-live-1` is billed per second of session duration. Close the session when
-you are done; leaving the tab open keeps it open. The server also enforces
-`MAX_LIVE_SESSION_MINUTES` and rate-limits session creation.
+you are done; leaving the tab open keeps it open. The server rate-limits
+session creation. `MAX_LIVE_SESSION_MINUTES` is reported to the browser but is
+not yet enforced, so nothing closes a forgotten session automatically.
 
 ### Testing your microphone
 
@@ -88,7 +89,7 @@ below the panel still completes the encounter and grades it identically.
 - `src/storage.ts` stores attempts in `localStorage` under `clinicsim-attempts-v1`; malformed values recover as an empty history.
 - `src/App.tsx` owns the route-level screens and encounter interaction state.
 
-Routes: `/`, `/cases`, `/encounter/:scenarioId`, and `/results/:attemptId`.
+Routes: `/` (home), `/dashboard`, `/cases`, `/encounter/:scenarioId`, and `/results/:attemptId`.
 
 ### Backend
 

@@ -5,7 +5,7 @@
 | Mode | Needs a key | Status |
 | --- | --- | --- |
 | `guided` | No | Working. The existing deterministic, button-driven encounter. |
-| `voice-handcrafted` | Yes | Working. Full-duplex WebRTC conversation with an AI patient. |
+| `voice-handcrafted` | Yes | Conversation works (full-duplex WebRTC with an AI patient). Not yet graded: see Known limitations. |
 | `voice-generated` | Yes | Not started. Bounded variants of approved blueprints. |
 
 With no `OPENAI_API_KEY` the app installs, builds, tests and runs, and guided
@@ -78,10 +78,24 @@ regardless of raw score. No AI output may alter this.
 
 - **Encounters are in-memory.** A browser refresh keeps the encounter because
   state lives on the server, but a server restart drops active encounters.
-- **Guided mode still ships scenario data in the browser bundle.** That is
-  pre-existing, offline by design, and required for no-key operation. Only the
+- **Guided mode still ships scenario data in the browser bundle.** The guided
+  screen in `src/App.tsx` loads full `ScenarioDefinition`s through
+  `staticScenarioProvider` and grades locally, so the answer key, rubric
+  effects and teaching text are present in the built JavaScript. Only the
   server path is rigorous about hidden state; the voice modes use it.
-- **No GPT-Live transport yet.** See below.
+- **The voice and guided flows are not joined.** `VoicePanel` creates a server
+  encounter and opens a session, but never advances its phases or submits it.
+  The server encounter therefore stays in `history`: exam, test, diagnosis and
+  plan tool calls are rejected as `wrong_phase`, and the grade the student sees
+  comes only from the guided selections.
+- **Session length is advertised, not enforced.** `MAX_LIVE_SESSION_MINUTES`
+  is reported by `/api/ai/status` but nothing closes a session when it elapses.
+  `liveEndedAt` and `liveDurationSeconds` are never written.
+- **Rate limiting keys on `req.ip`** with no `trust proxy` setting, so behind a
+  hosting proxy every client may share one bucket. The bucket map is in memory.
+- **`STORE_TRANSCRIPTS`, `OPENAI_VOICE` and `OPENAI_DELEGATION_MODE`** are
+  parsed and (except the voice) reported, but have no other effect. Transcripts
+  are never stored.
 
 ## Voice transport
 

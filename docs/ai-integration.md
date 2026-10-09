@@ -1,6 +1,6 @@
 # Future AI integration
 
-ClinicSim currently has no network calls. Any future provider must preserve the deterministic domain contract and keep the grading engine authoritative.
+Guided mode makes no network calls. AI voice mode calls the ClinicSim server, which calls OpenAI GPT-Live; see `docs/architecture.md`. The static providers in `src/providers/static.ts` are still the only `ScenarioProvider` and `PatientResponseProvider` implementations. Any future provider must preserve the deterministic domain contract and keep the grading engine authoritative.
 
 ## Pre-generated scenarios
 
