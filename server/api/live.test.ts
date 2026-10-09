@@ -1,29 +1,42 @@
 import request from 'supertest'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { scenarios } from '../../src/data/scenarios'
+import type { ScenarioDefinition } from '../../src/domain/types'
 import { createApp } from '../app'
-import { getScenario, resetEncounters } from '../encounters/store'
 import { setOpenAIClient } from '../openai/client'
+import { createTestDatabase, type TestDatabase } from '../test/db'
 import { resetRateLimit } from './live'
 
 const validSdp = `v=0\r\no=- 0 0 IN IP4 127.0.0.1\r\ns=-\r\n${'a=candidate:placeholder\r\n'.repeat(10)}`
+const getScenario = (id: string) => scenarios.find((s) => s.id === id) as ScenarioDefinition
+const USER = 'alice'
 
-async function newEncounter(app: ReturnType<typeof createApp>, mode = 'guided') {
-  const res = await request(app)
-    .post('/api/encounters')
-    .send({ scenarioId: 'chest-pressure', mode })
-  return res.body.id as string
+let db: TestDatabase
+beforeAll(async () => {
+  db = await createTestDatabase()
+})
+afterAll(() => db.close())
+
+async function newEncounter(app: ReturnType<typeof createApp>) {
+  const res = await request(app).post('/api/attempts').set('X-Dev-User', USER).send({ scenarioId: 'chest-pressure' })
+  return res.body.attempt.id as string
 }
 
+const session = (app: ReturnType<typeof createApp>, body: object) =>
+  request(app).post('/api/live/session').set('X-Dev-User', USER).send(body)
+const tool = (app: ReturnType<typeof createApp>, body: object) =>
+  request(app).post('/api/live/tool').set('X-Dev-User', USER).send(body)
+
 describe('POST /api/live/session without a key', () => {
-  beforeEach(() => {
-    resetEncounters()
+  beforeEach(async () => {
+    await db.reset()
     resetRateLimit()
   })
 
   it('explains the setup instead of failing opaquely', async () => {
     const app = createApp()
     const id = await newEncounter(app)
-    const res = await request(app).post('/api/live/session').send({ sdp: validSdp, encounterId: id })
+    const res = await session(app, { sdp: validSdp, attemptId: id })
     expect(res.status).toBe(503)
     expect(res.body.error.code).toBe('missing_api_key')
     expect(res.body.error.message).toContain('OPENAI_API_KEY')
@@ -34,8 +47,10 @@ describe('POST /api/live/session without a key', () => {
     const id = await newEncounter(app)
     const target = getScenario('chest-pressure').phases[0].actions[0].id
     const res = await request(app)
-      .post(`/api/encounters/${id}/tools/record_history_topics`)
-      .send({ actionIds: [target] })
+      .post(`/api/attempts/${id}/events`)
+      .set('X-Dev-User', USER)
+      .set('Idempotency-Key', 'guided-key-0001')
+      .send({ type: 'action', tool: 'record_history_topics', actionIds: [target] })
     expect(res.status).toBe(200)
     expect(res.body.result.recorded).toEqual([target])
   })
@@ -50,9 +65,10 @@ describe('POST /api/live/session with a key', () => {
     process.env.OPENAI_API_KEY = 'sk-test-not-a-real-key'
     const { createApp: freshApp } = await import('../app')
     const { setOpenAIClient: setClient } = await import('../openai/client')
-    const { resetEncounters: reset } = await import('../encounters/store')
+    const { setPool } = await import('../db/pool')
     const { resetRateLimit: resetLimit } = await import('./live')
-    reset()
+    setPool(db.pool)
+    await db.reset()
     resetLimit()
     create = vi.fn().mockResolvedValue({
       session: { id: 'live_sess_123' },
@@ -69,8 +85,8 @@ describe('POST /api/live/session with a key', () => {
   })
 
   it('returns only the session id and SDP answer', async () => {
-    const id = await newEncounter(app, 'voice-handcrafted')
-    const res = await request(app).post('/api/live/session').send({ sdp: validSdp, encounterId: id })
+    const id = await newEncounter(app)
+    const res = await session(app, { sdp: validSdp, attemptId: id })
 
     expect(res.status).toBe(200)
     expect(res.body).toEqual({ sessionId: 'live_sess_123', sdp: 'v=0\r\nanswer-sdp\r\n' })
@@ -79,8 +95,8 @@ describe('POST /api/live/session with a key', () => {
   })
 
   it('never returns the key or hidden case data', async () => {
-    const id = await newEncounter(app, 'voice-handcrafted')
-    const res = await request(app).post('/api/live/session').send({ sdp: validSdp, encounterId: id })
+    const id = await newEncounter(app)
+    const res = await session(app, { sdp: validSdp, attemptId: id })
     const body = JSON.stringify(res.body)
     const scenario = getScenario('chest-pressure')
 
@@ -90,8 +106,8 @@ describe('POST /api/live/session with a key', () => {
   })
 
   it('sends Responses delegation with the configured models and case tools', async () => {
-    const id = await newEncounter(app, 'voice-handcrafted')
-    await request(app).post('/api/live/session').send({ sdp: validSdp, encounterId: id })
+    const id = await newEncounter(app)
+    await session(app, { sdp: validSdp, attemptId: id })
 
     const params = create.mock.calls[0][0]
     expect(params.session.model).toBe('gpt-live-1')
@@ -103,8 +119,8 @@ describe('POST /api/live/session with a key', () => {
   })
 
   it('keeps the answer key out of the patient prompt', async () => {
-    const id = await newEncounter(app, 'voice-handcrafted')
-    await request(app).post('/api/live/session').send({ sdp: validSdp, encounterId: id })
+    const id = await newEncounter(app)
+    await session(app, { sdp: validSdp, attemptId: id })
 
     const instructions = create.mock.calls[0][0].session.instructions as string
     const scenario = getScenario('chest-pressure')
@@ -117,23 +133,19 @@ describe('POST /api/live/session with a key', () => {
     for (const finding of examFindings) expect(instructions).not.toContain(finding)
   })
 
-  it('rejects a malformed SDP and an unknown encounter', async () => {
-    const short = await request(app)
-      .post('/api/live/session')
-      .send({ sdp: 'nope', encounterId: '00000000-0000-4000-8000-000000000000' })
+  it('rejects a malformed SDP and an unknown attempt', async () => {
+    const short = await session(app, { sdp: 'nope', attemptId: '00000000-0000-4000-8000-000000000000' })
     expect(short.status).toBe(400)
 
-    const missing = await request(app)
-      .post('/api/live/session')
-      .send({ sdp: validSdp, encounterId: '00000000-0000-4000-8000-000000000000' })
+    const missing = await session(app, { sdp: validSdp, attemptId: '00000000-0000-4000-8000-000000000000' })
     expect(missing.status).toBe(404)
     expect(create).not.toHaveBeenCalled()
   })
 
   it('maps a provider auth failure to a sanitized message', async () => {
     create.mockRejectedValueOnce(Object.assign(new Error('Incorrect API key sk-live-real'), { status: 401 }))
-    const id = await newEncounter(app, 'voice-handcrafted')
-    const res = await request(app).post('/api/live/session').send({ sdp: validSdp, encounterId: id })
+    const id = await newEncounter(app)
+    const res = await session(app, { sdp: validSdp, attemptId: id })
 
     expect(res.status).toBe(502)
     expect(res.body.error.code).toBe('provider_auth_failed')
@@ -141,23 +153,21 @@ describe('POST /api/live/session with a key', () => {
   })
 
   it('rate limits session creation because each session is billed', async () => {
-    const id = await newEncounter(app, 'voice-handcrafted')
+    const id = await newEncounter(app)
     const codes: number[] = []
     for (let i = 0; i < 7; i += 1) {
-      const res = await request(app)
-        .post('/api/live/session')
-        .send({ sdp: validSdp, encounterId: id })
+      const res = await session(app, { sdp: validSdp, attemptId: id })
       codes.push(res.status)
     }
     expect(codes).toContain(429)
   })
 
   it('executes relayed tool calls server-side and rejects unknown tools', async () => {
-    const id = await newEncounter(app, 'voice-handcrafted')
+    const id = await newEncounter(app)
     const target = getScenario('chest-pressure').phases[0].actions[0].id
 
-    const ok = await request(app).post('/api/live/tool').send({
-      encounterId: id,
+    const ok = await tool(app, {
+      attemptId: id,
       callId: 'call_1',
       name: 'record_history_topics',
       arguments: JSON.stringify({ actionIds: [target] }),
@@ -166,8 +176,8 @@ describe('POST /api/live/session with a key', () => {
     expect(ok.body.output.ok).toBe(true)
     expect(ok.body.output.findings[0].id).toBe(target)
 
-    const bad = await request(app).post('/api/live/tool').send({
-      encounterId: id,
+    const bad = await tool(app, {
+      attemptId: id,
       callId: 'call_2',
       name: 'reveal_the_diagnosis',
       arguments: '{}',
@@ -175,10 +185,24 @@ describe('POST /api/live/session with a key', () => {
     expect(bad.status).toBe(400)
   })
 
+  it('records a retried relay of the same call ID once', async () => {
+    const id = await newEncounter(app)
+    const target = getScenario('chest-pressure').phases[0].actions[0].id
+    const call = { attemptId: id, callId: 'call_retry', name: 'record_history_topics', arguments: JSON.stringify({ actionIds: [target] }) }
+    const first = await tool(app, call)
+    const retry = await tool(app, call)
+    expect(retry.body).toEqual(first.body)
+    expect(first.body.output.recorded).toEqual([target])
+
+    const attempt = await request(app).get(`/api/attempts/${id}`).set('X-Dev-User', USER)
+    expect(attempt.body.events).toHaveLength(1)
+    expect(attempt.body.events[0].source).toBe('voice')
+  })
+
   it('returns a rejected tool call as a normal result so the conversation continues', async () => {
-    const id = await newEncounter(app, 'voice-handcrafted')
-    const res = await request(app).post('/api/live/tool').send({
-      encounterId: id,
+    const id = await newEncounter(app)
+    const res = await tool(app, {
+      attemptId: id,
       callId: 'call_3',
       name: 'record_history_topics',
       arguments: JSON.stringify({ actionIds: ['not-a-real-action'] }),

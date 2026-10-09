@@ -1,9 +1,19 @@
 import { z } from 'zod'
 
+const blankAsUnset = (value: unknown) => (value === '' ? undefined : value)
+
 const schema = z.object({
+  NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().positive().default(8787),
   CLIENT_ORIGIN: z.string().url().default('http://localhost:5173'),
-  OPENAI_API_KEY: z.string().min(1).optional(),
+  DATABASE_URL: z.preprocess(blankAsUnset, z.string().url().optional()),
+  DATABASE_SSL: z.stringbool().default(false),
+
+  /** `dev` trusts an X-Dev-User header and is impersonable; `none` refuses attempt endpoints. */
+  AUTH_PROVIDER: z.enum(['none', 'dev']).default('none'),
+  ALLOW_DEV_AUTH_IN_PRODUCTION: z.stringbool().default(false),
+
+  OPENAI_API_KEY: z.preprocess(blankAsUnset, z.string().min(1).optional()),
   OPENAI_LIVE_MODEL: z.string().default('gpt-live-1'),
   OPENAI_DELEGATE_MODEL: z.string().default('gpt-5.6-terra'),
   OPENAI_VOICE: z.string().optional(),
@@ -33,10 +43,23 @@ function load(source: NodeJS.ProcessEnv = process.env): Env {
     throw new Error(`Invalid server environment: ${detail}`)
   }
 
-  return parsed.data
+  const data = parsed.data
+  if (
+    data.AUTH_PROVIDER === 'dev' &&
+    data.NODE_ENV === 'production' &&
+    !data.ALLOW_DEV_AUTH_IN_PRODUCTION
+  ) {
+    throw new Error(
+      'Invalid server environment: AUTH_PROVIDER=dev is impersonable and is refused in production unless ALLOW_DEV_AUTH_IN_PRODUCTION=true',
+    )
+  }
+  return data
 }
 
 export const env = load()
+
+/** True when the impersonable dev provider is serving a production deployment. */
+export const insecureAuth = env.AUTH_PROVIDER === 'dev' && env.NODE_ENV === 'production'
 
 /** Indicates whether an API key was configured without exposing its value. */
 export const aiEnabled = Boolean(env.OPENAI_API_KEY)

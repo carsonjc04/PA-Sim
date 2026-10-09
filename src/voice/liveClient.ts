@@ -42,7 +42,8 @@ export class LiveVoiceClient {
   private audioEl: HTMLAudioElement | null = null
   private state: VoiceConnectionState = 'idle'
   private aggregator = new TranscriptAggregator()
-  private encounterId = ''
+  private attemptId = ''
+  private headers: () => Record<string, string> = () => ({})
   private apiBaseUrl = ''
   private sessionId: string | null = null
   private pendingToolCalls = 0
@@ -75,9 +76,10 @@ export class LiveVoiceClient {
     throw new Error(error.message)
   }
 
-  async start({ encounterId, apiBaseUrl }: StartVoiceOptions): Promise<void> {
+  async start({ attemptId, apiBaseUrl, headers }: StartVoiceOptions): Promise<void> {
     if (this.state !== 'idle' && this.state !== 'closed' && this.state !== 'error') return
-    this.encounterId = encounterId
+    this.attemptId = attemptId
+    this.headers = headers ?? (() => ({}))
     this.apiBaseUrl = apiBaseUrl
     this.aggregator.reset()
     this.sessionId = null
@@ -150,8 +152,8 @@ export class LiveVoiceClient {
     try {
       const response = await fetch(`${this.apiBaseUrl}/api/live/session`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sdp: peer.localDescription!.sdp, encounterId }),
+        headers: { 'Content-Type': 'application/json', ...this.headers() },
+        body: JSON.stringify({ sdp: peer.localDescription!.sdp, attemptId }),
       })
       if (!response.ok) {
         const body = (await response.json().catch(() => null)) as
@@ -273,9 +275,9 @@ export class LiveVoiceClient {
     try {
       const response = await fetch(`${this.apiBaseUrl}/api/live/tool`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...this.headers() },
         body: JSON.stringify({
-          encounterId: this.encounterId,
+          attemptId: this.attemptId,
           callId: item.call_id,
           name: item.name,
           arguments: item.arguments,

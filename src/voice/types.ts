@@ -48,7 +48,9 @@ export interface VoiceClientEvents {
 }
 
 export interface StartVoiceOptions {
-  encounterId: string
+  attemptId: string
   apiBaseUrl: string
+  /** Identity headers for the ClinicSim server. */
+  headers?: () => Record<string, string>
   signal?: AbortSignal
 }

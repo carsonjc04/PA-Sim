@@ -108,7 +108,7 @@ function harness() {
 }
 
 const start = (client: LiveVoiceClient) =>
-  client.start({ encounterId: 'enc-1', apiBaseUrl: 'http://localhost:8787' })
+  client.start({ attemptId: 'att-1', apiBaseUrl: 'http://localhost:8787', headers: () => ({ 'X-Dev-User': 'alice' }) })
 
 let micTracks: FakeTrack[]
 
@@ -252,6 +252,11 @@ describe('voice connection lifecycle', () => {
     expect(output.type).toBe('response.item.create')
     expect(output.item?.call_id).toBe('call_1')
     expect(create.type).toBe('response.create')
+
+    const [url, init] = (fetch as ReturnType<typeof vi.fn>).mock.calls[0]
+    expect(url).toBe('http://localhost:8787/api/live/tool')
+    expect(init.headers['X-Dev-User']).toBe('alice')
+    expect(JSON.parse(init.body)).toMatchObject({ attemptId: 'att-1', callId: 'call_1' })
   })
 
   it('mutes by disabling the track without closing the billed session', async () => {

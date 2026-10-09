@@ -1,4 +1,11 @@
-import { useEffect, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useState,
+  useSyncExternalStore,
+  type FormEvent,
+  type ReactNode,
+} from "react";
 import {
   Link,
   Navigate,
@@ -22,16 +29,24 @@ import {
   Stethoscope,
   X,
 } from "lucide-react";
-import type {
-  Attempt,
-  Category,
-  PhaseId,
-  ScenarioDefinition,
-} from "./domain/types";
+import type { Category } from "./domain/types";
 import { phaseOrder } from "./domain/types";
-import { gradeAttempt } from "./domain/grading";
-import { staticScenarioProvider } from "./providers/static";
-import { loadAttempts, resetAttempts, saveAttempts } from "./storage";
+import {
+  api,
+  ApiRequestError,
+  deleteLegacyAttempts,
+  getDevUser,
+  hasLegacyAttempts,
+  setDevUser,
+} from "./api/client";
+import {
+  devUserSchema,
+  type AttemptSummary,
+  type AuthStatus,
+  type PublicAttempt,
+  type PublicScenario,
+  type ToolName,
+} from "./api/contracts";
 import { VoicePanel } from "./features/encounter/VoicePanel";
 
 const categories: { id: Category; label: string }[] = [
@@ -42,46 +57,47 @@ const categories: { id: Category; label: string }[] = [
   { id: "treatment", label: "Treatment & follow-up" },
   { id: "communication", label: "Communication" },
 ];
-const seedAttempts = (): Attempt[] => [
-  {
-    id: "demo-respiratory",
-    scenarioId: "respiratory",
-    startedAt: "2026-09-12T09:00:00Z",
-    completedAt: "2026-09-12T09:14:00Z",
-    selectedByPhase: {
-      history: [],
-      exam: [],
-      diagnostics: [],
-      diagnosis: [],
-      treatment: [],
-    },
-    phaseLocks: phaseOrder,
-    revealed: [],
-    submitted: true,
-    rawScore: 78,
-    finalScore: 78,
-    passed: true,
-  },
-  {
-    id: "demo-asthma",
-    scenarioId: "asthma",
-    startedAt: "2026-09-14T14:00:00Z",
-    completedAt: "2026-09-14T14:12:00Z",
-    selectedByPhase: {
-      history: [],
-      exam: [],
-      diagnostics: [],
-      diagnosis: [],
-      treatment: [],
-    },
-    phaseLocks: phaseOrder,
-    revealed: [],
-    submitted: true,
-    rawScore: 66,
-    finalScore: 66,
-    passed: false,
-  },
-];
+const phaseTool: Record<"history" | "exam" | "diagnostics", ToolName> = {
+  history: "record_history_topics",
+  exam: "request_physical_exam",
+  diagnostics: "order_diagnostic_test",
+};
+const planTool: Record<string, ToolName> = {
+  treatment: "propose_treatment_plan",
+  counseling: "propose_treatment_plan",
+  disposition: "record_disposition",
+  "follow-up": "record_follow_up",
+  return: "record_follow_up",
+};
+const errorMessage = (e: unknown) =>
+  e instanceof ApiRequestError ? e.message : "Something went wrong.";
+
+function subscribeDevUser(callback: () => void) {
+  window.addEventListener("clinicsim-dev-user", callback);
+  window.addEventListener("storage", callback);
+  return () => {
+    window.removeEventListener("clinicsim-dev-user", callback);
+    window.removeEventListener("storage", callback);
+  };
+}
+function useDevUser(): string | null {
+  return useSyncExternalStore(subscribeDevUser, getDevUser, () => null);
+}
+function useAuthStatus(): AuthStatus | null | "unreachable" {
+  const user = useDevUser();
+  const [status, setStatus] = useState<AuthStatus | null | "unreachable">(null);
+  useEffect(() => {
+    let cancelled = false;
+    api
+      .authStatus()
+      .then((s) => !cancelled && setStatus(s))
+      .catch(() => !cancelled && setStatus("unreachable"));
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+  return status;
+}
 function Portrait({
   config,
   small = false,
@@ -104,30 +120,97 @@ function Portrait({
     </div>
   );
 }
-function Header({ showProfile = true }: { showProfile?: boolean }) {
-  return (
-    <header className="topbar">
-      <Link to="/" className="brand">
-        <span className="brand-mark">
-          <Stethoscope size={18} />
-        </span>
+function IdentityControl() {
+  const status = useAuthStatus();
+  const user = useDevUser();
+  const [draft, setDraft] = useState("");
+  const [invalid, setInvalid] = useState(false);
+  if (status === null) return null;
+  if (status === "unreachable")
+    return <span className="identity-note">Server unreachable</span>;
+  if (!status.available)
+    return <span className="identity-note">Sign-in not available</span>;
+  if (user)
+    return (
+      <div className="identity-chip">
         <span>
-          ClinicSim<small>PA learning lab</small>
+          {user}
+          <small>Development identity</small>
         </span>
-      </Link>
-      <nav>
-        <Link to="/cases">Case library</Link>
-        <Link to="/dashboard">Dashboard</Link>
-      </nav>
-      {showProfile && (
-        <div className="profile-chip">
-          <span className="avatar">AS</span>
-          <span>
-            Alex Morgan<small>PA-S student</small>
+        <button
+          type="button"
+          className="button button-quiet button-small"
+          onClick={() => setDevUser(null)}
+        >
+          Switch
+        </button>
+      </div>
+    );
+  const submit = (e: FormEvent) => {
+    e.preventDefault();
+    const name = draft.trim().toLowerCase();
+    if (!devUserSchema.safeParse(name).success) {
+      setInvalid(true);
+      return;
+    }
+    setDevUser(name);
+  };
+  return (
+    <form className="identity-form" onSubmit={submit}>
+      <label htmlFor="dev-user">Development identity</label>
+      <input
+        id="dev-user"
+        value={draft}
+        onChange={(e) => {
+          setDraft(e.target.value);
+          setInvalid(false);
+        }}
+        placeholder="e.g. alice"
+        aria-invalid={invalid}
+        aria-describedby="dev-user-hint"
+      />
+      <button type="submit" className="button button-primary button-small">
+        Use
+      </button>
+      <span
+        id="dev-user-hint"
+        className={invalid ? "identity-error" : "sr-only"}
+      >
+        2–32 lowercase letters, digits, dot, dash or underscore.
+      </span>
+    </form>
+  );
+}
+function InsecureBanner() {
+  const status = useAuthStatus();
+  if (!status || status === "unreachable" || !status.insecure) return null;
+  return (
+    <div className="insecure-banner" role="alert">
+      Demo deployment: identities are not verified. Anyone can view any
+      user&rsquo;s practice history. Do not enter personal information.
+    </div>
+  );
+}
+function Header({ showIdentity = true }: { showIdentity?: boolean }) {
+  return (
+    <>
+      <InsecureBanner />
+      <header className="topbar">
+        <Link to="/" className="brand">
+          <span className="brand-mark">
+            <Stethoscope size={18} />
           </span>
-        </div>
-      )}
-    </header>
+          <span>
+            ClinicSim<small>PA learning lab</small>
+          </span>
+        </Link>
+        <nav>
+          <Link to="/cases">Case library</Link>
+          <Link to="/dashboard">Dashboard</Link>
+        </nav>
+        {showIdentity && <IdentityControl />}
+      </header>
+    </>
   );
 }
 function Layout({ children }: { children: ReactNode }) {
@@ -144,10 +227,73 @@ function Layout({ children }: { children: ReactNode }) {
     </>
   );
 }
+/** Renders children only when a user is available; otherwise explains why. */
+function RequireUser({ children }: { children: ReactNode }) {
+  const status = useAuthStatus();
+  const user = useDevUser();
+  if (status === null) return <div className="loading">Loading...</div>;
+  if (status === "unreachable")
+    return (
+      <div className="empty-state">
+        <h1>The ClinicSim server is not reachable</h1>
+        <p className="lede">
+          Practice requires the backend. Start it with <code>npm run dev</code>,
+          then reload.
+        </p>
+      </div>
+    );
+  if (!status.available)
+    return (
+      <div className="empty-state">
+        <h1>Sign-in is not available yet</h1>
+        <p className="lede">
+          This server has no sign-in configured, so practice cannot be saved.
+        </p>
+      </div>
+    );
+  if (!user)
+    return (
+      <div className="empty-state">
+        <h1>Choose a development identity</h1>
+        <p className="lede">
+          Enter a name in the header to keep your practice history on this
+          server. Development identities are not passwords; do not use personal
+          information.
+        </p>
+      </div>
+    );
+  return <>{children}</>;
+}
+function LegacyNotice() {
+  const [visible, setVisible] = useState(hasLegacyAttempts);
+  if (!visible) return null;
+  return (
+    <div className="legacy-notice" role="status">
+      <div>
+        <strong>Older practice results on this device</strong>
+        <p>
+          Results saved by an earlier version stayed in this browser and were
+          scored here, not by the server. They cannot be verified or tied to an
+          identity, so they are not imported into your history.
+        </p>
+      </div>
+      <button
+        type="button"
+        className="button button-quiet button-small"
+        onClick={() => {
+          deleteLegacyAttempts();
+          setVisible(false);
+        }}
+      >
+        Delete local results
+      </button>
+    </div>
+  );
+}
 function Home() {
   return (
     <div className="home">
-      <Header showProfile={false} />
+      <Header showIdentity={false} />
       <main className="home-main">
         <div className="home-columns">
           <div className="home-copy">
@@ -220,8 +366,8 @@ function Home() {
             </div>
             <figcaption>
               <em>Fig. A</em> Use ClinicSim alongside your reading: move from a
-              study prompt into a spoken patient encounter while the material
-              is fresh.
+              study prompt into a spoken patient encounter while the material is
+              fresh.
             </figcaption>
           </figure>
         </div>
@@ -242,74 +388,86 @@ function Home() {
   );
 }
 function Dashboard() {
-  const [attempts, setAttempts] = useState<Attempt[]>([]);
-  const [scenarios, setScenarios] = useState<ScenarioDefinition[]>([]);
-  useEffect(() => {
-    const saved = loadAttempts();
-    setAttempts(saved.length ? saved : seedAttempts());
-    staticScenarioProvider.listScenarios().then(setScenarios);
-  }, []);
-  const done = new Set(
-    attempts.filter((a) => a.submitted).map((a) => a.scenarioId),
+  return (
+    <Layout>
+      <LegacyNotice />
+      <RequireUser>
+        <DashboardContent />
+      </RequireUser>
+    </Layout>
   );
-  const completed = attempts.filter((a) => a.submitted);
+}
+function DashboardContent() {
+  const user = useDevUser();
+  const [items, setItems] = useState<AttemptSummary[]>([]);
+  const [cursor, setCursor] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const fetchPage = (after?: string) =>
+    api
+      .history({ limit: 10, cursor: after })
+      .then((page) => {
+        setItems((prev) => (after ? [...prev, ...page.items] : page.items));
+        setCursor(page.nextCursor);
+        setError(null);
+      })
+      .catch((e) => setError(errorMessage(e)))
+      .finally(() => setLoading(false));
+  const load = (after?: string) => {
+    setLoading(true);
+    setError(null);
+    void fetchPage(after);
+  };
+  useEffect(() => {
+    void api
+      .history({ limit: 10 })
+      .then((page) => {
+        setItems(page.items);
+        setCursor(page.nextCursor);
+      })
+      .catch((e) => setError(errorMessage(e)))
+      .finally(() => setLoading(false));
+  }, [user]);
+  const completed = items.filter((a) => a.status === "submitted");
   const average = completed.length
     ? Math.round(
         completed.reduce((n, a) => n + (a.finalScore ?? 0), 0) /
           completed.length,
       )
-    : 0;
+    : null;
   return (
-    <Layout>
+    <>
       <section className="dashboard-hero">
         <div>
-          <p className="eyebrow">GOOD MORNING, ALEX</p>
+          <p className="eyebrow">PRACTICE HISTORY</p>
           <h1>
             Practice the encounter.
             <br />
             <em>Sharpen the judgment.</em>
           </h1>
           <p className="lede">
-            A focused clinical simulation space for building confident,
-            patient-centered primary care habits.
+            Your submitted encounters are scored by the server and saved to this
+            identity.
           </p>
           <Link className="button button-primary" to="/cases">
             Start an encounter <ArrowRight size={17} />
           </Link>
-        </div>
-        <div className="hero-note">
-          <span className="note-icon">
-            <ShieldAlert size={18} />
-          </span>
-          <div>
-            <strong>Private learning space</strong>
-            <p>
-              All encounters are fictional. Your practice history stays on this
-              device.
-            </p>
-          </div>
         </div>
       </section>
       <section className="stats-grid">
         <Stat
           icon={<BarChart3 size={19} />}
           tone="teal"
-          value={
-            <>
-              {done.size}
-              <small> / {scenarios.length || 5}</small>
-            </>
-          }
-          label="Cases completed"
-          progress={done.size / 5}
+          value={<>{completed.length}</>}
+          label="Submitted encounters loaded"
         />
         <Stat
           icon={<ClipboardList size={19} />}
           tone="amber"
           value={
             <>
-              {average || "—"}
-              <small>{average ? "%" : ""}</small>
+              {average ?? "—"}
+              <small>{average !== null ? "%" : ""}</small>
             </>
           }
           label="Average score"
@@ -326,113 +484,112 @@ function Dashboard() {
           label="Passes"
         />
       </section>
-      <section className="content-grid">
-        <div className="panel">
-          <div className="section-heading">
-            <div>
-              <p className="eyebrow">RECENT ACTIVITY</p>
-              <h2>Keep your momentum</h2>
-            </div>
-            <Link to="/cases" className="text-link">
-              View all cases <ArrowRight size={15} />
-            </Link>
+      <section className="panel">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">RECENT ACTIVITY</p>
+            <h2>Your encounters</h2>
           </div>
-          {completed.map((a) => (
-            <div className="attempt-row" key={a.id}>
-              <div className="case-dot">
-                {a.scenarioId.slice(0, 2).toUpperCase()}
-              </div>
-              <div className="attempt-copy">
-                <strong>
-                  {scenarios.find((s) => s.id === a.scenarioId)?.summary
-                    .title || "Demo encounter"}
-                </strong>
-                <span>
-                  {a.passed ? "Passed" : "Needs review"} ·{" "}
-                  {new Date(a.completedAt ?? a.startedAt).toLocaleDateString()}
-                </span>
-              </div>
+          <Link to="/cases" className="text-link">
+            View all cases <ArrowRight size={15} />
+          </Link>
+        </div>
+        {error && (
+          <div className="voice-error" role="alert">
+            <p>{error}</p>
+            <button type="button" onClick={() => void load()}>
+              Try again
+            </button>
+          </div>
+        )}
+        {!loading && !error && items.length === 0 && (
+          <p className="muted">
+            No encounters yet. Choose a case to start your first one.
+          </p>
+        )}
+        {items.map((a) => (
+          <div className="attempt-row" key={a.id}>
+            <div className="case-dot">
+              {a.scenarioId.slice(0, 2).toUpperCase()}
+            </div>
+            <div className="attempt-copy">
+              <strong>{a.scenarioTitle}</strong>
+              <span>
+                {a.status === "active"
+                  ? "In progress"
+                  : a.passed
+                    ? "Passed"
+                    : "Needs review"}{" "}
+                · {new Date(a.submittedAt ?? a.createdAt).toLocaleDateString()}
+              </span>
+            </div>
+            {a.status === "submitted" ? (
               <strong className={a.passed ? "score-pass" : "score-fail"}>
                 {a.finalScore}%
               </strong>
-              <Link
-                aria-label="Review attempt"
-                className="icon-button"
-                to={`/results/${a.id}`}
-              >
-                <ArrowRight size={16} />
-              </Link>
-            </div>
-          ))}
-        </div>
-        <div className="panel profile-panel">
-          <p className="eyebrow">YOUR PROFILE</p>
-          <div className="profile-large">
-            <span className="avatar avatar-large">AM</span>
-            <div>
-              <h2>Alex Morgan</h2>
-              <p>PA-S · North Coast University</p>
-            </div>
+            ) : (
+              <span className="case-status">Active</span>
+            )}
+            <Link
+              aria-label={
+                a.status === "submitted"
+                  ? `Review ${a.scenarioTitle}`
+                  : `Resume ${a.scenarioTitle}`
+              }
+              className="icon-button"
+              to={
+                a.status === "submitted"
+                  ? `/results/${a.id}`
+                  : `/encounter/${a.scenarioId}`
+              }
+            >
+              <ArrowRight size={16} />
+            </Link>
           </div>
-          <div className="profile-rule" />
-          <div className="focus-row">
-            <span>Current focus</span>
-            <strong>Clinical reasoning</strong>
-          </div>
-          <div className="focus-row">
-            <span>Cases in library</span>
-            <strong>{scenarios.length || 5}</strong>
-          </div>
+        ))}
+        {cursor && (
           <button
+            type="button"
             className="button button-quiet"
-            onClick={() => {
-              resetAttempts();
-              setAttempts(seedAttempts());
-            }}
+            disabled={loading}
+            onClick={() => void load(cursor)}
           >
-            <RotateCcw size={15} /> Reset demo data
+            {loading ? "Loading..." : "Load more"}
           </button>
-        </div>
+        )}
       </section>
-    </Layout>
-  );
-}
-function Stat({
-  icon,
-  tone,
-  value,
-  label,
-  progress,
-}: {
-  icon: ReactNode;
-  tone: string;
-  value: ReactNode;
-  label: string;
-  progress?: number;
-}) {
-  return (
-    <div className="stat-card">
-      <span className={`stat-icon ${tone}`}>{icon}</span>
-      <div>
-        <strong>{value}</strong>
-        <span>{label}</span>
-      </div>
-      {progress !== undefined && (
-        <div className="mini-progress">
-          <i style={{ width: `${progress * 100}%` }} />
-        </div>
-      )}
-    </div>
+    </>
   );
 }
 function Cases() {
-  const [scenarios, setScenarios] = useState<ScenarioDefinition[]>([]);
-  const [attempts] = useState(loadAttempts);
+  const user = useDevUser();
+  const [scenarios, setScenarios] = useState<PublicScenario[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [statusById, setStatusById] = useState<
+    Record<string, "active" | "submitted">
+  >({});
   useEffect(() => {
-    staticScenarioProvider.listScenarios().then(setScenarios);
+    api
+      .scenarios()
+      .then(setScenarios)
+      .catch((e) => setError(errorMessage(e)));
   }, []);
+  useEffect(() => {
+    if (!user) return;
+    // Status labels are a convenience; the first page is enough to mark recent work.
+    api
+      .history({ limit: 50 })
+      .then((page) => {
+        const next: Record<string, "active" | "submitted"> = {};
+        for (const a of [...page.items].reverse())
+          next[a.scenarioId] = a.status;
+        setStatusById(next);
+      })
+      .catch(() => setStatusById({}));
+  }, [user]);
   return (
     <Layout>
+      <LegacyNotice />
       <section className="page-intro">
         <div>
           <p className="eyebrow">CASE LIBRARY</p>
@@ -442,150 +599,260 @@ function Cases() {
             Diagnoses stay hidden until you submit.
           </p>
         </div>
-        <div className="library-count">
-          <strong>{scenarios.length || 5}</strong>
-          <span>
-            authored cases
-            <br />
-            ready to practice
-          </span>
-        </div>
+        {scenarios && (
+          <div className="library-count">
+            <strong>{scenarios.length}</strong>
+            <span>
+              authored cases
+              <br />
+              ready to practice
+            </span>
+          </div>
+        )}
       </section>
+      {error && (
+        <div className="voice-error" role="alert">
+          <p>{error}</p>
+        </div>
+      )}
+      {!scenarios && !error && <div className="loading">Loading cases...</div>}
       <div className="case-grid">
-        {scenarios.map((s) => (
-          <article className="case-card" key={s.id}>
-            <div className="case-card-top">
-              <span className={`tag ${s.summary.urgent ? "tag-amber" : ""}`}>
-                {s.summary.urgent ? "Urgent decision" : "Routine visit"}
-              </span>
-              <span className="case-status">
-                {attempts.some((a) => a.scenarioId === s.id && a.submitted)
-                  ? "Completed"
-                  : "Not started"}
-              </span>
-            </div>
-            <h2>{s.summary.title}</h2>
-            <p>{s.summary.complaint}</p>
-            <div className="case-meta">
-              <span>
-                {s.summary.age} · {s.summary.pronouns}
-              </span>
-              <span>
-                <Clock3 size={14} />
-                {s.summary.duration}
-              </span>
-            </div>
-            <div className="case-footer">
-              <span className="difficulty">{s.summary.difficulty}</span>
-              <Link className="button button-small" to={`/encounter/${s.id}`}>
-                {attempts.some((a) => a.scenarioId === s.id && a.submitted)
-                  ? "Replay"
-                  : "Begin"}{" "}
-                <ArrowRight size={15} />
-              </Link>
-            </div>
-          </article>
-        ))}
+        {scenarios?.map((s) => {
+          const status = statusById[s.id];
+          return (
+            <article className="case-card" key={s.id}>
+              <div className="case-card-top">
+                <span className={`tag ${s.summary.urgent ? "tag-amber" : ""}`}>
+                  {s.summary.urgent ? "Urgent decision" : "Routine visit"}
+                </span>
+                <span className="case-status">
+                  {status === "active"
+                    ? "In progress"
+                    : status === "submitted"
+                      ? "Completed"
+                      : "Not started"}
+                </span>
+              </div>
+              <h2>{s.summary.title}</h2>
+              <p>{s.summary.complaint}</p>
+              <div className="case-meta">
+                <span>
+                  {s.summary.age} · {s.summary.pronouns}
+                </span>
+                <span>
+                  <Clock3 size={14} />
+                  {s.summary.duration}
+                </span>
+              </div>
+              <div className="case-footer">
+                <span className="difficulty">{s.summary.difficulty}</span>
+                <Link className="button button-small" to={`/encounter/${s.id}`}>
+                  {status === "active"
+                    ? "Resume"
+                    : status === "submitted"
+                      ? "Replay"
+                      : "Begin"}{" "}
+                  <ArrowRight size={15} />
+                </Link>
+              </div>
+            </article>
+          );
+        })}
       </div>
     </Layout>
   );
 }
-function Encounter({ onSubmit }: { onSubmit: (a: Attempt) => void }) {
+function Encounter() {
+  return (
+    <Layout>
+      <RequireUser>
+        <EncounterContent />
+      </RequireUser>
+    </Layout>
+  );
+}
+function EncounterContent() {
   const { scenarioId } = useParams();
   const navigate = useNavigate();
-  const [scenario, setScenario] = useState<ScenarioDefinition>();
-  const [phaseIndex, setPhaseIndex] = useState(0);
-  const [selected, setSelected] = useState<Record<PhaseId, string[]>>({
-    history: [],
-    exam: [],
-    diagnostics: [],
-    diagnosis: [],
-    treatment: [],
-  });
-  const [revealed, setRevealed] = useState<
-    { phase: PhaseId; actionId: string; text: string }[]
-  >([]);
-  const [locked, setLocked] = useState<PhaseId[]>([]);
+  const [attempt, setAttempt] = useState<PublicAttempt | null>(null);
+  const [resumed, setResumed] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  // Diagnosis and plan choices are drafts until the student locks the phase.
+  const [draft, setDraft] = useState<{
+    diagnosis: string[];
+    treatment: string[];
+  }>({ diagnosis: [], treatment: [] });
   const [confirm, setConfirm] = useState(false);
+
   useEffect(() => {
-    if (scenarioId)
-      staticScenarioProvider
-        .getScenario(scenarioId)
-        .then(setScenario)
-        .catch(() => navigate("/cases"));
+    if (!scenarioId) return;
+    let cancelled = false;
+    api
+      .startAttempt(scenarioId)
+      .then((res) => {
+        if (cancelled) return;
+        setAttempt(res.attempt);
+        setResumed(res.resumed);
+      })
+      .catch((e) => {
+        if (cancelled) return;
+        if (e instanceof ApiRequestError && e.code === "scenario_not_found")
+          navigate("/cases");
+        else setLoadError(errorMessage(e));
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [scenarioId, navigate]);
-  if (!scenario)
+
+  const attemptId = attempt?.id;
+  // Keyed on the ID only: depending on `attempt` would re-fire the voice panel's effect after every refresh.
+  const refresh = useCallback(() => {
+    if (!attemptId) return;
+    api
+      .attempt(attemptId)
+      .then(setAttempt)
+      .catch(() => undefined);
+  }, [attemptId]);
+
+  if (loadError)
     return (
-      <Layout>
-        <div className="loading">Loading encounter...</div>
-      </Layout>
+      <div className="empty-state">
+        <h1>Could not open this encounter</h1>
+        <p className="lede">{loadError}</p>
+        <Link className="button button-primary" to="/cases">
+          Return to cases
+        </Link>
+      </div>
     );
-  const phase = phaseOrder[phaseIndex];
+  if (!attempt) return <div className="loading">Loading encounter...</div>;
+
+  const scenario = attempt.scenario;
+  const phase = attempt.currentPhase;
+  const phaseIndex = phaseOrder.indexOf(phase);
   const phaseDef = scenario.phases.find((p) => p.id === phase)!;
-  const activeIds = selected[phase];
-  const visible = phaseDef.actions.filter(
-    (a) =>
-      !a.rule?.requires?.some((id) => !selected[phase].includes(id)) &&
-      !a.rule?.excludes?.some((id) => selected[phase].includes(id)),
-  );
-  const choose = (id: string, text: string) => {
-    if (locked.includes(phase)) return;
-    if (phase === "diagnosis" || phase === "treatment") {
-      setSelected((x) => ({
-        ...x,
-        [phase]:
-          phase === "diagnosis"
-            ? [id]
-            : x[phase].includes(id)
-              ? x[phase].filter((v) => v !== id)
-              : [...x[phase], id],
+  const locked = attempt.lockedPhases;
+  const recorded = attempt.events
+    .filter((e) => e.phase === phase)
+    .map((e) => e.actionId);
+  const activeIds =
+    phase === "diagnosis" || phase === "treatment" ? draft[phase] : recorded;
+
+  const run = async (fn: () => Promise<PublicAttempt>) => {
+    setBusy(true);
+    setActionError(null);
+    try {
+      setAttempt(await fn());
+      return true;
+    } catch (e) {
+      setActionError(errorMessage(e));
+      return false;
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const choose = (id: string) => {
+    if (busy || locked.includes(phase)) return;
+    if (phase === "diagnosis") {
+      setDraft((d) => ({ ...d, diagnosis: [id] }));
+      return;
+    }
+    if (phase === "treatment") {
+      setDraft((d) => ({
+        ...d,
+        treatment: d.treatment.includes(id)
+          ? d.treatment.filter((v) => v !== id)
+          : [...d.treatment, id],
       }));
       return;
     }
-    if (activeIds.includes(id)) return;
-    setSelected((x) => ({ ...x, [phase]: [...x[phase], id] }));
-    setRevealed((x) => [...x, { phase, actionId: id, text }]);
+    if (recorded.includes(id)) return;
+    void run(async () => {
+      const res = await api.event(attempt.id, {
+        type: "action",
+        tool: phaseTool[phase],
+        actionIds: [id],
+      });
+      return res.attempt;
+    });
   };
-  const advance = () => {
-    setLocked((x) => [...x, phase]);
-    if (phaseIndex < phaseOrder.length - 1) setPhaseIndex(phaseIndex + 1);
-    setConfirm(false);
+
+  const commitDrafts = async (): Promise<PublicAttempt> => {
+    let latest = attempt;
+    if (phase === "diagnosis" && draft.diagnosis.length) {
+      latest = (
+        await api.event(attempt.id, {
+          type: "action",
+          tool: "propose_diagnosis",
+          actionIds: draft.diagnosis,
+          confirmed: true,
+        })
+      ).attempt;
+    }
+    if (phase === "treatment") {
+      const byTool = new Map<ToolName, string[]>();
+      for (const id of draft.treatment) {
+        const group = scenario.planOptions.find((p) => p.id === id)?.group;
+        const tool = group ? planTool[group] : undefined;
+        if (tool) byTool.set(tool, [...(byTool.get(tool) ?? []), id]);
+      }
+      for (const [tool, actionIds] of byTool) {
+        latest = (
+          await api.event(attempt.id, {
+            type: "action",
+            tool,
+            actionIds,
+            confirmed: true,
+          })
+        ).attempt;
+      }
+    }
+    return latest;
   };
-  const submit = () => {
-    const a: Attempt = {
-      id: `attempt-${Date.now()}`,
-      scenarioId: scenario.id,
-      startedAt: new Date().toISOString(),
-      completedAt: new Date().toISOString(),
-      selectedByPhase: selected,
-      phaseLocks: phaseOrder,
-      revealed,
-      submitted: true,
-    };
-    onSubmit(a);
-    navigate(`/results/${a.id}`);
+
+  const advance = async () => {
+    const ok = await run(async () => {
+      await commitDrafts();
+      return (await api.event(attempt.id, { type: "lock_phase", phase }))
+        .attempt;
+    });
+    if (ok) setConfirm(false);
   };
+
+  const submit = async () => {
+    const ok = await run(async () => {
+      await commitDrafts();
+      return api.submit(attempt.id);
+    });
+    if (ok) navigate(`/results/${attempt.id}`);
+  };
+
   const options =
     phase === "diagnosis"
       ? scenario.diagnoses.map((d) => ({
           id: d.id,
           label: d.label,
           paText: "Select primary diagnosis",
-          response: d.reasoning ?? "",
-          kind: "choice" as const,
         }))
       : phase === "treatment"
         ? scenario.planOptions.map((p) => ({
             id: p.id,
             label: p.label,
             paText: "Add to care plan",
-            response:
-              p.unsafeReason ?? "Plan element recorded for final review.",
-            kind: "choice" as const,
           }))
-        : visible;
+        : phaseDef.actions;
+  const revealed = attempt.events.filter(
+    (e) => e.revealed && e.phase !== "diagnosis" && e.phase !== "treatment",
+  );
+
+  if (attempt.status === "submitted")
+    return <Navigate to={`/results/${attempt.id}`} replace />;
+
   return (
-    <Layout>
+    <>
       <div className="encounter-shell">
         <div className="encounter-header">
           <div>
@@ -594,6 +861,9 @@ function Encounter({ onSubmit }: { onSubmit: (a: Attempt) => void }) {
             </Link>
             <p className="eyebrow">
               ACTIVE ENCOUNTER · {scenario.summary.setting.toUpperCase()}
+              {resumed && (attempt.events.length > 0 || locked.length > 0)
+                ? " · RESUMED"
+                : ""}
             </p>
             <h1>{scenario.summary.title}</h1>
           </div>
@@ -618,7 +888,7 @@ function Encounter({ onSubmit }: { onSubmit: (a: Attempt) => void }) {
             </div>
           ))}
         </div>
-        <VoicePanel scenarioId={scenario.id} />
+        <VoicePanel attemptId={attempt.id} onActivity={refresh} />
         <div className="encounter-grid">
           <aside className="speaker-side clinician-side">
             <Portrait config={scenario.clinician} />
@@ -642,16 +912,20 @@ function Encounter({ onSubmit }: { onSubmit: (a: Attempt) => void }) {
                 <span key={x}>{x}</span>
               ))}
             </div>
-            {revealed.map((r, i) => (
-              <div className="turn" key={`${r.actionId}-${i}`}>
+            {revealed.map((r) => (
+              <div className="turn" key={r.seq}>
                 <div className="turn-label">
                   <span className="pa-dot">PA</span>
                   <strong>
                     {scenario.phases.find((p) => p.id === r.phase)?.label}
                   </strong>
-                  <small>Finding revealed</small>
+                  <small>
+                    {r.source === "voice"
+                      ? "Recorded from voice"
+                      : "Finding revealed"}
+                  </small>
                 </div>
-                <p>{r.text}</p>
+                <p>{r.revealed}</p>
               </div>
             ))}
             <div aria-live="polite" className="sr-only">
@@ -673,12 +947,19 @@ function Encounter({ onSubmit }: { onSubmit: (a: Attempt) => void }) {
             </div>
             <span className="selection-count">{activeIds.length} selected</span>
           </div>
+          {actionError && (
+            <div className="voice-error" role="alert">
+              <p>{actionError}</p>
+            </div>
+          )}
           {options.map((a) => (
             <button
               type="button"
               className={`action-option ${activeIds.includes(a.id) ? "selected" : ""}`}
               key={a.id}
-              onClick={() => choose(a.id, a.response)}
+              aria-pressed={activeIds.includes(a.id)}
+              disabled={busy}
+              onClick={() => choose(a.id)}
             >
               <span className="action-check">
                 {activeIds.includes(a.id) ? <Check size={14} /> : ""}
@@ -696,28 +977,21 @@ function Encounter({ onSubmit }: { onSubmit: (a: Attempt) => void }) {
                   <Lock size={14} /> Phase locked
                 </>
               ) : phase === "diagnosis" ? (
-                "Choose one primary diagnosis."
+                "Choose one primary diagnosis. It is saved when you lock the phase."
               ) : phase === "treatment" ? (
-                "Choose all plan elements you would include."
+                "Choose all plan elements. They are saved when you submit."
               ) : (
-                "Choose any actions in the order you prefer."
+                "Each choice is saved as you make it."
               )}
             </span>
-            {phaseIndex < 4 ? (
-              <button
-                className="button button-primary"
-                onClick={() => setConfirm(true)}
-              >
-                Advance phase <ArrowRight size={16} />
-              </button>
-            ) : (
-              <button
-                className="button button-primary"
-                onClick={() => setConfirm(true)}
-              >
-                Review and submit <ArrowRight size={16} />
-              </button>
-            )}
+            <button
+              className="button button-primary"
+              disabled={busy}
+              onClick={() => setConfirm(true)}
+            >
+              {phaseIndex < 4 ? "Advance phase" : "Review and submit"}{" "}
+              <ArrowRight size={16} />
+            </button>
           </div>
         </section>
       </div>
@@ -729,8 +1003,13 @@ function Encounter({ onSubmit }: { onSubmit: (a: Attempt) => void }) {
           <p>
             {phaseIndex < 4
               ? "You will be able to review this phase later, but its selections cannot be edited after advancing."
-              : "Your choices will be graded only after submission."}
+              : "Your choices will be graded by the server only after submission."}
           </p>
+          {actionError && (
+            <p className="voice-error" role="alert">
+              {actionError}
+            </p>
+          )}
           <div className="modal-actions">
             <button
               className="button button-quiet"
@@ -738,75 +1017,60 @@ function Encounter({ onSubmit }: { onSubmit: (a: Attempt) => void }) {
             >
               Keep working
             </button>
-            {phaseIndex < 4 ? (
-              <button className="button button-primary" onClick={advance}>
-                Lock and advance
-              </button>
-            ) : (
-              <button className="button button-primary" onClick={submit}>
-                Submit encounter
-              </button>
-            )}
+            <button
+              className="button button-primary"
+              disabled={busy}
+              onClick={() => void (phaseIndex < 4 ? advance() : submit())}
+            >
+              {busy
+                ? "Saving..."
+                : phaseIndex < 4
+                  ? "Lock and advance"
+                  : "Submit encounter"}
+            </button>
           </div>
         </Modal>
       )}
+    </>
+  );
+}
+function Results() {
+  return (
+    <Layout>
+      <RequireUser>
+        <ResultsContent />
+      </RequireUser>
     </Layout>
   );
 }
-function Modal({
-  title,
-  children,
-  onClose,
-}: {
-  title: string;
-  children: ReactNode;
-  onClose: () => void;
-}) {
-  return (
-    <div
-      className="modal-backdrop"
-      role="dialog"
-      aria-modal="true"
-      aria-label={title}
-    >
-      <div className="modal">
-        <button
-          className="modal-close"
-          onClick={onClose}
-          aria-label="Close dialog"
-        >
-          <X size={18} />
-        </button>
-        <p className="eyebrow">CONFIRMATION</p>
-        <h2>{title}</h2>
-        {children}
-      </div>
-    </div>
-  );
-}
-function Results({ attempts }: { attempts: Attempt[] }) {
+function ResultsContent() {
   const { attemptId } = useParams();
-  const navigate = useNavigate();
-  const attempt = attempts.find((a) => a.id === attemptId);
-  const [scenario, setScenario] = useState<ScenarioDefinition>();
+  const [attempt, setAttempt] = useState<PublicAttempt | null>(null);
+  const [error, setError] = useState<string | null>(null);
   useEffect(() => {
-    if (attempt)
-      staticScenarioProvider.getScenario(attempt.scenarioId).then(setScenario);
-  }, [attempt]);
-  if (!attempt || !scenario)
+    if (!attemptId) return;
+    api
+      .attempt(attemptId)
+      .then(setAttempt)
+      .catch((e) => setError(errorMessage(e)));
+  }, [attemptId]);
+  if (error || (attempt && !attempt.debrief))
     return (
-      <Layout>
-        <div className="empty-state">
-          <h1>Result not found</h1>
-          <Link className="button button-primary" to="/cases">
-            Return to cases
-          </Link>
-        </div>
-      </Layout>
+      <div className="empty-state">
+        <h1>Result not found</h1>
+        <p className="lede">
+          {error ?? "This encounter has not been submitted yet."}
+        </p>
+        <Link className="button button-primary" to="/cases">
+          Return to cases
+        </Link>
+      </div>
     );
-  const result = attempt.feedback ?? gradeAttempt(scenario, attempt);
+  if (!attempt) return <div className="loading">Loading debrief...</div>;
+  const scenario = attempt.scenario;
+  const result = attempt.debrief!;
   return (
-    <Layout>
+    <>
       <section className="results-head">
         <div>
           <p className="eyebrow">
@@ -816,8 +1080,12 @@ function Results({ attempts }: { attempts: Attempt[] }) {
             {result.passed ? "Strong clinical work." : "A useful next review."}
           </h1>
           <p className="lede">
-            This feedback is available after submission and reflects the
-            authored rubric for this fictional case.
+            This feedback reflects the authored rubric for this fictional case
+            and has not been clinically validated.
+          </p>
+          <p className="muted">
+            Graded {new Date(result.gradedAt).toLocaleString()} · rubric{" "}
+            {result.gradingVersionId} · case version {result.contentVersionId}
           </p>
         </div>
         <div className={`score-hero ${result.passed ? "pass" : "fail"}`}>
@@ -875,12 +1143,7 @@ function Results({ attempts }: { attempts: Attempt[] }) {
       <section className="results-grid lower">
         <div className="panel">
           <p className="eyebrow">DIAGNOSTIC REASONING</p>
-          <h2>
-            {
-              scenario.diagnoses.find((d) => d.id === scenario.correctPrimary)
-                ?.label
-            }
-          </h2>
+          <h2>{result.correctDiagnosisLabel}</h2>
           <p>{result.diagnosisReasoning}</p>
           <div className="ideal-plan">
             <strong>Recommended plan</strong>
@@ -900,19 +1163,78 @@ function Results({ attempts }: { attempts: Attempt[] }) {
             for another fictional patient.
           </p>
           <div className="modal-actions">
-            <button
+            <Link
               className="button button-primary"
-              onClick={() => navigate(`/encounter/${scenario.id}`)}
+              to={`/encounter/${scenario.id}`}
             >
               Replay case <RotateCcw size={15} />
-            </button>
+            </Link>
             <Link className="button button-quiet" to="/cases">
               Case library
             </Link>
           </div>
         </div>
       </section>
-    </Layout>
+    </>
+  );
+}
+function Stat({
+  icon,
+  tone,
+  value,
+  label,
+  progress,
+}: {
+  icon: ReactNode;
+  tone: string;
+  value: ReactNode;
+  label: string;
+  progress?: number;
+}) {
+  return (
+    <div className="stat-card">
+      <span className={`stat-icon ${tone}`}>{icon}</span>
+      <div>
+        <strong>{value}</strong>
+        <span>{label}</span>
+      </div>
+      {progress !== undefined && (
+        <div className="mini-progress">
+          <i style={{ width: `${progress * 100}%` }} />
+        </div>
+      )}
+    </div>
+  );
+}
+function Modal({
+  title,
+  children,
+  onClose,
+}: {
+  title: string;
+  children: ReactNode;
+  onClose: () => void;
+}) {
+  return (
+    <div
+      className="modal-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-label={title}
+    >
+      <div className="modal">
+        <button
+          className="modal-close"
+          onClick={onClose}
+          aria-label="Close dialog"
+        >
+          <X size={18} />
+        </button>
+        <p className="eyebrow">CONFIRMATION</p>
+        <h2>{title}</h2>
+        {children}
+      </div>
+    </div>
   );
 }
 function Feedback({ title, items }: { title: string; items: string[] }) {
@@ -932,37 +1254,13 @@ function Feedback({ title, items }: { title: string; items: string[] }) {
   );
 }
 function App() {
-  const [attempts, setAttempts] = useState<Attempt[]>(loadAttempts);
-  const submit = (a: Attempt) => {
-    staticScenarioProvider.getScenario(a.scenarioId).then((s) => {
-      const result = gradeAttempt(s, a);
-      const finished = {
-        ...a,
-        feedback: result,
-        rawScore: result.rawScore,
-        finalScore: result.finalScore,
-        passed: result.passed,
-      };
-      setAttempts((x) => {
-        const next = [...x, finished];
-        saveAttempts(next);
-        return next;
-      });
-    });
-  };
   return (
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/cases" element={<Cases />} />
-      <Route
-        path="/encounter/:scenarioId"
-        element={<Encounter onSubmit={submit} />}
-      />
-      <Route
-        path="/results/:attemptId"
-        element={<Results attempts={attempts} />}
-      />
+      <Route path="/encounter/:scenarioId" element={<Encounter />} />
+      <Route path="/results/:attemptId" element={<Results />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

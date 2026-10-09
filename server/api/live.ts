@@ -1,23 +1,24 @@
 import { Router, type Request } from 'express'
 import { z } from 'zod'
+import { authOf, requireAuth } from '../auth/context'
+import { getOwnedAttemptWithScenario, recordEvent, recordLiveStarted } from '../attempts/service'
 import { aiEnabled, env } from '../config/env'
-import { EncounterError, requireEncounter } from '../encounters/store'
+import { ApiError } from '../http/errors'
 import { openaiClient } from '../openai/client'
-import { buildDelegateInstructions, buildPatientInstructions } from '../prompts/patient'
+import { PATIENT_PROMPT_VERSION, buildDelegateInstructions, buildPatientInstructions } from '../prompts/patient'
 import { isToolName } from '../tools/contracts'
 import { buildCaseTools } from '../tools/definitions'
-import { executeTool } from '../tools/execute'
 
 const sessionBody = z.object({
   // An SDP offer is well over 100 bytes; the ceiling bounds abuse without
   // rejecting legitimate offers, which grow with codec and ICE candidate count.
   sdp: z.string().min(100).max(100_000),
-  encounterId: z.string().uuid(),
+  attemptId: z.string().uuid(),
 })
 
 const toolBody = z.object({
-  encounterId: z.string().uuid(),
-  callId: z.string().min(1).max(200),
+  attemptId: z.string().uuid(),
+  callId: z.string().min(1).max(200).regex(/^[A-Za-z0-9_-]+$/),
   name: z.string().min(1).max(100),
   arguments: z.string().max(10_000),
 })
@@ -30,7 +31,7 @@ function enforceRateLimit(req: Request): void {
   const now = Date.now()
   const recent = (hits.get(key) ?? []).filter((t) => now - t < env.LIVE_SESSION_RATE_WINDOW_MS)
   if (recent.length >= env.LIVE_SESSION_RATE_LIMIT) {
-    throw new EncounterError('Too many voice sessions started. Wait a moment.', 429, 'rate_limited')
+    throw new ApiError('Too many voice sessions started. Wait a moment.', 429, 'rate_limited')
   }
   recent.push(now)
   hits.set(key, recent)
@@ -42,39 +43,41 @@ export function resetRateLimit(): void {
 }
 
 export const liveRouter: Router = Router()
+liveRouter.use(requireAuth)
 
 liveRouter.post('/session', async (req, res) => {
   if (!aiEnabled) {
-    throw new EncounterError(
+    throw new ApiError(
       'Voice mode is not configured. Set OPENAI_API_KEY on the server, then restart it. Guided mode works without a key.',
       503,
       'missing_api_key',
     )
   }
-  enforceRateLimit(req)
 
   const parsed = sessionBody.safeParse(req.body ?? {})
   if (!parsed.success) {
-    throw new EncounterError('Invalid voice session request', 400, 'invalid_body')
+    throw new ApiError('Invalid voice session request', 400, 'invalid_body')
   }
 
-  const encounter = requireEncounter(parsed.data.encounterId)
-  if (encounter.submitted) {
-    throw new EncounterError('This encounter is already submitted', 409, 'encounter_submitted')
+  const auth = authOf(req)
+  const { attempt, scenario } = await getOwnedAttemptWithScenario(auth, parsed.data.attemptId)
+  if (attempt.status === 'submitted') {
+    throw new ApiError('This attempt is already submitted.', 409, 'attempt_submitted')
   }
+  enforceRateLimit(req)
 
   let result
   try {
     result = await openaiClient().live.create({
       session: {
         model: env.OPENAI_LIVE_MODEL,
-        instructions: buildPatientInstructions(encounter.hidden),
+        instructions: buildPatientInstructions(scenario),
         delegation: {
           type: 'responses',
           responses: {
             model: env.OPENAI_DELEGATE_MODEL,
-            instructions: buildDelegateInstructions(encounter.hidden),
-            tools: buildCaseTools(encounter.hidden),
+            instructions: buildDelegateInstructions(scenario),
+            tools: buildCaseTools(scenario),
             tool_choice: 'auto',
             parallel_tool_calls: false,
           },
@@ -89,28 +92,32 @@ liveRouter.post('/session', async (req, res) => {
       ? (cause as { status: number }).status
       : 0
     console.error('[live] session creation failed', {
-      encounterId: encounter.id,
+      attemptId: attempt.id,
       status: status || 'unknown',
     })
     if (status === 401 || status === 403) {
-      throw new EncounterError(
+      throw new ApiError(
         'The server rejected the OpenAI credentials. Check the API key and that the project has billing enabled.',
         502,
         'provider_auth_failed',
       )
     }
     if (status === 429) {
-      throw new EncounterError(
+      throw new ApiError(
         'OpenAI rate limit or quota reached. Check the project usage limits.',
         502,
         'provider_rate_limited',
       )
     }
-    throw new EncounterError('Could not start the voice session.', 502, 'provider_unavailable')
+    throw new ApiError('Could not start the voice session.', 502, 'provider_unavailable')
   }
 
-  encounter.liveSessionId = result.session.id
-  encounter.liveStartedAt = new Date().toISOString()
+  await recordLiveStarted(auth, attempt.id, {
+    sessionId: result.session.id,
+    promptVersion: PATIENT_PROMPT_VERSION,
+    liveModel: env.OPENAI_LIVE_MODEL,
+    reasoningModel: env.OPENAI_DELEGATE_MODEL,
+  })
 
   // Only the SDP answer and session ID cross to the browser.
   res.json({ sessionId: result.session.id, sdp: result.transport.sdp })
@@ -118,27 +125,34 @@ liveRouter.post('/session', async (req, res) => {
 
 /**
  * Browser relay for delegated tool calls. The browser forwards the call; the
- * hidden case state and all validation stay here. A server-side sideband can
- * later take ownership of this without the encounter components changing.
+ * hidden case state and all validation stay here. Keyed by call ID so a
+ * retried relay never records twice.
  */
-liveRouter.post('/tool', (req, res) => {
+liveRouter.post('/tool', async (req, res) => {
   const parsed = toolBody.safeParse(req.body ?? {})
-  if (!parsed.success) throw new EncounterError('Invalid tool request', 400, 'invalid_body')
+  if (!parsed.success) throw new ApiError('Invalid tool request', 400, 'invalid_body')
+  if (!isToolName(parsed.data.name)) throw new ApiError('Unknown tool', 400, 'unknown_tool')
 
-  const encounter = requireEncounter(parsed.data.encounterId)
-  if (!isToolName(parsed.data.name)) {
-    throw new EncounterError('Unknown tool', 400, 'unknown_tool')
-  }
-
-  let args: unknown
+  let args: { actionIds?: unknown; confirmed?: unknown }
   try {
     args = JSON.parse(parsed.data.arguments || '{}')
   } catch {
-    throw new EncounterError('Tool arguments were not valid JSON', 400, 'invalid_tool_arguments')
+    throw new ApiError('Tool arguments were not valid JSON', 400, 'invalid_tool_arguments')
   }
 
   try {
-    const result = executeTool(encounter, parsed.data.name, args)
+    const { result } = await recordEvent(
+      authOf(req),
+      parsed.data.attemptId,
+      `voice:${parsed.data.callId}`,
+      {
+        type: 'action',
+        tool: parsed.data.name,
+        actionIds: args.actionIds as string[],
+        ...(typeof args.confirmed === 'boolean' ? { confirmed: args.confirmed } : {}),
+      },
+      'voice',
+    )
     res.json({
       callId: parsed.data.callId,
       output: {
@@ -150,13 +164,10 @@ liveRouter.post('/tool', (req, res) => {
       },
     })
   } catch (cause) {
-    // A rejected tool call is returned as a normal result so the conversation
-    // can continue; the model is told it failed, not why in internal terms.
-    if (cause instanceof EncounterError) {
-      res.json({
-        callId: parsed.data.callId,
-        output: { ok: false, reason: cause.message },
-      })
+    // A rejected call is returned as a normal result so the conversation can
+    // continue. Ownership failures still surface as HTTP errors.
+    if (cause instanceof ApiError && cause.code !== 'attempt_not_found') {
+      res.json({ callId: parsed.data.callId, output: { ok: false, reason: cause.message } })
       return
     }
     throw cause

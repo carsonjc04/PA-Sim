@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import type { PhaseId } from '../../src/domain/types'
-import type { EncounterEvent } from '../encounters/model'
+
+type EventKind = 'history' | 'exam' | 'test' | 'communication' | 'diagnosis' | 'treatment' | 'disposition' | 'follow-up'
 
 /**
  * Tool arguments carry IDs only. Scores, findings and display text are never
@@ -11,42 +12,42 @@ const ids = z.array(z.string().min(1)).min(1).max(12)
 export const toolContracts = {
   record_history_topics: {
     phase: 'history' as PhaseId,
-    kind: 'history' as EncounterEvent['kind'],
+    kind: 'history' as EventKind,
     schema: z.object({ actionIds: ids }),
   },
   request_physical_exam: {
     phase: 'exam' as PhaseId,
-    kind: 'exam' as EncounterEvent['kind'],
+    kind: 'exam' as EventKind,
     schema: z.object({ actionIds: ids }),
   },
   order_diagnostic_test: {
     phase: 'diagnostics' as PhaseId,
-    kind: 'test' as EncounterEvent['kind'],
+    kind: 'test' as EventKind,
     schema: z.object({ actionIds: ids }),
   },
   record_communication_behavior: {
     phase: null,
-    kind: 'communication' as EncounterEvent['kind'],
+    kind: 'communication' as EventKind,
     schema: z.object({ actionIds: ids }),
   },
   propose_diagnosis: {
     phase: 'diagnosis' as PhaseId,
-    kind: 'diagnosis' as EncounterEvent['kind'],
+    kind: 'diagnosis' as EventKind,
     schema: z.object({ actionIds: ids, confirmed: z.boolean().default(false) }),
   },
   propose_treatment_plan: {
     phase: 'treatment' as PhaseId,
-    kind: 'treatment' as EncounterEvent['kind'],
+    kind: 'treatment' as EventKind,
     schema: z.object({ actionIds: ids, confirmed: z.boolean().default(false) }),
   },
   record_disposition: {
     phase: 'treatment' as PhaseId,
-    kind: 'disposition' as EncounterEvent['kind'],
+    kind: 'disposition' as EventKind,
     schema: z.object({ actionIds: ids, confirmed: z.boolean().default(false) }),
   },
   record_follow_up: {
     phase: 'treatment' as PhaseId,
-    kind: 'follow-up' as EncounterEvent['kind'],
+    kind: 'follow-up' as EventKind,
     schema: z.object({ actionIds: ids, confirmed: z.boolean().default(false) }),
   },
 } as const

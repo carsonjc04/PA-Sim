@@ -5,12 +5,12 @@ Verified against `main` at `a91a293` plus the uncommitted home screen
 
 Quality gates at baseline:
 
-| Command | Result |
-| --- | --- |
-| `npm run typecheck` | Pass |
-| `npm run lint` | Pass, one warning: `react(set-state-in-effect)` in `Dashboard` |
-| `npm test` | 46 passed, 1 skipped (the billable live smoke test) |
-| `npm run build` | Pass |
+| Command             | Result                                                         |
+| ------------------- | -------------------------------------------------------------- |
+| `npm run typecheck` | Pass                                                           |
+| `npm run lint`      | Pass, one warning: `react(set-state-in-effect)` in `Dashboard` |
+| `npm test`          | 46 passed, 1 skipped (the billable live smoke test)            |
+| `npm run build`     | Pass                                                           |
 
 `npm run test:live` was not run; it is billable.
 
@@ -99,18 +99,30 @@ Behaviour:
 
 ## 2. Top 10 risks, ranked by severity
 
-| # | Severity | Risk | Evidence |
-| --- | --- | --- | --- |
-| 1 | Critical | **Answer key ships to the browser in guided mode.** Full scenarios, including `correctPrimary`, `criticalRules`, `effects`, `idealPlan` and `teachingPoints`, are in the production JS bundle. Any student can read the answers in dev tools. | `staticScenarioProvider` is used by `Dashboard`, `Cases`, `Encounter`, `Results` and `App` in `src/App.tsx`. Built `dist/assets/*.js` contains `correctPrimary` ×9, `criticalRules` ×7, `idealPlan` ×9. |
-| 2 | Critical | **Voice encounters are never graded.** `VoicePanel` creates a server encounter but never advances or submits it. The server stays in `history`, so voice exam, test, diagnosis and plan tool calls are rejected as `wrong_phase`. The score shown comes only from guided clicks. | `VoicePanel.tsx` only calls `POST /api/encounters`. `executeTool` checks `contract.phase !== record.currentPhase`. |
-| 3 | High | **Billed sessions have no server-side time limit.** `MAX_LIVE_SESSION_MINUTES` is reported but never enforced. A forgotten tab, or a client that never sends `session.close`, keeps billing. | `env.ts` and `publicCapabilities()` are the only uses. `liveEndedAt` and `liveDurationSeconds` are never written. |
-| 4 | High | **The cost endpoint is unauthenticated, and rate limiting can be bypassed or over-applied.** Anyone allowed by CORS (or using curl, which ignores CORS) can create an encounter and open billed sessions. `req.ip` without `trust proxy` behind Render probably puts all users in one bucket, or lets attackers rotate IPs. The bucket map is in memory and never pruned. | `server/api/live.ts` `enforceRateLimit`. No `app.set('trust proxy')`. No auth middleware. |
-| 5 | High | **No clinical review.** All scenarios are `requires-clinician-review`, but the UI shows pass/fail and "Strong clinical work." Feedback reliability is unvalidated. | `reviewStatus` literal in the schema, and results screen copy. |
-| 6 | Medium | **The browser decides when a tool runs.** Tool calls pass through the browser, so a modified client can call `/api/live/tool` or `/api/encounters/:id/tools/*` directly with any valid ID. IDs are validated, but whether the student actually *asked* is not. | Documented. `server/api/live.ts` `/tool`. |
-| 7 | Medium | **Server state is lost on restart.** Encounters are in memory: a Render restart or deploy drops every active encounter, and with it any future voice grade. With multiple instances, requests reach the wrong one. | `server/encounters/store.ts`. |
-| 8 | Medium | **Deployment config is not in the repo.** There is no `vercel.json` or `render.yaml`. `CLIENT_ORIGIN` must be a full URL; a bare hostname crashes startup (seen locally in this session). SPA deep-link rewrites on Vercel are unverified. | Repository listing. Startup error `CLIENT_ORIGIN: Invalid URL`. |
-| 9 | Medium | **Placeholder data looks real.** A hard-coded "Alex Morgan, PA-S student" profile chip, seeded demo attempts on the dashboard, and a `\|\| 5` fallback for the case count break the AGENTS.md rule against inventing user identities or counts. | `src/App.tsx` `Header`, `seedAttempts`, `Cases`. |
-| 10 | Low | **Structural debt in a 970-line `App.tsx`.** All screens are in one file. The grading and schema files are minified one-liners, which are hard to review. The visibility-rule test re-implements the logic instead of calling it. `unlocks` and `hides` are dead fields. `Results` falls back to re-grading when `feedback` is missing. | `src/App.tsx`, `src/domain/*.ts`, `grading.test.ts`. |
+> **Update, 2026-10-09 (server-owned persistence):**
+>
+> - **Risk 1 resolved.** The browser bundle contains no answer key. This is
+>   checked on every build.
+> - **Risk 7 resolved.** Attempts persist in Postgres.
+> - **Risk 9 resolved.** The fake profile and demo history are removed.
+> - **Risk 2 partly resolved.** Voice and guided input now share one attempt
+>   and one graded log. Voice-only phase advance is still not possible.
+> - **Risk 4 partly resolved.** Live sessions now require an owned attempt, but
+>   the dev identity is self-asserted.
+> - **Decision for M1:** option (a). Guided mode requires the backend.
+
+| #   | Severity | Risk                                                                                                                                                                                                                                                                                                                                                                      | Evidence                                                                                                                                                                                                |
+| --- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Critical | **Answer key ships to the browser in guided mode.** Full scenarios, including `correctPrimary`, `criticalRules`, `effects`, `idealPlan` and `teachingPoints`, are in the production JS bundle. Any student can read the answers in dev tools.                                                                                                                             | `staticScenarioProvider` is used by `Dashboard`, `Cases`, `Encounter`, `Results` and `App` in `src/App.tsx`. Built `dist/assets/*.js` contains `correctPrimary` ×9, `criticalRules` ×7, `idealPlan` ×9. |
+| 2   | Critical | **Voice encounters are never graded.** `VoicePanel` creates a server encounter but never advances or submits it. The server stays in `history`, so voice exam, test, diagnosis and plan tool calls are rejected as `wrong_phase`. The score shown comes only from guided clicks.                                                                                          | `VoicePanel.tsx` only calls `POST /api/encounters`. `executeTool` checks `contract.phase !== record.currentPhase`.                                                                                      |
+| 3   | High     | **Billed sessions have no server-side time limit.** `MAX_LIVE_SESSION_MINUTES` is reported but never enforced. A forgotten tab, or a client that never sends `session.close`, keeps billing.                                                                                                                                                                              | `env.ts` and `publicCapabilities()` are the only uses. `liveEndedAt` and `liveDurationSeconds` are never written.                                                                                       |
+| 4   | High     | **The cost endpoint is unauthenticated, and rate limiting can be bypassed or over-applied.** Anyone allowed by CORS (or using curl, which ignores CORS) can create an encounter and open billed sessions. `req.ip` without `trust proxy` behind Render probably puts all users in one bucket, or lets attackers rotate IPs. The bucket map is in memory and never pruned. | `server/api/live.ts` `enforceRateLimit`. No `app.set('trust proxy')`. No auth middleware.                                                                                                               |
+| 5   | High     | **No clinical review.** All scenarios are `requires-clinician-review`, but the UI shows pass/fail and "Strong clinical work." Feedback reliability is unvalidated.                                                                                                                                                                                                        | `reviewStatus` literal in the schema, and results screen copy.                                                                                                                                          |
+| 6   | Medium   | **The browser decides when a tool runs.** Tool calls pass through the browser, so a modified client can call `/api/live/tool` or `/api/encounters/:id/tools/*` directly with any valid ID. IDs are validated, but whether the student actually _asked_ is not.                                                                                                            | Documented. `server/api/live.ts` `/tool`.                                                                                                                                                               |
+| 7   | Medium   | **Server state is lost on restart.** Encounters are in memory: a Render restart or deploy drops every active encounter, and with it any future voice grade. With multiple instances, requests reach the wrong one.                                                                                                                                                        | `server/encounters/store.ts`.                                                                                                                                                                           |
+| 8   | Medium   | **Deployment config is not in the repo.** There is no `vercel.json` or `render.yaml`. `CLIENT_ORIGIN` must be a full URL; a bare hostname crashes startup (seen locally in this session). SPA deep-link rewrites on Vercel are unverified.                                                                                                                                | Repository listing. Startup error `CLIENT_ORIGIN: Invalid URL`.                                                                                                                                         |
+| 9   | Medium   | **Placeholder data looks real.** A hard-coded "Alex Morgan, PA-S student" profile chip, seeded demo attempts on the dashboard, and a `\|\| 5` fallback for the case count break the AGENTS.md rule against inventing user identities or counts.                                                                                                                           | `src/App.tsx` `Header`, `seedAttempts`, `Cases`.                                                                                                                                                        |
+| 10  | Low      | **Structural debt in a 970-line `App.tsx`.** All screens are in one file. The grading and schema files are minified one-liners, which are hard to review. The visibility-rule test re-implements the logic instead of calling it. `unlocks` and `hides` are dead fields. `Results` falls back to re-grading when `feedback` is missing.                                   | `src/App.tsx`, `src/domain/*.ts`, `grading.test.ts`.                                                                                                                                                    |
 
 ## 3. Next six milestones: dependency graph
 
@@ -170,8 +182,10 @@ Any change that breaks one of these is a regression, whatever else it adds.
   mode completes and grades an encounter.
 - A voice failure (microphone denied, provider error, network loss) never
   blocks finishing the encounter in guided mode on the same screen.
-- `POST /api/encounters` returns `503 ai_unavailable` for voice modes without a
-  key. It must not pretend a session exists.
+- `POST /api/live/session` returns `503 missing_api_key` without a key. It must
+  not pretend a session exists.
+- Guided mode requires the backend and an identity, but never an OpenAI key or
+  a microphone.
 - `npm test` never contacts OpenAI.
 
 ### Secret isolation
@@ -193,12 +207,15 @@ Any change that breaks one of these is a regression, whatever else it adds.
 - Tool arguments accept IDs only. Scores, findings and display text are always
   resolved server-side from the locked scenario.
 - Renaming an ID in authored content is a breaking change for saved attempts.
-  Version it (`schemaVersion`) instead of editing it in place.
+  Attempts pin a content version (`<scenarioId>@<hash>`), so old attempts keep
+  their IDs. New attempts get the new content.
+- Stored results reference `GRADING_VERSION`. Change scoring behavior only
+  with a version bump; the pinned snapshot test enforces this.
 
 ### Spoiler-safe projections
 
 - Browser payloads are built by **allowlist** (`toPublicScenario`,
-  `toPublicEncounter`), never by deleting sensitive fields.
+  `toPublicAttempt`, `toPublicDebrief`, `toAttemptSummary`), never by deleting sensitive fields.
 - These stay withheld until submission: `correctPrimary`, `criticalRules`,
   `omissions`, `idealPlan`, `teachingPoints`, every `effects`,
   `unsafe`/`unsafeReason`, diagnosis `reasoning`, and every action `response`.
@@ -206,5 +223,6 @@ Any change that breaks one of these is a regression, whatever else it adds.
   current phase.
 - Diagnosis options are published without any marker of which one is correct.
 - Scenario summaries (title, complaint) must not name the diagnosis.
-- `server/encounters/projection.test.ts` (key scan plus text scan) must keep
+- `server/attempts/projection.test.ts`, `server/api/attempts.test.ts` and
+  `scripts/check-bundle.ts` must keep
   passing and must be extended whenever a field is added to `ScenarioDefinition`.

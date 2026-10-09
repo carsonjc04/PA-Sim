@@ -1,6 +1,6 @@
 # Future AI integration
 
-Guided mode makes no network calls. AI voice mode calls the ClinicSim server, which calls OpenAI GPT-Live; see `docs/architecture.md`. The static providers in `src/providers/static.ts` are still the only `ScenarioProvider` and `PatientResponseProvider` implementations. Any future provider must preserve the deterministic domain contract and keep the grading engine authoritative.
+Guided mode calls only the ClinicSim server. AI voice mode also has the server call OpenAI GPT-Live; see `docs/architecture.md`. Scenarios come from `src/data/scenarios.ts` on the server, pinned per attempt as content versions. Any future scenario source must produce validated `ScenarioDefinition`s that are stored as new content versions, and must keep the server-side grading engine authoritative.
 
 ## Pre-generated scenarios
 

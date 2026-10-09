@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { apiBaseUrl, authHeaders } from '../api/client'
 import { LiveVoiceClient } from './liveClient'
 import type {
   SessionUsage,
@@ -6,8 +7,6 @@ import type {
   VoiceConnectionState,
   VoiceError,
 } from './types'
-
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8787'
 
 export interface VoiceEncounter {
   state: VoiceConnectionState
@@ -22,7 +21,7 @@ export interface VoiceEncounter {
   retry: () => void
 }
 
-export function useVoiceEncounter(encounterId: string | null): VoiceEncounter {
+export function useVoiceEncounter(attemptId: string | null): VoiceEncounter {
   const [state, setState] = useState<VoiceConnectionState>('idle')
   const [transcript, setTranscript] = useState<TranscriptSegment[]>([])
   const [error, setError] = useState<VoiceError | null>(null)
@@ -45,13 +44,13 @@ export function useVoiceEncounter(encounterId: string | null): VoiceEncounter {
   }, [])
 
   const connect = useCallback(() => {
-    if (!encounterId) return
+    if (!attemptId) return
     setError(null)
     // start() reports failures through onError; the rejection is the same error.
     void ensureClient()
-      .start({ encounterId, apiBaseUrl })
+      .start({ attemptId, apiBaseUrl, headers: authHeaders })
       .catch(() => undefined)
-  }, [encounterId, ensureClient])
+  }, [attemptId, ensureClient])
 
   const disconnect = useCallback(() => {
     void clientRef.current?.stop().catch(() => undefined)
@@ -78,7 +77,7 @@ export function useVoiceEncounter(encounterId: string | null): VoiceEncounter {
       clientRef.current = null
       void client?.stop().catch(() => undefined)
     }
-  }, [encounterId])
+  }, [attemptId])
 
   return {
     state,

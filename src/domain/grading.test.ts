@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { scenarios } from '../data/scenarios'
 import { validateScenarios } from './schema'
-import { gradeAttempt } from './grading'
+import { GRADING_VERSION, gradeAttempt } from './grading'
 import type { Attempt } from './types'
 
 const blank = (scenarioId: string): Attempt => ({id:'test',scenarioId,startedAt:'2026-01-01',selectedByPhase:{history:[],exam:[],diagnostics:[],diagnosis:[],treatment:[]},phaseLocks:[],revealed:[],submitted:true})
@@ -35,6 +35,36 @@ describe('deterministic grading', () => {
     expect(result.finalScore).toBeLessThanOrEqual(59)
     expect(result.passed).toBe(false)
     expect(result.rawScore).toBeGreaterThan(result.finalScore)
+  })
+})
+
+describe('grading version pin', () => {
+  // Stored results cite GRADING_VERSION. If this snapshot changes, bump GRADING_VERSION in grading.ts.
+  it('produces the pinned result for a fixed attempt under the current version', () => {
+    const scenario = scenarios.find(s => s.id === 'chest-pressure')!
+    const attempt = blank(scenario.id)
+    attempt.selectedByPhase.history = ['onset', 'associated']
+    attempt.selectedByPhase.diagnostics = ['ecg', 'ems']
+    attempt.selectedByPhase.diagnosis = ['acs']
+    attempt.selectedByPhase.treatment = ['ems', 'discharge']
+    const r = gradeAttempt(scenario, attempt)
+    expect({ version: GRADING_VERSION, categoryScores: r.categoryScores, raw: r.rawScore, final: r.finalScore, passed: r.passed, critical: r.criticalSafetyError }).toMatchInlineSnapshot(`
+      {
+        "categoryScores": {
+          "communication": 50,
+          "diagnosis": 70,
+          "diagnostics": 80,
+          "exam": 50,
+          "history": 76,
+          "treatment": 50,
+        },
+        "critical": true,
+        "final": 59,
+        "passed": false,
+        "raw": 64,
+        "version": "grading-2026-10-09.1",
+      }
+    `)
   })
 })
 

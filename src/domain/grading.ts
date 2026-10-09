@@ -1,4 +1,6 @@
 import type { Attempt, Category, GradingResult, ScenarioDefinition } from './types'
+/** Bump whenever this file's scoring behavior changes; stored results reference it. */
+export const GRADING_VERSION = 'grading-2026-10-09.1'
 export const weights: Record<Category, number> = {history:.2,exam:.15,diagnostics:.15,diagnosis:.2,treatment:.2,communication:.1}
 const categories: Category[] = ['history','exam','diagnostics','diagnosis','treatment','communication']
 export function gradeAttempt(s:ScenarioDefinition,a:Attempt): GradingResult { const scores:Record<Category,number>={history:50,exam:50,diagnostics:50,diagnosis:50,treatment:50,communication:50}; const chosen=new Set(Object.values(a.selectedByPhase).flat()); const feedback:{strengths:string[]; missed:string[]; unnecessary:string[]; unsafe:string[]}= {strengths:[],missed:[],unnecessary:[],unsafe:[]};

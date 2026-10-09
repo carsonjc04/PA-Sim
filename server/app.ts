@@ -1,24 +1,34 @@
 import { randomUUID } from 'node:crypto'
 import cors from 'cors'
 import express, { type NextFunction, type Request, type Response } from 'express'
+import { attemptsRouter } from './api/attempts'
 import { liveRouter } from './api/live'
 import { router } from './api/routes'
+import { insecureAuthHeader } from './auth/context'
 import { env } from './config/env'
-import { EncounterError } from './encounters/store'
+import { ApiError } from './http/errors'
 
 export function createApp() {
   const app = express()
-
-  app.use(cors({ origin: env.CLIENT_ORIGIN, credentials: false }))
-  app.use(express.json({ limit: '256kb' }))
 
   app.use((req, _res, next) => {
     ;(req as Request & { requestId: string }).requestId = randomUUID()
     next()
   })
+  app.use(
+    cors({
+      origin: env.CLIENT_ORIGIN,
+      credentials: false,
+      allowedHeaders: ['Content-Type', 'Idempotency-Key', 'X-Dev-User'],
+      exposedHeaders: ['X-ClinicSim-Insecure-Auth'],
+    }),
+  )
+  app.use(express.json({ limit: '256kb' }))
+  app.use(insecureAuthHeader)
 
   app.get('/api/health', (_req, res) => res.json({ ok: true }))
   app.use('/api/live', liveRouter)
+  app.use('/api/attempts', attemptsRouter)
   app.use('/api', router)
 
   app.use((_req, res) => {
@@ -27,8 +37,17 @@ export function createApp() {
 
   app.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {
     const requestId = (req as Request & { requestId?: string }).requestId
-    if (err instanceof EncounterError) {
+    if (err instanceof ApiError) {
       res.status(err.status).json({ error: { code: err.code, message: err.message, requestId } })
+      return
+    }
+    // express.json() rejects malformed JSON before any route runs.
+    if ((err as { type?: string })?.type === 'entity.parse.failed') {
+      res.status(400).json({ error: { code: 'invalid_body', message: 'Request body is not valid JSON.', requestId } })
+      return
+    }
+    if ((err as { type?: string })?.type === 'entity.too.large') {
+      res.status(413).json({ error: { code: 'invalid_body', message: 'Request body is too large.', requestId } })
       return
     }
     // Internal detail is logged, never returned, so provider or stack text
