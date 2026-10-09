@@ -9,12 +9,14 @@ import {
 } from "react-router-dom";
 import {
   ArrowRight,
+  ArrowUpRight,
   BarChart3,
   Check,
   ChevronLeft,
   ClipboardList,
   Clock3,
   Lock,
+  Mic,
   RotateCcw,
   ShieldAlert,
   Stethoscope,
@@ -102,7 +104,7 @@ function Portrait({
     </div>
   );
 }
-function Header() {
+function Header({ showProfile = true }: { showProfile?: boolean }) {
   return (
     <header className="topbar">
       <Link to="/" className="brand">
@@ -115,14 +117,16 @@ function Header() {
       </Link>
       <nav>
         <Link to="/cases">Case library</Link>
-        <Link to="/">Dashboard</Link>
+        <Link to="/dashboard">Dashboard</Link>
       </nav>
-      <div className="profile-chip">
-        <span className="avatar">AS</span>
-        <span>
-          Alex Morgan<small>PA-S student</small>
-        </span>
-      </div>
+      {showProfile && (
+        <div className="profile-chip">
+          <span className="avatar">AS</span>
+          <span>
+            Alex Morgan<small>PA-S student</small>
+          </span>
+        </div>
+      )}
     </header>
   );
 }
@@ -138,6 +142,103 @@ function Layout({ children }: { children: ReactNode }) {
         <span>Requires qualified clinical review before formal use.</span>
       </footer>
     </>
+  );
+}
+function Home() {
+  return (
+    <div className="home">
+      <Header showProfile={false} />
+      <main className="home-main">
+        <div className="home-columns">
+          <div className="home-copy">
+            <p className="home-kicker">
+              <span>ClinicSim field guide</span>
+              <i aria-hidden="true" />
+              <span>Practice edition</span>
+            </p>
+            <h1 className="home-headline">
+              Turn knowledge into clinical conversation.
+            </h1>
+            <p className="home-lede">
+              Choose the kind of encounter you want to practice. Speak
+              naturally, reason aloud, and learn by doing.
+            </p>
+            <ol className="home-actions">
+              <li>
+                <span className="home-numeral" aria-hidden="true">
+                  I
+                </span>
+                <div className="home-action-copy">
+                  <h2>
+                    <Link to="/cases" className="home-action-link">
+                      Start OSCE Practice
+                    </Link>
+                  </h2>
+                  <p>
+                    Interview a patient, examine, and commit to an assessment
+                    and plan, then review your debrief.
+                  </p>
+                </div>
+                <span className="home-action-tag">Conduct an encounter</span>
+                <span className="home-action-arrow" aria-hidden="true">
+                  <ArrowUpRight size={17} />
+                </span>
+              </li>
+              <li className="home-action--unavailable">
+                <span className="home-numeral" aria-hidden="true">
+                  II
+                </span>
+                <div className="home-action-copy">
+                  <h2>Start Clinical Sim</h2>
+                  <p>
+                    Take responsibility for workup, treatment, and disposition
+                    as the patient evolves.
+                  </p>
+                </div>
+                <span className="home-action-tag">Manage a patient</span>
+                <span className="home-action-badge">Coming soon</span>
+              </li>
+            </ol>
+          </div>
+          <figure className="home-figure">
+            <div
+              className="home-plate"
+              role="img"
+              aria-label="Illustration of an open study book beside a stethoscope"
+            >
+              <span className="home-plate-label" aria-hidden="true">
+                Plate 01
+              </span>
+              <div className="home-plate-art" aria-hidden="true">
+                <div className="home-book">
+                  <span className="home-book-spine" />
+                  <span className="home-book-page home-book-page--left" />
+                  <span className="home-book-page home-book-page--right" />
+                </div>
+                <Stethoscope size={44} strokeWidth={1.4} />
+              </div>
+            </div>
+            <figcaption>
+              <em>Fig. A</em> Use ClinicSim alongside your reading: move from a
+              study prompt into a spoken patient encounter while the material
+              is fresh.
+            </figcaption>
+          </figure>
+        </div>
+      </main>
+      <div className="home-banner">
+        <p>Practice the encounter, not just the answer.</p>
+        <Link to="/cases" className="home-banner-button">
+          Browse practice cases <Mic size={15} aria-hidden="true" />
+        </Link>
+      </div>
+      <footer>
+        <span>
+          ClinicSim is an educational prototype using fictional patients.
+        </span>
+        <span>Requires qualified clinical review before formal use.</span>
+      </footer>
+    </div>
   );
 }
 function Dashboard() {
@@ -851,7 +952,8 @@ function App() {
   };
   return (
     <Routes>
-      <Route path="/" element={<Dashboard />} />
+      <Route path="/" element={<Home />} />
+      <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/cases" element={<Cases />} />
       <Route
         path="/encounter/:scenarioId"
