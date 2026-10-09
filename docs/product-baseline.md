@@ -34,11 +34,16 @@ artifact. No live voice session was run for this baseline.
   - pass threshold is 70;
   - any critical rule caps the final score at 59 and fails the attempt.
 - Attempts are stored in `localStorage` (`clinicsim-attempts-v1`). Malformed
-  data is treated as empty history.
+  data is treated as empty history. *(Superseded: see the update note in
+  section 2 and `docs/architecture.md`.)*
 - Results screen: category bars, strengths, misses, unnecessary/unsafe
   choices, correct diagnosis with reasoning, ideal plan.
 
 ### Server (Express, `server/`)
+
+*Snapshot at `a91a293`. The `/api/encounters` routes and in-memory store have
+since been replaced by `/api/attempts` backed by Postgres; see
+`docs/architecture.md`.*
 
 - `GET /api/health`, `GET /api/ai/status`, `GET /api/scenarios`
 - `POST /api/encounters`, `GET /api/encounters/:id`, `DELETE /api/encounters/:id`
