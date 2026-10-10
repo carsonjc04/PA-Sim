@@ -186,8 +186,9 @@ function InsecureBanner() {
   if (!status || status === "unreachable" || !status.insecure) return null;
   return (
     <div className="insecure-banner" role="alert">
-      Demo deployment: identities are not verified. Anyone can view any
-      user&rsquo;s practice history. Do not enter personal information.
+      Demo deployment: identities are not verified &mdash; anyone can sign in
+      as any name, but each identity only sees its own practice history. Do
+      not enter personal information.
     </div>
   );
 }
