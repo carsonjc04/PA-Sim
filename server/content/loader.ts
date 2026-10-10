@@ -1,0 +1,61 @@
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
+import { join, relative, resolve, sep } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import type { Issue } from './validate'
+
+export const DEFAULT_CONTENT_DIR = fileURLToPath(new URL('../../content', import.meta.url))
+
+export interface RawPackage {
+  dir: string
+  manifest: unknown
+  lock: unknown
+  taxonomy: unknown
+  /** Raw scenario JSON by manifest id. */
+  scenarios: Record<string, unknown>
+  fixtures: Record<string, unknown>
+  /** Scenario file names found on disk, relative to `scenarios/`. */
+  scenarioFilesOnDisk: string[]
+  loadIssues: Issue[]
+}
+
+function readJson(path: string, label: string, issues: Issue[], scenarioId?: string): unknown {
+  if (!existsSync(path)) {
+    issues.push({ severity: 'error', code: 'file-missing', scenarioId, path: label, message: `Missing file ${label}` })
+    return undefined
+  }
+  try {
+    return JSON.parse(readFileSync(path, 'utf8'))
+  } catch (error) {
+    issues.push({ severity: 'error', code: 'json-invalid', scenarioId, path: label, message: `${label} is not valid JSON: ${(error as Error).message}` })
+    return undefined
+  }
+}
+
+/** Reads the package from disk without validating it; every problem becomes an issue. */
+export function readPackage(dir: string = DEFAULT_CONTENT_DIR): RawPackage {
+  const loadIssues: Issue[] = []
+  const root = resolve(dir)
+  const manifest = readJson(join(root, 'manifest.json'), 'manifest.json', loadIssues)
+  const lock = readJson(join(root, 'lock.json'), 'lock.json', loadIssues)
+  const taxonomy = readJson(join(root, 'taxonomy.json'), 'taxonomy.json', loadIssues)
+
+  const scenarios: Record<string, unknown> = {}
+  const fixtures: Record<string, unknown> = {}
+  const entries = (manifest as { scenarios?: { id?: unknown; file?: unknown }[] } | undefined)?.scenarios
+  if (Array.isArray(entries)) {
+    for (const entry of entries) {
+      if (typeof entry?.id !== 'string' || typeof entry.file !== 'string') continue
+      const file = resolve(root, entry.file)
+      if (relative(root, file).startsWith('..') || !file.startsWith(root + sep)) {
+        loadIssues.push({ severity: 'error', code: 'path-escape', scenarioId: entry.id, path: 'manifest.scenarios', message: `Manifest file "${entry.file}" leaves the content directory` })
+        continue
+      }
+      scenarios[entry.id] = readJson(file, entry.file, loadIssues, entry.id)
+      fixtures[entry.id] = readJson(file.replace(/\.json$/, '.fixtures.json'), entry.file.replace(/\.json$/, '.fixtures.json'), loadIssues, entry.id)
+    }
+  }
+
+  const scenarioDir = join(root, 'scenarios')
+  const scenarioFilesOnDisk = existsSync(scenarioDir) ? readdirSync(scenarioDir).filter((f) => f.endsWith('.json') && !f.endsWith('.fixtures.json')) : []
+  return { dir: root, manifest, lock, taxonomy, scenarios, fixtures, scenarioFilesOnDisk, loadIssues }
+}

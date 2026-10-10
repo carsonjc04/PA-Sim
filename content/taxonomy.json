@@ -1,0 +1,173 @@
+{
+  "provenance": "Organ-system, task-category and EOR-rotation names supplied by the project owner from web research of the NCCPA PANCE content blueprint (effective January 2025); not independently re-checked against the NCCPA source, and care-setting and age-group values are author-proposed. Unreviewed until a qualified clinician reviews them. Using a name here is not a claim of blueprint coverage.",
+  "organSystems": [
+    {
+      "id": "cardiovascular-system",
+      "label": "Cardiovascular System"
+    },
+    {
+      "id": "pulmonary-system",
+      "label": "Pulmonary System"
+    },
+    {
+      "id": "gi-system-nutrition",
+      "label": "GI System / Nutrition"
+    },
+    {
+      "id": "musculoskeletal-system",
+      "label": "Musculoskeletal System"
+    },
+    {
+      "id": "infectious-diseases",
+      "label": "Infectious Diseases"
+    },
+    {
+      "id": "neurologic-system",
+      "label": "Neurologic System"
+    },
+    {
+      "id": "psychiatry-behavioral-science",
+      "label": "Psychiatry / Behavioral Science"
+    },
+    {
+      "id": "reproductive-system",
+      "label": "Reproductive System"
+    },
+    {
+      "id": "endocrine-system",
+      "label": "Endocrine System"
+    },
+    {
+      "id": "eyes-ears-nose-throat",
+      "label": "Eyes, Ears, Nose, Throat"
+    },
+    {
+      "id": "hematologic-system",
+      "label": "Hematologic System"
+    },
+    {
+      "id": "renal-system",
+      "label": "Renal System"
+    },
+    {
+      "id": "dermatologic-system",
+      "label": "Dermatologic System"
+    },
+    {
+      "id": "genitourinary-system",
+      "label": "Genitourinary System"
+    },
+    {
+      "id": "professional-practice",
+      "label": "Professional Practice"
+    }
+  ],
+  "panceTasks": [
+    {
+      "id": "history-taking-physical-examination",
+      "label": "History Taking & Physical Examination"
+    },
+    {
+      "id": "using-diagnostic-laboratory-studies",
+      "label": "Using Diagnostic & Laboratory Studies"
+    },
+    {
+      "id": "formulating-the-most-likely-diagnosis",
+      "label": "Formulating the Most Likely Diagnosis"
+    },
+    {
+      "id": "health-maintenance",
+      "label": "Health Maintenance"
+    },
+    {
+      "id": "patient-education",
+      "label": "Patient Education"
+    },
+    {
+      "id": "preventive-measures",
+      "label": "Preventive Measures"
+    },
+    {
+      "id": "clinical-intervention",
+      "label": "Clinical Intervention"
+    },
+    {
+      "id": "pharmaceutical-therapeutics",
+      "label": "Pharmaceutical Therapeutics"
+    },
+    {
+      "id": "applying-foundational-scientific-concepts",
+      "label": "Applying Foundational Scientific Concepts"
+    },
+    {
+      "id": "professional-practice",
+      "label": "Professional Practice"
+    }
+  ],
+  "careSettings": [
+    {
+      "id": "primary-care",
+      "label": "Primary care (office)"
+    },
+    {
+      "id": "same-day-care",
+      "label": "Same-day or urgent care"
+    },
+    {
+      "id": "emergency-department",
+      "label": "Emergency department"
+    },
+    {
+      "id": "inpatient",
+      "label": "Inpatient"
+    }
+  ],
+  "ageGroups": [
+    {
+      "id": "pediatric",
+      "label": "Pediatric (under 18)"
+    },
+    {
+      "id": "young-adult",
+      "label": "Young adult (18-39)"
+    },
+    {
+      "id": "middle-aged-adult",
+      "label": "Middle-aged adult (40-64)"
+    },
+    {
+      "id": "older-adult",
+      "label": "Older adult (65 and over)"
+    }
+  ],
+  "eorRotations": [
+    {
+      "id": "emergency-medicine",
+      "label": "Emergency Medicine"
+    },
+    {
+      "id": "family-medicine",
+      "label": "Family Medicine"
+    },
+    {
+      "id": "internal-medicine",
+      "label": "Internal Medicine"
+    },
+    {
+      "id": "pediatrics",
+      "label": "Pediatrics"
+    },
+    {
+      "id": "surgery",
+      "label": "Surgery"
+    },
+    {
+      "id": "psychiatry-behavioral-health",
+      "label": "Psychiatry/Behavioral Health"
+    },
+    {
+      "id": "women-s-health",
+      "label": "Women's Health"
+    }
+  ]
+}

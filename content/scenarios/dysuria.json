@@ -1,0 +1,418 @@
+{
+  "schemaVersion": "2.0",
+  "id": "dysuria",
+  "summary": {
+    "title": "Painful urination",
+    "complaint": "Dysuria and urinary frequency",
+    "age": "24 years",
+    "pronouns": "she/her",
+    "difficulty": "Foundational",
+    "duration": "8-12 min",
+    "urgent": false,
+    "setting": "Primary care"
+  },
+  "patient": {
+    "name": "Jordan Ellis",
+    "demographics": "24-year-old adult",
+    "portrait": {
+      "alt": "Portrait placeholder for Jordan Ellis, fictional patient",
+      "fallback": "JE"
+    }
+  },
+  "clinician": {
+    "alt": "Portrait placeholder for PA student",
+    "fallback": "PA"
+  },
+  "opening": "It burns when I pee, and I have been going constantly since yesterday.",
+  "initialInfo": [
+    "No visible distress",
+    "No known pregnancy",
+    "Symptoms began yesterday"
+  ],
+  "phases": [
+    {
+      "id": "history",
+      "label": "History",
+      "description": "Distinguish lower urinary symptoms from systemic or alternate causes.",
+      "actions": [
+        {
+          "id": "urinary",
+          "label": "Clarify dysuria, frequency, and hematuria",
+          "paText": "Tell me more about the urinary symptoms.",
+          "response": "Burning and frequent small voids. I noticed no visible blood.",
+          "effects": [
+            {
+              "category": "history",
+              "points": 12
+            }
+          ]
+        },
+        {
+          "id": "ask-flank-pain",
+          "label": "Screen for fever, flank pain, and vomiting",
+          "paText": "Any fever, chills, back or flank pain, or vomiting?",
+          "response": "No fever, chills, flank pain, or vomiting.",
+          "effects": [
+            {
+              "category": "history",
+              "points": 12
+            }
+          ]
+        },
+        {
+          "id": "pregnancy",
+          "label": "Assess pregnancy possibility",
+          "paText": "Is there any possibility you could be pregnant?",
+          "response": "No. I use contraception and had a normal period last week.",
+          "effects": [
+            {
+              "category": "history",
+              "points": 8
+            }
+          ]
+        },
+        {
+          "id": "vaginal",
+          "label": "Ask about vaginal discharge or pelvic pain",
+          "paText": "Any new discharge, odor, pelvic pain, or pain with sex?",
+          "response": "No, none of those symptoms.",
+          "effects": [
+            {
+              "category": "history",
+              "points": 8
+            }
+          ]
+        },
+        {
+          "id": "allergy",
+          "label": "Review medication and antibiotic allergies",
+          "paText": "What medicines do you take, and do you have allergies?",
+          "response": "No daily medicines and no known medication allergies.",
+          "effects": [
+            {
+              "category": "history",
+              "points": 8
+            },
+            {
+              "category": "communication",
+              "points": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "exam",
+      "label": "Physical exam",
+      "description": "Confirm stability and look for upper-tract involvement.",
+      "actions": [
+        {
+          "id": "vitals",
+          "label": "Obtain vital signs",
+          "paText": "I am checking your vital signs.",
+          "response": "Temperature 98.4 F, heart rate 82, blood pressure 118/72.",
+          "effects": [
+            {
+              "category": "exam",
+              "points": 12
+            }
+          ]
+        },
+        {
+          "id": "abdomen",
+          "label": "Examine abdomen and costovertebral angles",
+          "paText": "I am checking your abdomen and back for tenderness.",
+          "response": "Mild suprapubic discomfort; no flank or costovertebral angle tenderness.",
+          "effects": [
+            {
+              "category": "exam",
+              "points": 15
+            }
+          ]
+        },
+        {
+          "id": "pelvic",
+          "label": "Perform a pelvic exam immediately",
+          "paText": "I recommend a pelvic exam today.",
+          "response": "No exam performed; there are no concerning vaginal or pelvic symptoms in the authored presentation.",
+          "effects": [
+            {
+              "category": "exam",
+              "points": -2
+            }
+          ],
+          "unsafeReason": "An invasive exam is not routinely needed from this history."
+        }
+      ]
+    },
+    {
+      "id": "diagnostics",
+      "label": "Diagnostics",
+      "description": "Choose context-appropriate urine testing.",
+      "actions": [
+        {
+          "id": "ua",
+          "label": "Obtain urinalysis",
+          "paText": "I will obtain a urinalysis today.",
+          "response": "Positive leukocyte esterase and nitrites with pyuria, supporting cystitis.",
+          "effects": [
+            {
+              "category": "diagnostics",
+              "points": 15
+            }
+          ]
+        },
+        {
+          "id": "culture",
+          "label": "Consider urine culture based on context and local guidance",
+          "paText": "I will consider a culture if risk factors or local guidance support it.",
+          "response": "Culture is available as a nuanced option; there is no systemic illness.",
+          "effects": [
+            {
+              "category": "diagnostics",
+              "points": 8
+            }
+          ]
+        },
+        {
+          "id": "preg-test",
+          "label": "Use pregnancy testing when clinically appropriate",
+          "paText": "I will confirm pregnancy status when clinically appropriate.",
+          "response": "Pregnancy test is negative.",
+          "effects": [
+            {
+              "category": "diagnostics",
+              "points": 8
+            }
+          ]
+        },
+        {
+          "id": "ct",
+          "label": "Order CT imaging for uncomplicated symptoms",
+          "paText": "I will order CT imaging.",
+          "response": "No imaging result is available.",
+          "effects": [
+            {
+              "category": "diagnostics",
+              "points": -3
+            }
+          ],
+          "unsafeReason": "Imaging is not a routine first step for this stable presentation."
+        }
+      ]
+    },
+    {
+      "id": "diagnosis",
+      "label": "Diagnosis",
+      "description": "Select the most likely urinary diagnosis.",
+      "actions": []
+    },
+    {
+      "id": "treatment",
+      "label": "Treatment & follow-up",
+      "description": "Choose a safe, individualized plan.",
+      "actions": []
+    }
+  ],
+  "omissions": [
+    {
+      "id": "omit-pyelo",
+      "phase": "history",
+      "label": "Upper-tract screen",
+      "when": [
+        "ask-flank-pain"
+      ],
+      "effects": [
+        {
+          "category": "history",
+          "points": -12
+        }
+      ],
+      "feedback": "Fever and flank pain screening helps identify pyelonephritis."
+    },
+    {
+      "id": "omit-allergy",
+      "phase": "history",
+      "label": "Medication safety",
+      "when": [
+        "allergy"
+      ],
+      "effects": [
+        {
+          "category": "history",
+          "points": -7
+        }
+      ],
+      "feedback": "Medication and allergy review should inform any treatment plan."
+    }
+  ],
+  "diagnoses": [
+    {
+      "id": "cystitis",
+      "label": "Acute uncomplicated cystitis",
+      "primary": true,
+      "effects": [
+        {
+          "category": "diagnosis",
+          "points": 20
+        }
+      ],
+      "reasoning": "Lower urinary symptoms, supportive urine findings, and no systemic features fit cystitis."
+    },
+    {
+      "id": "pyelo",
+      "label": "Pyelonephritis",
+      "effects": [
+        {
+          "category": "diagnosis",
+          "points": 3
+        }
+      ]
+    },
+    {
+      "id": "vaginitis",
+      "label": "Vaginitis or cervicitis",
+      "effects": [
+        {
+          "category": "diagnosis",
+          "points": 2
+        }
+      ]
+    }
+  ],
+  "planOptions": [
+    {
+      "id": "firstline",
+      "label": "Use an evidence-aligned first-line approach considering allergies, kidney function, and local guidance",
+      "group": "treatment",
+      "effects": [
+        {
+          "category": "treatment",
+          "points": 17
+        }
+      ]
+    },
+    {
+      "id": "fluids",
+      "label": "Encourage fluids and symptom relief",
+      "group": "counseling",
+      "effects": [
+        {
+          "category": "treatment",
+          "points": 6
+        }
+      ]
+    },
+    {
+      "id": "precautions",
+      "label": "Return urgently for fever, flank pain, vomiting, or worsening illness",
+      "group": "return",
+      "effects": [
+        {
+          "category": "treatment",
+          "points": 9
+        }
+      ]
+    },
+    {
+      "id": "followup",
+      "label": "Provide follow-up and culture-result instructions when applicable",
+      "group": "follow-up",
+      "effects": [
+        {
+          "category": "treatment",
+          "points": 6
+        }
+      ]
+    },
+    {
+      "id": "no-treatment",
+      "label": "Provide reassurance without treatment or follow-up",
+      "group": "disposition",
+      "effects": [
+        {
+          "category": "treatment",
+          "points": -10
+        }
+      ],
+      "unsafe": true,
+      "unsafeReason": "The findings support a symptomatic infection requiring a treatment plan."
+    }
+  ],
+  "correctPrimary": "cystitis",
+  "criticalRules": [],
+  "criticalWaivers": [
+    {
+      "optionId": "no-treatment",
+      "reason": "pending clinical review"
+    }
+  ],
+  "spoilerTerms": [
+    "cystitis",
+    "urinary tract infection",
+    "uti",
+    "bladder infection"
+  ],
+  "teachingPoints": [
+    "Treatment choices should be checked against allergies, kidney function, pregnancy status, and local guidance."
+  ],
+  "idealPlan": [
+    "Evidence-aligned treatment",
+    "Symptom relief",
+    "Escalation precautions",
+    "Follow-up instructions"
+  ],
+  "clinicalReferences": [
+    {
+      "title": "Adult Outpatient Treatment Recommendations",
+      "organization": "Centers for Disease Control and Prevention (CDC)",
+      "url": "https://www.cdc.gov/antibiotic-use/hcp/clinical-care/adult-outpatient.html",
+      "accessedAt": "2026-10-10",
+      "verified": true,
+      "specificity": "case-specific",
+      "notes": "The cystitis row supports the first-line approach. A pyelonephritis and vaginitis source is still needed, so this case needs additional case-specific sources."
+    }
+  ],
+  "taxonomy": {
+    "provenance": "author-proposed-unreviewed",
+    "organSystems": [
+      "genitourinary-system",
+      "infectious-diseases",
+      "reproductive-system"
+    ],
+    "panceTasks": [
+      "history-taking-physical-examination",
+      "using-diagnostic-laboratory-studies",
+      "pharmaceutical-therapeutics"
+    ],
+    "careSetting": "primary-care",
+    "acuity": "routine",
+    "ageGroup": "young-adult",
+    "eorRotations": [
+      "family-medicine",
+      "women-s-health"
+    ]
+  },
+  "lifecycle": {
+    "status": "draft",
+    "contentVersion": "2.0.1",
+    "reviews": [],
+    "nextReviewDue": "2027-10-10",
+    "openItems": [
+      "Needs review by a qualified clinician (PA-C, MD, DO, NP or PharmD).",
+      "Taxonomy tags are author-proposed and unreviewed."
+    ],
+    "changeLog": [
+      {
+        "version": "2.0.0",
+        "date": "2026-10-10",
+        "summary": "Schema 2.0: lifecycle, taxonomy and reference metadata added. History action id \"pyelo\" renamed to \"ask-flank-pain\" to remove a collision with the diagnosis id (breaking for stored ids)."
+      },
+      {
+        "version": "2.0.1",
+        "date": "2026-10-10",
+        "summary": "Taxonomy tags remapped to the NCCPA PANCE blueprint category names (unreviewed)."
+      }
+    ]
+  }
+}

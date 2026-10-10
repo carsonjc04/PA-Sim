@@ -8,8 +8,12 @@
     "dev:web": "vite",
     "dev:server": "tsx watch server/index.ts",
     "start": "tsx server/index.ts",
-    "build": "tsc -b && vite build && tsx scripts/check-bundle.ts",
+    "build": "npm run content:check && tsc -b && vite build && tsx scripts/check-bundle.ts",
     "typecheck": "tsc -b && tsc -p tsconfig.server.json",
+    "content:validate": "tsx scripts/content/validate.ts",
+    "content:check": "tsx scripts/content/validate.ts --strict && tsx scripts/content/coverage.ts --check",
+    "content:coverage": "tsx scripts/content/coverage.ts",
+    "content:lock": "tsx scripts/content/lock.ts",
     "lint": "oxlint",
     "test": "vitest run",
     "db:up": "docker compose up -d --wait",
@@ -50,5 +54,8 @@
     "typescript": "~6.0.2",
     "vite": "^8.3.0",
     "vitest": "^4.1.11"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }

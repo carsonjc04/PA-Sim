@@ -1,0 +1,139 @@
+{
+  "scenarioId": "asthma",
+  "contentVersion": "1.0.1",
+  "fixtures": [
+    {
+      "id": "happy",
+      "kind": "happy-path",
+      "description": "Rapid assessment, bronchodilator, steroid and follow-up.",
+      "selections": {
+        "history": [
+          "speak",
+          "rescue",
+          "trigger"
+        ],
+        "exam": [
+          "vitals",
+          "lungs",
+          "peak"
+        ],
+        "diagnostics": [
+          "reassess",
+          "xray"
+        ],
+        "diagnosis": [
+          "asthma-exac"
+        ],
+        "treatment": [
+          "bronchodilator",
+          "steroid",
+          "controller",
+          "escalate",
+          "followup"
+        ]
+      },
+      "expect": {
+        "rawScore": 80,
+        "finalScore": 80,
+        "passed": true,
+        "criticalSafetyError": false,
+        "missedCount": 0,
+        "unsafeCount": 0
+      }
+    },
+    {
+      "id": "wrong-diagnosis",
+      "kind": "wrong-path",
+      "description": "Anchors on pneumonia and delays testing.",
+      "selections": {
+        "history": [
+          "trigger"
+        ],
+        "exam": [
+          "lungs"
+        ],
+        "diagnostics": [
+          "xray"
+        ],
+        "diagnosis": [
+          "pneumonia"
+        ],
+        "treatment": [
+          "followup"
+        ]
+      },
+      "expect": {
+        "rawScore": 55,
+        "finalScore": 55,
+        "passed": false,
+        "criticalSafetyError": false,
+        "missedCount": 1,
+        "unsafeCount": 0
+      }
+    },
+    {
+      "id": "unsafe-discharge",
+      "kind": "critical-safety-miss",
+      "description": "Discharges a patient with unresolved severe respiratory compromise.",
+      "selections": {
+        "history": [
+          "speak",
+          "rescue",
+          "trigger"
+        ],
+        "exam": [
+          "vitals",
+          "lungs",
+          "peak"
+        ],
+        "diagnostics": [
+          "reassess"
+        ],
+        "diagnosis": [
+          "asthma-exac"
+        ],
+        "treatment": [
+          "discharge"
+        ]
+      },
+      "expect": {
+        "rawScore": 66,
+        "finalScore": 59,
+        "passed": false,
+        "criticalSafetyError": true,
+        "missedCount": 0,
+        "unsafeCount": 1
+      }
+    },
+    {
+      "id": "partial",
+      "kind": "partial-credit",
+      "description": "Right diagnosis and treatment, but skips vitals.",
+      "selections": {
+        "history": [
+          "speak"
+        ],
+        "exam": [
+          "lungs"
+        ],
+        "diagnostics": [
+          "reassess"
+        ],
+        "diagnosis": [
+          "asthma-exac"
+        ],
+        "treatment": [
+          "bronchodilator"
+        ]
+      },
+      "expect": {
+        "rawScore": 61,
+        "finalScore": 61,
+        "passed": false,
+        "criticalSafetyError": false,
+        "missedCount": 1,
+        "unsafeCount": 0
+      }
+    }
+  ]
+}

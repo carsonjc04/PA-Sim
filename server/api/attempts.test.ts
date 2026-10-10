@@ -1,7 +1,7 @@
 import request from 'supertest'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import type { PublicAttempt } from '../../src/api/contracts'
-import { scenarios } from '../../src/data/scenarios'
+import { scenarios } from '../content/scenarios'
 import type { ScenarioDefinition } from '../../src/domain/types'
 import { createApp } from '../app'
 import { noAuthProvider, setAuthProvider, devAuthProvider } from '../auth/context'

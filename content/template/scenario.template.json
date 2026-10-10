@@ -1,0 +1,318 @@
+{
+  "schemaVersion": "2.0",
+  "id": "template-example",
+  "summary": {
+    "title": "REPLACE: presenting problem in lay terms, no diagnosis",
+    "complaint": "REPLACE: chief complaint in the patient's words, no diagnosis",
+    "age": "30 years",
+    "pronouns": "they/them",
+    "difficulty": "Foundational",
+    "duration": "8-12 min",
+    "urgent": false,
+    "setting": "Primary care"
+  },
+  "patient": {
+    "name": "REPLACE: fictional name",
+    "demographics": "30-year-old adult",
+    "portrait": {
+      "alt": "Portrait placeholder for a fictional patient",
+      "fallback": "FP"
+    }
+  },
+  "clinician": {
+    "alt": "Portrait placeholder for PA student",
+    "fallback": "PA"
+  },
+  "opening": "REPLACE: first thing the patient says, no diagnosis.",
+  "initialInfo": [
+    "REPLACE: what is visible at the start, such as general appearance"
+  ],
+  "phases": [
+    {
+      "id": "history",
+      "label": "History",
+      "description": "Ask focused history questions.",
+      "actions": [
+        {
+          "id": "ask-onset",
+          "label": "Ask about onset and course",
+          "paText": "When did this start, and how has it changed?",
+          "response": "REPLACE: what the patient says. Original wording.",
+          "effects": [
+            {
+              "category": "history",
+              "points": 12
+            }
+          ]
+        },
+        {
+          "id": "ask-red-flags",
+          "label": "Screen for red flags",
+          "paText": "Any fever, weakness or trouble breathing?",
+          "response": "REPLACE: what the patient says.",
+          "effects": [
+            {
+              "category": "history",
+              "points": 10
+            }
+          ]
+        },
+        {
+          "id": "skip-history",
+          "label": "Skip further history",
+          "paText": "I do not need more history.",
+          "response": "REPLACE: consequence, in neutral wording.",
+          "effects": [
+            {
+              "category": "history",
+              "points": -6
+            }
+          ],
+          "unsafeReason": "REPLACE: why skipping is unsafe or low value."
+        }
+      ]
+    },
+    {
+      "id": "exam",
+      "label": "Exam",
+      "description": "Choose examination maneuvers.",
+      "actions": [
+        {
+          "id": "check-vitals",
+          "label": "Check vital signs",
+          "paText": "I will check your vital signs.",
+          "response": "REPLACE: findings.",
+          "effects": [
+            {
+              "category": "exam",
+              "points": 14
+            }
+          ]
+        },
+        {
+          "id": "focused-exam",
+          "label": "Perform a focused exam",
+          "paText": "I will examine the affected area.",
+          "response": "REPLACE: findings.",
+          "effects": [
+            {
+              "category": "exam",
+              "points": 10
+            }
+          ],
+          "rule": {
+            "requires": [
+              "check-vitals"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "diagnostics",
+      "label": "Diagnostics",
+      "description": "Order tests that change management.",
+      "actions": [
+        {
+          "id": "order-key-test",
+          "label": "Order the most informative test",
+          "paText": "I will order a test.",
+          "response": "REPLACE: result.",
+          "effects": [
+            {
+              "category": "diagnostics",
+              "points": 15
+            }
+          ]
+        },
+        {
+          "id": "order-low-value-test",
+          "label": "Order a low-value test",
+          "paText": "I will order a broad panel.",
+          "response": "REPLACE: result.",
+          "effects": [
+            {
+              "category": "diagnostics",
+              "points": -3
+            }
+          ],
+          "unsafeReason": "REPLACE: why this is low value."
+        }
+      ]
+    },
+    {
+      "id": "diagnosis",
+      "label": "Diagnosis",
+      "description": "Choose your primary diagnosis.",
+      "actions": []
+    },
+    {
+      "id": "treatment",
+      "label": "Treatment",
+      "description": "Choose treatment, disposition and follow-up.",
+      "actions": []
+    }
+  ],
+  "omissions": [
+    {
+      "id": "omit-red-flags",
+      "phase": "history",
+      "label": "Did not screen for red flags",
+      "when": [
+        "ask-red-flags"
+      ],
+      "effects": [
+        {
+          "category": "history",
+          "points": -10
+        }
+      ],
+      "feedback": "REPLACE: what was missed and why it matters."
+    }
+  ],
+  "diagnoses": [
+    {
+      "id": "example-correct",
+      "label": "REPLACE: correct diagnosis",
+      "primary": true,
+      "effects": [
+        {
+          "category": "diagnosis",
+          "points": 20
+        }
+      ],
+      "reasoning": "REPLACE: concise reasoning from the findings."
+    },
+    {
+      "id": "example-distractor-a",
+      "label": "REPLACE: plausible alternative",
+      "effects": [
+        {
+          "category": "diagnosis",
+          "points": 3
+        }
+      ]
+    },
+    {
+      "id": "example-distractor-b",
+      "label": "REPLACE: less likely alternative",
+      "effects": [
+        {
+          "category": "diagnosis",
+          "points": 1
+        }
+      ]
+    }
+  ],
+  "planOptions": [
+    {
+      "id": "plan-appropriate",
+      "label": "REPLACE: appropriate treatment",
+      "group": "treatment",
+      "effects": [
+        {
+          "category": "treatment",
+          "points": 16
+        }
+      ]
+    },
+    {
+      "id": "plan-counseling",
+      "label": "REPLACE: key counseling",
+      "group": "counseling",
+      "effects": [
+        {
+          "category": "treatment",
+          "points": 8
+        }
+      ]
+    },
+    {
+      "id": "plan-safe-disposition",
+      "label": "REPLACE: appropriate disposition",
+      "group": "disposition",
+      "effects": [
+        {
+          "category": "treatment",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "id": "plan-unsafe-disposition",
+      "label": "REPLACE: unsafe disposition",
+      "group": "disposition",
+      "effects": [
+        {
+          "category": "treatment",
+          "points": -15
+        }
+      ],
+      "unsafe": true,
+      "unsafeReason": "REPLACE: why this is unsafe."
+    }
+  ],
+  "correctPrimary": "example-correct",
+  "criticalRules": [
+    {
+      "id": "critical-unsafe-disposition",
+      "when": [
+        "plan-unsafe-disposition"
+      ],
+      "explanation": "REPLACE: the safety principle that was violated."
+    }
+  ],
+  "criticalWaivers": [],
+  "spoilerTerms": [
+    "REPLACE-with-synonyms-of-the-correct-diagnosis"
+  ],
+  "teachingPoints": [
+    "REPLACE: one original sentence of teaching, under 300 characters."
+  ],
+  "idealPlan": [
+    "REPLACE: a short ideal-plan item",
+    "REPLACE: another"
+  ],
+  "clinicalReferences": [
+    {
+      "title": "REPLACE: exact title of the source",
+      "organization": "REPLACE: publisher",
+      "url": "https://example.org/replace",
+      "accessedAt": "2026-10-10",
+      "specificity": "case-specific",
+      "verified": false,
+      "notes": "Set verified to true only after checking the source. Add publishedOrUpdated only when the source states a date."
+    }
+  ],
+  "taxonomy": {
+    "provenance": "author-proposed-unreviewed",
+    "organSystems": [
+      "pulmonary-system"
+    ],
+    "panceTasks": [
+      "history-taking-physical-examination"
+    ],
+    "careSetting": "primary-care",
+    "acuity": "routine",
+    "ageGroup": "young-adult",
+    "eorRotations": [
+      "family-medicine"
+    ]
+  },
+  "lifecycle": {
+    "status": "draft",
+    "contentVersion": "0.1.0",
+    "reviews": [],
+    "nextReviewDue": "2027-10-10",
+    "openItems": [
+      "Template: replace every REPLACE marker, then request clinician review."
+    ],
+    "changeLog": [
+      {
+        "version": "0.1.0",
+        "date": "2026-10-10",
+        "summary": "Initial draft from the template."
+      }
+    ]
+  }
+}

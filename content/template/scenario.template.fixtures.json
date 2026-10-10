@@ -1,0 +1,132 @@
+{
+  "scenarioId": "template-example",
+  "contentVersion": "0.1.0",
+  "fixtures": [
+    {
+      "id": "happy",
+      "kind": "happy-path",
+      "description": "Strong history, exam and test, correct diagnosis, safe plan.",
+      "selections": {
+        "history": [
+          "ask-onset",
+          "ask-red-flags"
+        ],
+        "exam": [
+          "check-vitals",
+          "focused-exam"
+        ],
+        "diagnostics": [
+          "order-key-test"
+        ],
+        "diagnosis": [
+          "example-correct"
+        ],
+        "treatment": [
+          "plan-appropriate",
+          "plan-counseling",
+          "plan-safe-disposition"
+        ]
+      },
+      "expect": {
+        "rawScore": 71,
+        "finalScore": 71,
+        "passed": true,
+        "criticalSafetyError": false,
+        "missedCount": 0,
+        "unsafeCount": 0
+      }
+    },
+    {
+      "id": "wrong-diagnosis",
+      "kind": "wrong-path",
+      "description": "Plausible but incorrect diagnosis.",
+      "selections": {
+        "history": [
+          "ask-onset"
+        ],
+        "exam": [
+          "check-vitals"
+        ],
+        "diagnostics": [
+          "order-low-value-test"
+        ],
+        "diagnosis": [
+          "example-distractor-a"
+        ],
+        "treatment": [
+          "plan-counseling"
+        ]
+      },
+      "expect": {
+        "rawScore": 54,
+        "finalScore": 54,
+        "passed": false,
+        "criticalSafetyError": false,
+        "missedCount": 1,
+        "unsafeCount": 1
+      }
+    },
+    {
+      "id": "unsafe-disposition",
+      "kind": "critical-safety-miss",
+      "description": "Unsafe disposition triggers the critical rule.",
+      "selections": {
+        "history": [
+          "ask-onset",
+          "ask-red-flags"
+        ],
+        "exam": [
+          "check-vitals",
+          "focused-exam"
+        ],
+        "diagnostics": [
+          "order-key-test"
+        ],
+        "diagnosis": [
+          "example-correct"
+        ],
+        "treatment": [
+          "plan-unsafe-disposition"
+        ]
+      },
+      "expect": {
+        "rawScore": 61,
+        "finalScore": 59,
+        "passed": false,
+        "criticalSafetyError": true,
+        "missedCount": 0,
+        "unsafeCount": 1
+      }
+    },
+    {
+      "id": "partial",
+      "kind": "partial-credit",
+      "description": "Correct diagnosis with an incomplete workup.",
+      "selections": {
+        "history": [
+          "ask-onset"
+        ],
+        "exam": [
+          "check-vitals"
+        ],
+        "diagnostics": [
+          "order-key-test"
+        ],
+        "diagnosis": [
+          "example-correct"
+        ],
+        "treatment": [
+          "plan-appropriate"
+        ]
+      },
+      "expect": {
+        "rawScore": 62,
+        "finalScore": 62,
+        "passed": false,
+        "criticalSafetyError": false,
+        "missedCount": 1,
+        "unsafeCount": 0
+      }
+    }
+  ]
+}

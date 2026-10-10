@@ -1,0 +1,385 @@
+{
+  "schemaVersion": "2.0",
+  "id": "metabolic",
+  "summary": {
+    "title": "Fatigue, thirst, and frequent urination",
+    "complaint": "Progressive fatigue, thirst, and urinary frequency",
+    "age": "52 years",
+    "pronouns": "he/him",
+    "difficulty": "Intermediate",
+    "duration": "10-14 min",
+    "urgent": false,
+    "setting": "Primary care"
+  },
+  "patient": {
+    "name": "Robert Alvarez",
+    "demographics": "52-year-old adult",
+    "portrait": {
+      "alt": "Portrait placeholder for Robert Alvarez, fictional patient",
+      "fallback": "RA"
+    }
+  },
+  "clinician": {
+    "alt": "Portrait placeholder for PA student",
+    "fallback": "PA"
+  },
+  "opening": "I am tired all the time and drinking water constantly. I am also up several times at night to urinate.",
+  "initialInfo": [
+    "Alert and conversational",
+    "Symptoms progressed over two months",
+    "No acute distress"
+  ],
+  "phases": [
+    {
+      "id": "history",
+      "label": "History",
+      "description": "Characterize metabolic symptoms and screen for urgent complications.",
+      "actions": [
+        {
+          "id": "timeline",
+          "label": "Clarify onset, weight change, and severity",
+          "paText": "When did this start, and have you noticed weight change?",
+          "response": "It has progressed over two months and I have lost about 12 pounds without trying.",
+          "effects": [
+            {
+              "category": "history",
+              "points": 12
+            }
+          ]
+        },
+        {
+          "id": "meds",
+          "label": "Review medications and family history",
+          "paText": "What medicines do you take, and does diabetes run in your family?",
+          "response": "I take a thiazide for blood pressure. My mother had type 2 diabetes.",
+          "effects": [
+            {
+              "category": "history",
+              "points": 10
+            }
+          ]
+        },
+        {
+          "id": "risks",
+          "label": "Assess cardiovascular risk and lifestyle context",
+          "paText": "Tell me about activity, nutrition, smoking, and cardiovascular history.",
+          "response": "Sedentary work, no smoking, and high blood pressure. No known heart disease.",
+          "effects": [
+            {
+              "category": "history",
+              "points": 10
+            }
+          ]
+        },
+        {
+          "id": "emergency",
+          "label": "Screen for vomiting, abdominal pain, confusion, or inability to hydrate",
+          "paText": "Any vomiting, abdominal pain, confusion, or trouble keeping fluids down?",
+          "response": "No. I can drink and keep food down, and I feel clear-headed.",
+          "effects": [
+            {
+              "category": "history",
+              "points": 12
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "exam",
+      "label": "Physical exam",
+      "description": "Establish baseline stability and risk.",
+      "actions": [
+        {
+          "id": "vitals",
+          "label": "Obtain vital signs and general appearance",
+          "paText": "I am checking your vital signs and general appearance.",
+          "response": "Blood pressure 146/88, heart rate 86, normal respiratory rate, comfortable appearance.",
+          "effects": [
+            {
+              "category": "exam",
+              "points": 12
+            }
+          ]
+        },
+        {
+          "id": "weight",
+          "label": "Measure weight and assess hydration",
+          "paText": "I will check weight and hydration status.",
+          "response": "BMI 32. Mildly dry mouth but no orthostasis.",
+          "effects": [
+            {
+              "category": "exam",
+              "points": 10
+            }
+          ]
+        },
+        {
+          "id": "foot",
+          "label": "Perform a focused foot and peripheral neurovascular assessment",
+          "paText": "I am checking your feet and peripheral sensation.",
+          "response": "Skin intact, pulses present, sensation grossly intact.",
+          "effects": [
+            {
+              "category": "exam",
+              "points": 10
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "diagnostics",
+      "label": "Diagnostics",
+      "description": "Confirm glycemia and begin baseline evaluation.",
+      "actions": [
+        {
+          "id": "glucose",
+          "label": "Order A1c and glucose-based testing",
+          "paText": "I will order A1c and glucose-based testing.",
+          "response": "A1c 8.6%; fasting glucose 184 mg/dL.",
+          "effects": [
+            {
+              "category": "diagnostics",
+              "points": 15
+            }
+          ]
+        },
+        {
+          "id": "baseline",
+          "label": "Assess kidney function, urine albumin, lipids, and related baseline risk",
+          "paText": "I will include baseline kidney, urine, and cardiovascular risk assessment.",
+          "response": "Creatinine is normal; urine albumin screening is negative; LDL is elevated.",
+          "effects": [
+            {
+              "category": "diagnostics",
+              "points": 12
+            }
+          ]
+        },
+        {
+          "id": "ketones",
+          "label": "Assess for emergency hyperglycemia when symptoms warrant",
+          "paText": "I will assess for ketones or urgent metabolic decompensation if indicated.",
+          "response": "No ketones or acidosis; the patient is stable for outpatient planning.",
+          "effects": [
+            {
+              "category": "diagnostics",
+              "points": 7
+            }
+          ]
+        },
+        {
+          "id": "head-ct",
+          "label": "Order head imaging for fatigue",
+          "paText": "I will order head imaging.",
+          "response": "No imaging result is available.",
+          "effects": [
+            {
+              "category": "diagnostics",
+              "points": -3
+            }
+          ],
+          "unsafeReason": "This does not address the leading metabolic concern."
+        }
+      ]
+    },
+    {
+      "id": "diagnosis",
+      "label": "Diagnosis",
+      "description": "Select the diagnosis and account for comorbid risk.",
+      "actions": []
+    },
+    {
+      "id": "treatment",
+      "label": "Treatment & follow-up",
+      "description": "Create a shared, staged chronic disease plan.",
+      "actions": []
+    }
+  ],
+  "omissions": [
+    {
+      "id": "omit-emergency",
+      "phase": "history",
+      "label": "Hyperglycemic emergency screen",
+      "when": [
+        "emergency"
+      ],
+      "effects": [
+        {
+          "category": "history",
+          "points": -12
+        }
+      ],
+      "feedback": "Urgent metabolic symptoms should be screened before outpatient planning."
+    }
+  ],
+  "diagnoses": [
+    {
+      "id": "t2dm",
+      "label": "Newly recognized type 2 diabetes",
+      "primary": true,
+      "effects": [
+        {
+          "category": "diagnosis",
+          "points": 20
+        }
+      ],
+      "reasoning": "Progressive polyuria, polydipsia, elevated A1c, and metabolic risk support type 2 diabetes."
+    },
+    {
+      "id": "di",
+      "label": "Diabetes insipidus",
+      "effects": [
+        {
+          "category": "diagnosis",
+          "points": 2
+        }
+      ]
+    },
+    {
+      "id": "thyroid",
+      "label": "Thyroid disease",
+      "effects": [
+        {
+          "category": "diagnosis",
+          "points": 3
+        }
+      ]
+    }
+  ],
+  "planOptions": [
+    {
+      "id": "shared",
+      "label": "Use patient-centered initial management based on severity, comorbidities, kidney function, preferences, and access",
+      "group": "treatment",
+      "effects": [
+        {
+          "category": "treatment",
+          "points": 18
+        }
+      ]
+    },
+    {
+      "id": "lifestyle",
+      "label": "Set specific nutrition, activity, and weight goals with support",
+      "group": "counseling",
+      "effects": [
+        {
+          "category": "treatment",
+          "points": 8
+        }
+      ]
+    },
+    {
+      "id": "risk",
+      "label": "Address blood pressure, lipids, smoking status, and preventive risk",
+      "group": "treatment",
+      "effects": [
+        {
+          "category": "treatment",
+          "points": 7
+        }
+      ]
+    },
+    {
+      "id": "followup",
+      "label": "Arrange timely follow-up for response, education, and complications screening",
+      "group": "follow-up",
+      "effects": [
+        {
+          "category": "treatment",
+          "points": 9
+        }
+      ]
+    },
+    {
+      "id": "ignore",
+      "label": "Reassure and return in one year",
+      "group": "disposition",
+      "effects": [
+        {
+          "category": "treatment",
+          "points": -10
+        }
+      ],
+      "unsafe": true,
+      "unsafeReason": "Newly recognized diabetes needs timely education, management, and monitoring."
+    }
+  ],
+  "correctPrimary": "t2dm",
+  "criticalRules": [],
+  "criticalWaivers": [
+    {
+      "optionId": "ignore",
+      "reason": "pending clinical review"
+    }
+  ],
+  "spoilerTerms": [
+    "type 2 diabetes",
+    "diabetes mellitus",
+    "t2dm",
+    "diabetes"
+  ],
+  "teachingPoints": [
+    "No single medication is universally correct; context and shared decision-making matter."
+  ],
+  "idealPlan": [
+    "Confirm and stage diabetes",
+    "Shared management plan",
+    "Risk reduction",
+    "Timely follow-up"
+  ],
+  "clinicalReferences": [
+    {
+      "title": "Standards of Care in Diabetes (Diabetes Care, volume 49, supplement 1)",
+      "organization": "American Diabetes Association",
+      "url": "https://diabetesjournals.org/care/issue/49/Supplement_1",
+      "accessedAt": "2026-10-10",
+      "specificity": "case-specific",
+      "verified": false,
+      "notes": "Title and edition taken from the earlier citation. The page returned 403 when fetched on 2026-10-10, so the title and date are unverified. Needs a case-specific section reference from a reviewer."
+    }
+  ],
+  "taxonomy": {
+    "provenance": "author-proposed-unreviewed",
+    "organSystems": [
+      "endocrine-system"
+    ],
+    "panceTasks": [
+      "history-taking-physical-examination",
+      "using-diagnostic-laboratory-studies",
+      "formulating-the-most-likely-diagnosis",
+      "patient-education"
+    ],
+    "careSetting": "primary-care",
+    "acuity": "routine",
+    "ageGroup": "middle-aged-adult",
+    "eorRotations": [
+      "family-medicine",
+      "internal-medicine"
+    ]
+  },
+  "lifecycle": {
+    "status": "draft",
+    "contentVersion": "1.0.1",
+    "reviews": [],
+    "nextReviewDue": "2027-10-10",
+    "openItems": [
+      "Needs review by a qualified clinician (PA-C, MD, DO, NP or PharmD).",
+      "Taxonomy tags are author-proposed and unreviewed."
+    ],
+    "changeLog": [
+      {
+        "version": "1.0.0",
+        "date": "2026-10-10",
+        "summary": "Schema 2.0: lifecycle, taxonomy and reference metadata added. No id changes."
+      },
+      {
+        "version": "1.0.1",
+        "date": "2026-10-10",
+        "summary": "Taxonomy tags remapped to the NCCPA PANCE blueprint category names (unreviewed)."
+      }
+    ]
+  }
+}

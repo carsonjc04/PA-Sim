@@ -16,7 +16,8 @@ npm run dev            # frontend on :5173, backend on :8787; migrations run at 
 `npm run dev:web` and `npm run dev:server` run the two halves separately.
 
 - Checks: `npm run typecheck`, `npm run lint`, `npm test`, and `npm run build`
-  (which also scans the bundle for answer-key leaks).
+  (which validates the content package in strict mode, then scans the bundle for answer-key leaks).
+- Content: `npm run content:validate`, `content:lock`, `content:coverage`. Node 22 or newer (`.nvmrc`).
 - `npm test` needs the Docker database. Each test file migrates its own
   isolated schema.
 - `npm run db:migrate` applies migrations without starting the server.
@@ -112,7 +113,7 @@ below the panel still completes the encounter and grades it identically.
 
 ## Architecture
 
-- `src/data/scenarios.ts` contains the five handcrafted scenario definitions.
+- `content/` holds the versioned content package: `manifest.json`, one JSON `ScenarioDefinition` plus fixtures per case, `taxonomy.json` and `lock.json`. `server/content/` validates and loads it.
   Server-only; a lint rule blocks browser imports.
 - `src/domain/types.ts` contains canonical domain types.
 - `src/domain/schema.ts` validates scenarios with Zod.
@@ -165,7 +166,7 @@ known limitations, and what the voice layer still needs.
 
 ## Scenario data and adding a sixth case
 
-Add another `ScenarioDefinition` to `src/data/scenarios.ts` (or split the data into one module per case), using stable IDs for every phase, action, diagnosis, plan item, omission, and critical rule. Include a non-spoiler summary, clinical references, `reviewStatus: "requires-clinician-review"`, and all five phases. Run `npm test` and `npm run build`; no encounter or results component should need to change. Editing an existing scenario creates a new content version on the next attempt; existing attempts keep grading against the version they started with.
+Cases are JSON under `content/` with a versioned manifest. Follow [docs/case-authoring-guide.md](docs/case-authoring-guide.md) and start from `content/template/scenario.template.json`. Run `npm run content:validate`, then `npm run content:lock` and `npm run content:coverage` when the version is final; no encounter or results component should need to change. An invalid package cannot start the server or pass `npm run build`. Editing an existing scenario creates a new content version on the next attempt; existing attempts keep grading against the version they started with.
 
 Rules are data-driven: action visibility can use `requires` and `excludes`, while grading refers only to stable IDs. Keep teaching text original and concise; references are metadata, not copied source material.
 

@@ -1,0 +1,144 @@
+{
+  "scenarioId": "metabolic",
+  "contentVersion": "1.0.1",
+  "fixtures": [
+    {
+      "id": "happy",
+      "kind": "happy-path",
+      "description": "Complete history, glucose testing and patient-centered plan.",
+      "selections": {
+        "history": [
+          "timeline",
+          "meds",
+          "risks",
+          "emergency"
+        ],
+        "exam": [
+          "vitals",
+          "weight",
+          "foot"
+        ],
+        "diagnostics": [
+          "glucose",
+          "baseline",
+          "ketones"
+        ],
+        "diagnosis": [
+          "t2dm"
+        ],
+        "treatment": [
+          "shared",
+          "lifestyle",
+          "risk",
+          "followup"
+        ]
+      },
+      "expect": {
+        "rawScore": 81,
+        "finalScore": 81,
+        "passed": true,
+        "criticalSafetyError": false,
+        "missedCount": 0,
+        "unsafeCount": 0
+      }
+    },
+    {
+      "id": "wrong-diagnosis",
+      "kind": "wrong-path",
+      "description": "Suspects a thyroid problem and orders head imaging.",
+      "selections": {
+        "history": [
+          "timeline"
+        ],
+        "exam": [
+          "vitals"
+        ],
+        "diagnostics": [
+          "head-ct"
+        ],
+        "diagnosis": [
+          "thyroid"
+        ],
+        "treatment": [
+          "lifestyle"
+        ]
+      },
+      "expect": {
+        "rawScore": 54,
+        "finalScore": 54,
+        "passed": false,
+        "criticalSafetyError": false,
+        "missedCount": 1,
+        "unsafeCount": 1
+      }
+    },
+    {
+      "id": "unsafe-ignore",
+      "kind": "critical-safety-miss",
+      "description": "Case has no critical rules yet (waiver pending clinical review). Reassuring and returning in a year is flagged unsafe but does not cap the score.",
+      "selections": {
+        "history": [
+          "timeline",
+          "meds",
+          "risks",
+          "emergency"
+        ],
+        "exam": [
+          "vitals",
+          "weight",
+          "foot"
+        ],
+        "diagnostics": [
+          "glucose",
+          "baseline",
+          "ketones"
+        ],
+        "diagnosis": [
+          "t2dm"
+        ],
+        "treatment": [
+          "ignore"
+        ]
+      },
+      "expect": {
+        "rawScore": 71,
+        "finalScore": 71,
+        "passed": true,
+        "criticalSafetyError": false,
+        "missedCount": 0,
+        "unsafeCount": 1
+      }
+    },
+    {
+      "id": "partial",
+      "kind": "partial-credit",
+      "description": "Right diagnosis, with the emergency screen and risk-factor review missing.",
+      "selections": {
+        "history": [
+          "timeline",
+          "meds"
+        ],
+        "exam": [
+          "vitals"
+        ],
+        "diagnostics": [
+          "glucose"
+        ],
+        "diagnosis": [
+          "t2dm"
+        ],
+        "treatment": [
+          "shared"
+        ]
+      },
+      "expect": {
+        "rawScore": 64,
+        "finalScore": 64,
+        "passed": false,
+        "criticalSafetyError": false,
+        "missedCount": 1,
+        "unsafeCount": 0
+      }
+    }
+  ]
+}

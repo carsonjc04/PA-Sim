@@ -1,0 +1,480 @@
+{
+  "schemaVersion": "2.0",
+  "id": "respiratory",
+  "summary": {
+    "title": "Cough and sore throat",
+    "complaint": "Several days of sore throat, cough, and fatigue",
+    "age": "28 years",
+    "pronouns": "she/her",
+    "difficulty": "Foundational",
+    "duration": "8-12 min",
+    "urgent": false,
+    "setting": "Primary care"
+  },
+  "patient": {
+    "name": "Maya Chen",
+    "demographics": "28-year-old adult",
+    "portrait": {
+      "alt": "Portrait placeholder for Maya Chen, fictional patient",
+      "fallback": "MC"
+    }
+  },
+  "clinician": {
+    "alt": "Portrait placeholder for PA student",
+    "fallback": "PA"
+  },
+  "opening": "I have felt run down for a few days. My throat hurts and I cannot stop coughing.",
+  "initialInfo": [
+    "Speaking comfortably in full sentences",
+    "No visible distress",
+    "Symptoms began four days ago"
+  ],
+  "phases": [
+    {
+      "id": "history",
+      "label": "History",
+      "description": "Clarify the timeline, associated symptoms, and safety concerns.",
+      "actions": [
+        {
+          "id": "duration",
+          "label": "Clarify symptom duration and progression",
+          "paText": "How have these symptoms changed since they started?",
+          "response": "They began four days ago and are slowly improving, though the cough is annoying.",
+          "effects": [
+            {
+              "category": "history",
+              "points": 12
+            },
+            {
+              "category": "communication",
+              "points": 3
+            }
+          ]
+        },
+        {
+          "id": "fever",
+          "label": "Ask about fever and chills",
+          "paText": "Have you had measured fever or chills?",
+          "response": "No measured fever. I felt warm the first night but no shaking chills.",
+          "effects": [
+            {
+              "category": "history",
+              "points": 8
+            }
+          ]
+        },
+        {
+          "id": "uri",
+          "label": "Ask about cough and nasal symptoms",
+          "paText": "Tell me about the cough, congestion, and drainage.",
+          "response": "It is a dry cough with runny nose and clear drainage.",
+          "effects": [
+            {
+              "category": "history",
+              "points": 10
+            }
+          ]
+        },
+        {
+          "id": "redflags",
+          "label": "Screen for dyspnea, chest pain, or swallowing difficulty",
+          "paText": "Any trouble breathing, chest pain, or trouble swallowing liquids?",
+          "response": "No chest pain or shortness of breath. Swallowing is uncomfortable but easy.",
+          "effects": [
+            {
+              "category": "history",
+              "points": 12
+            }
+          ]
+        },
+        {
+          "id": "exposure",
+          "label": "Ask about exposures and relevant risks",
+          "paText": "Any sick contacts, travel, pregnancy possibility, or immune conditions?",
+          "response": "A coworker had a cold. No travel, pregnancy possibility, or immune condition.",
+          "effects": [
+            {
+              "category": "history",
+              "points": 8
+            }
+          ]
+        },
+        {
+          "id": "antibiotic",
+          "label": "Ask for antibiotics immediately",
+          "paText": "Would you like an antibiotic today?",
+          "response": "I was hoping for one, but I am open to your advice.",
+          "effects": [
+            {
+              "category": "communication",
+              "points": 2
+            }
+          ],
+          "unsafeReason": "This frames antibiotics before completing an appropriate assessment."
+        }
+      ]
+    },
+    {
+      "id": "exam",
+      "label": "Physical exam",
+      "description": "Choose focused findings that distinguish a stable upper-respiratory illness.",
+      "actions": [
+        {
+          "id": "vitals",
+          "label": "Obtain vital signs",
+          "paText": "I would like to check your vital signs.",
+          "response": "Temperature 98.6 F, heart rate 78, respiratory rate 14, oxygen saturation 99% on room air.",
+          "effects": [
+            {
+              "category": "exam",
+              "points": 14
+            }
+          ]
+        },
+        {
+          "id": "appearance",
+          "label": "Assess general appearance and hydration",
+          "paText": "I am assessing your appearance and hydration.",
+          "response": "Comfortable, alert, and well hydrated.",
+          "effects": [
+            {
+              "category": "exam",
+              "points": 8
+            }
+          ]
+        },
+        {
+          "id": "throat",
+          "label": "Examine the oropharynx",
+          "paText": "Please open wide while I inspect your throat.",
+          "response": "Mild diffuse redness without tonsillar exudate, uvula deviation, or muffled voice.",
+          "effects": [
+            {
+              "category": "exam",
+              "points": 12
+            }
+          ]
+        },
+        {
+          "id": "nodes",
+          "label": "Palpate cervical lymph nodes",
+          "paText": "I am checking the lymph nodes in your neck.",
+          "response": "Small, mildly tender anterior nodes; no prominent posterior adenopathy.",
+          "effects": [
+            {
+              "category": "exam",
+              "points": 7
+            }
+          ]
+        },
+        {
+          "id": "lungs",
+          "label": "Auscultate the lungs",
+          "paText": "Take some slow deep breaths while I listen.",
+          "response": "Clear breath sounds bilaterally without wheeze or focal crackles.",
+          "effects": [
+            {
+              "category": "exam",
+              "points": 12
+            }
+          ]
+        },
+        {
+          "id": "imaging",
+          "label": "Order a chest x-ray now",
+          "paText": "I recommend a chest x-ray today.",
+          "response": "No imaging result is available because the stable exam does not suggest pneumonia.",
+          "effects": [
+            {
+              "category": "exam",
+              "points": -3
+            }
+          ],
+          "unsafeReason": "This is a low-value test in the authored stable presentation."
+        }
+      ]
+    },
+    {
+      "id": "diagnostics",
+      "label": "Diagnostics",
+      "description": "Use testing selectively and explain the clinical reasoning.",
+      "actions": [
+        {
+          "id": "no-test",
+          "label": "Choose supportive care without routine testing",
+          "paText": "Based on the stable exam, I do not recommend routine testing today.",
+          "response": "The presentation remains most consistent with a self-limited viral illness.",
+          "effects": [
+            {
+              "category": "diagnostics",
+              "points": 15
+            }
+          ]
+        },
+        {
+          "id": "rapid-strep-test",
+          "label": "Order a rapid strep test",
+          "paText": "I will order a rapid strep test.",
+          "response": "A rapid test is negative.",
+          "effects": [
+            {
+              "category": "diagnostics",
+              "points": 4
+            }
+          ]
+        },
+        {
+          "id": "flu",
+          "label": "Order broad viral testing",
+          "paText": "I will order a broad viral panel.",
+          "response": "No result is available immediately.",
+          "effects": [
+            {
+              "category": "diagnostics",
+              "points": -2
+            }
+          ],
+          "unsafeReason": "Broad testing is not necessary for this uncomplicated presentation."
+        },
+        {
+          "id": "cbc",
+          "label": "Order a CBC for routine reassurance",
+          "paText": "I will order a CBC for reassurance.",
+          "response": "No result is available immediately.",
+          "effects": [
+            {
+              "category": "diagnostics",
+              "points": -3
+            }
+          ],
+          "unsafeReason": "This adds low-value testing without changing the plan."
+        }
+      ]
+    },
+    {
+      "id": "diagnosis",
+      "label": "Diagnosis",
+      "description": "Name the leading diagnosis and reasonable alternatives.",
+      "actions": []
+    },
+    {
+      "id": "treatment",
+      "label": "Treatment & follow-up",
+      "description": "Build a patient-centered plan with safety-netting.",
+      "actions": []
+    }
+  ],
+  "omissions": [
+    {
+      "id": "omit-redflags",
+      "phase": "history",
+      "label": "Safety screening",
+      "when": [
+        "redflags"
+      ],
+      "effects": [
+        {
+          "category": "history",
+          "points": -10
+        }
+      ],
+      "feedback": "A brief screen for breathing, chest pain, and swallowing difficulty is important."
+    },
+    {
+      "id": "omit-lungs",
+      "phase": "exam",
+      "label": "Lung assessment",
+      "when": [
+        "lungs"
+      ],
+      "effects": [
+        {
+          "category": "exam",
+          "points": -10
+        }
+      ],
+      "feedback": "A focused lung exam helps support the absence of pneumonia or bronchospasm."
+    }
+  ],
+  "diagnoses": [
+    {
+      "id": "viral-uri",
+      "label": "Viral upper-respiratory infection",
+      "primary": true,
+      "effects": [
+        {
+          "category": "diagnosis",
+          "points": 20
+        }
+      ],
+      "reasoning": "Cough, rhinorrhea, stable vital signs, and a nonfocal exam support a viral URI."
+    },
+    {
+      "id": "strep",
+      "label": "Group A streptococcal pharyngitis",
+      "effects": [
+        {
+          "category": "diagnosis",
+          "points": 2
+        }
+      ]
+    },
+    {
+      "id": "pneumonia",
+      "label": "Community-acquired pneumonia",
+      "effects": [
+        {
+          "category": "diagnosis",
+          "points": 0
+        }
+      ]
+    }
+  ],
+  "planOptions": [
+    {
+      "id": "supportive",
+      "label": "Supportive care and symptom relief",
+      "group": "treatment",
+      "effects": [
+        {
+          "category": "treatment",
+          "points": 16
+        }
+      ]
+    },
+    {
+      "id": "antibiotics",
+      "label": "Prescribe antibiotics for presumed bacterial infection",
+      "group": "treatment",
+      "effects": [
+        {
+          "category": "treatment",
+          "points": -8
+        }
+      ],
+      "unsafe": true,
+      "unsafeReason": "The authored findings do not support routine antibiotics."
+    },
+    {
+      "id": "course",
+      "label": "Explain expected course and hydration",
+      "group": "counseling",
+      "effects": [
+        {
+          "category": "treatment",
+          "points": 8
+        }
+      ]
+    },
+    {
+      "id": "return",
+      "label": "Return for breathing difficulty, dehydration, or worsening symptoms",
+      "group": "return",
+      "effects": [
+        {
+          "category": "treatment",
+          "points": 8
+        }
+      ]
+    },
+    {
+      "id": "followup",
+      "label": "Follow up if not improving or as clinically needed",
+      "group": "follow-up",
+      "effects": [
+        {
+          "category": "treatment",
+          "points": 5
+        }
+      ]
+    },
+    {
+      "id": "ed",
+      "label": "Send to emergency department now",
+      "group": "disposition",
+      "effects": [
+        {
+          "category": "treatment",
+          "points": -2
+        }
+      ]
+    }
+  ],
+  "correctPrimary": "viral-uri",
+  "criticalRules": [],
+  "criticalWaivers": [
+    {
+      "optionId": "antibiotics",
+      "reason": "pending clinical review"
+    }
+  ],
+  "spoilerTerms": [
+    "viral upper respiratory",
+    "viral uri",
+    "common cold",
+    "upper respiratory infection",
+    "viral infection"
+  ],
+  "teachingPoints": [
+    "Antibiotics do not improve uncomplicated viral respiratory illness.",
+    "Safety-net advice should be specific and understandable."
+  ],
+  "idealPlan": [
+    "Supportive care",
+    "Expected-course counseling",
+    "Clear return precautions",
+    "Follow-up if symptoms persist"
+  ],
+  "clinicalReferences": [
+    {
+      "title": "Adult Outpatient Treatment Recommendations",
+      "organization": "Centers for Disease Control and Prevention (CDC)",
+      "url": "https://www.cdc.gov/antibiotic-use/hcp/clinical-care/adult-outpatient.html",
+      "accessedAt": "2026-10-10",
+      "verified": true,
+      "specificity": "case-specific",
+      "notes": "Covers pharyngitis, the common cold/URI and acute bronchitis. Verified title; the page does not state a publication date in the text that could be retrieved."
+    }
+  ],
+  "taxonomy": {
+    "provenance": "author-proposed-unreviewed",
+    "organSystems": [
+      "pulmonary-system",
+      "eyes-ears-nose-throat",
+      "infectious-diseases"
+    ],
+    "panceTasks": [
+      "history-taking-physical-examination",
+      "formulating-the-most-likely-diagnosis",
+      "pharmaceutical-therapeutics"
+    ],
+    "careSetting": "primary-care",
+    "acuity": "routine",
+    "ageGroup": "young-adult",
+    "eorRotations": [
+      "family-medicine"
+    ]
+  },
+  "lifecycle": {
+    "status": "draft",
+    "contentVersion": "2.0.1",
+    "reviews": [],
+    "nextReviewDue": "2027-10-10",
+    "openItems": [
+      "Needs review by a qualified clinician (PA-C, MD, DO, NP or PharmD).",
+      "Taxonomy tags are author-proposed and unreviewed."
+    ],
+    "changeLog": [
+      {
+        "version": "2.0.0",
+        "date": "2026-10-10",
+        "summary": "Schema 2.0: lifecycle, taxonomy and reference metadata added. Action id \"strep\" renamed to \"rapid-strep-test\" to remove a collision with the diagnosis id (breaking for stored ids)."
+      },
+      {
+        "version": "2.0.1",
+        "date": "2026-10-10",
+        "summary": "Taxonomy tags remapped to the NCCPA PANCE blueprint category names (unreviewed)."
+      }
+    ]
+  }
+}

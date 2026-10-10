@@ -1,6 +1,6 @@
 import request from 'supertest'
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
-import { scenarios } from '../../src/data/scenarios'
+import { scenarios } from '../content/scenarios'
 import type { ScenarioDefinition } from '../../src/domain/types'
 import { createApp } from '../app'
 import { setOpenAIClient } from '../openai/client'

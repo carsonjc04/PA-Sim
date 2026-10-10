@@ -1,0 +1,5 @@
+# Clinical content changes need the designated maintainer's review. Approval of a case
+# (lifecycle.status = approved) happens only in a reviewed pull request touching these paths.
+/content/ @carsonjc04
+/docs/content-status.md @carsonjc04
+/docs/content-coverage.md @carsonjc04

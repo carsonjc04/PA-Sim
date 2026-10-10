@@ -28,8 +28,14 @@ export function toPublicScenario(s: ScenarioDefinition): PublicScenario {
     })),
     diagnoses: s.diagnoses.map((d) => ({ id: d.id, label: d.label })),
     planOptions: s.planOptions.map((p) => ({ id: p.id, label: p.label, group: p.group })),
-    reviewStatus: s.reviewStatus,
-    clinicalReferences: s.clinicalReferences.map((r) => ({ ...r })),
+    reviewStatus: s.lifecycle.status === 'approved' ? 'clinician-reviewed' : 'requires-clinician-review',
+    // Provenance only: verification state, notes and review records stay server-side.
+    clinicalReferences: s.clinicalReferences.map((r) => ({
+      title: r.title,
+      organization: r.organization,
+      url: r.url,
+      ...(r.publishedOrUpdated ? { publishedOrUpdated: r.publishedOrUpdated } : {}),
+    })),
   }
 }
 

@@ -58,7 +58,7 @@ export type ApiErrorCode =
   | 'auth_required'
   | 'auth_unavailable'
   | 'database_unavailable'
-  | 'scenario_not_found'
+  | 'scenario_not_found' | 'scenario_retired'
   | 'attempt_not_found'
   | 'attempt_submitted'
   | 'unknown_tool'
@@ -108,8 +108,9 @@ export interface PublicScenario {
   phases: { id: PhaseId; label: string; description: string; actions: PublicAction[] }[]
   diagnoses: { id: string; label: string }[]
   planOptions: { id: string; label: string; group: string }[]
-  reviewStatus: string
-  clinicalReferences: { title: string; organization: string; url: string; reviewed: string }[]
+  /** Coarse label only: reviewer, dates, notes and lifecycle status are maintainer data. */
+  reviewStatus: 'requires-clinician-review' | 'clinician-reviewed'
+  clinicalReferences: { title: string; organization: string; url: string; publishedOrUpdated?: string }[]
 }
 
 export interface PublicEvent {

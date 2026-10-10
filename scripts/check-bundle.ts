@@ -1,7 +1,7 @@
 // Fails the build if answer-key fields, hidden case text or prompts reach the browser bundle.
 import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { scenarios } from '../src/data/scenarios'
+import { scenarios } from '../server/content/scenarios'
 
 const dir = 'dist/assets'
 const bundle = readdirSync(dir)
@@ -17,6 +17,12 @@ const markers = [
   'You are speaking with a physician assistant',
   'Hard limits',
   'OPENAI_API_KEY',
+  'criticalWaivers',
+  'spoilerTerms',
+  'nextReviewDue',
+  'reviewerRole',
+  'author-proposed-unreviewed',
+  'pending clinical review',
   ...scenarios.flatMap((s) => [
     ...s.teachingPoints,
     ...s.idealPlan,
@@ -24,6 +30,9 @@ const markers = [
     ...s.criticalRules.map((r) => r.explanation),
     ...s.omissions.map((o) => o.feedback),
     ...s.phases.flatMap((p) => p.actions.map((a) => a.response)),
+    ...s.lifecycle.openItems,
+    ...s.lifecycle.changeLog.map((c) => c.summary),
+    ...s.clinicalReferences.map((r) => r.notes ?? ''),
   ]),
 ].filter((m) => m.length > 8)
 

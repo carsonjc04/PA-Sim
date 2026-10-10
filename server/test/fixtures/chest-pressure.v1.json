@@ -1,0 +1,350 @@
+{
+  "schemaVersion": "1.0",
+  "id": "chest-pressure",
+  "summary": {
+    "title": "Chest pressure with sweating",
+    "complaint": "New central chest pressure with nausea and diaphoresis",
+    "age": "64 years",
+    "pronouns": "he/him",
+    "difficulty": "Urgent",
+    "duration": "8-12 min",
+    "urgent": true,
+    "setting": "Primary care"
+  },
+  "patient": {
+    "name": "Thomas Reed",
+    "demographics": "64-year-old adult",
+    "portrait": {
+      "alt": "Portrait placeholder for Thomas Reed, fictional patient",
+      "fallback": "TR"
+    }
+  },
+  "clinician": {
+    "alt": "Portrait placeholder for PA student",
+    "fallback": "PA"
+  },
+  "opening": "I have pressure in the middle of my chest, and I am sweating. It started when I was walking in from the parking lot.",
+  "initialInfo": [
+    "Pale and diaphoretic",
+    "Alert but anxious",
+    "Central pressure is ongoing"
+  ],
+  "phases": [
+    {
+      "id": "history",
+      "label": "History",
+      "description": "Recognize a time-sensitive emergency while gathering focused information.",
+      "actions": [
+        {
+          "id": "onset",
+          "label": "Clarify onset, quality, radiation, and exertional nature",
+          "paText": "When did the pressure begin, and does it spread anywhere?",
+          "response": "It began 25 minutes ago with exertion, feels heavy, and radiates to my left arm.",
+          "effects": [
+            {
+              "category": "history",
+              "points": 14
+            }
+          ]
+        },
+        {
+          "id": "associated",
+          "label": "Ask about nausea, sweating, dyspnea, and syncope",
+          "paText": "Any nausea, sweating, shortness of breath, or fainting?",
+          "response": "I am nauseated and sweaty, but I have not fainted.",
+          "effects": [
+            {
+              "category": "history",
+              "points": 12
+            }
+          ]
+        },
+        {
+          "id": "risk",
+          "label": "Review cardiovascular risks and medication/allergy/bleeding history",
+          "paText": "Tell me about heart risks, medicines, allergies, and bleeding history.",
+          "response": "I have hypertension, diabetes, and high cholesterol. No known medication allergy or recent bleeding.",
+          "effects": [
+            {
+              "category": "history",
+              "points": 10
+            }
+          ]
+        },
+        {
+          "id": "routine",
+          "label": "Complete a routine outpatient workup before considering emergency transfer",
+          "paText": "We will start a routine outpatient workup and decide later.",
+          "response": "The pressure continues and the patient remains diaphoretic.",
+          "effects": [
+            {
+              "category": "history",
+              "points": -8
+            }
+          ],
+          "unsafeReason": "Time-sensitive emergency evaluation should not be delayed."
+        }
+      ]
+    },
+    {
+      "id": "exam",
+      "label": "Physical exam",
+      "description": "Assess immediate stability without losing time.",
+      "actions": [
+        {
+          "id": "stability",
+          "label": "Immediately assess airway, breathing, circulation, and vital signs",
+          "paText": "I am checking your immediate stability and vital signs.",
+          "response": "Blood pressure 158/94, pulse 104, respiratory rate 20, oxygen saturation 96%.",
+          "effects": [
+            {
+              "category": "exam",
+              "points": 15
+            }
+          ]
+        },
+        {
+          "id": "focused",
+          "label": "Perform a focused cardiopulmonary exam",
+          "paText": "I am listening to your heart and lungs and checking perfusion.",
+          "response": "No focal lung crackles; skin is cool and clammy.",
+          "effects": [
+            {
+              "category": "exam",
+              "points": 10
+            }
+          ]
+        },
+        {
+          "id": "routine-exam",
+          "label": "Perform a lengthy nonurgent examination first",
+          "paText": "I will complete a comprehensive routine examination.",
+          "response": "The patient remains symptomatic while time passes.",
+          "effects": [
+            {
+              "category": "exam",
+              "points": -5
+            }
+          ],
+          "unsafeReason": "Do not let a lengthy routine exam delay emergency activation."
+        }
+      ]
+    },
+    {
+      "id": "diagnostics",
+      "label": "Diagnostics",
+      "description": "Obtain an ECG when available without delaying transfer.",
+      "actions": [
+        {
+          "id": "ecg",
+          "label": "Obtain an ECG immediately if available without delaying EMS",
+          "paText": "We will obtain an ECG while emergency transfer is activated.",
+          "response": "ECG shows concerning ischemic changes; emergency evaluation remains required.",
+          "effects": [
+            {
+              "category": "diagnostics",
+              "points": 15
+            }
+          ]
+        },
+        {
+          "id": "ems",
+          "label": "Activate emergency medical services now",
+          "paText": "I am activating EMS for emergency transfer.",
+          "response": "EMS is dispatched and the patient is monitored while awaiting transport.",
+          "effects": [
+            {
+              "category": "diagnostics",
+              "points": 15
+            }
+          ]
+        },
+        {
+          "id": "outpatient",
+          "label": "Order outpatient stress testing and send the patient home",
+          "paText": "I will arrange outpatient testing and discharge you.",
+          "response": "The patient remains symptomatic and has not received emergency evaluation.",
+          "effects": [
+            {
+              "category": "diagnostics",
+              "points": -10
+            }
+          ],
+          "unsafeReason": "Outpatient testing is not an adequate response to ongoing suspected ACS."
+        }
+      ]
+    },
+    {
+      "id": "diagnosis",
+      "label": "Diagnosis",
+      "description": "Name the leading emergency diagnosis.",
+      "actions": []
+    },
+    {
+      "id": "treatment",
+      "label": "Treatment & disposition",
+      "description": "Prioritize emergency disposition and safe transport.",
+      "actions": []
+    }
+  ],
+  "omissions": [
+    {
+      "id": "omit-ems",
+      "phase": "diagnostics",
+      "label": "Emergency activation",
+      "when": [
+        "ems"
+      ],
+      "effects": [
+        {
+          "category": "diagnostics",
+          "points": -25
+        }
+      ],
+      "feedback": "Suspected ACS requires emergency activation rather than outpatient completion."
+    }
+  ],
+  "diagnoses": [
+    {
+      "id": "acs",
+      "label": "Suspected acute coronary syndrome",
+      "primary": true,
+      "effects": [
+        {
+          "category": "diagnosis",
+          "points": 20
+        }
+      ],
+      "reasoning": "Exertional central pressure with radiation, diaphoresis, nausea, and risk factors is concerning for ACS."
+    },
+    {
+      "id": "gerd",
+      "label": "Gastroesophageal reflux",
+      "effects": [
+        {
+          "category": "diagnosis",
+          "points": 0
+        }
+      ]
+    },
+    {
+      "id": "musculoskeletal",
+      "label": "Musculoskeletal chest pain",
+      "effects": [
+        {
+          "category": "diagnosis",
+          "points": 0
+        }
+      ]
+    }
+  ],
+  "planOptions": [
+    {
+      "id": "ems",
+      "label": "Activate EMS and arrange emergency transfer",
+      "group": "disposition",
+      "effects": [
+        {
+          "category": "treatment",
+          "points": 20
+        }
+      ]
+    },
+    {
+      "id": "monitor",
+      "label": "Monitor the patient and provide immediate clinic measures within protocol and scope",
+      "group": "treatment",
+      "effects": [
+        {
+          "category": "treatment",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "id": "no-drive",
+      "label": "Do not allow the patient to drive themselves",
+      "group": "return",
+      "effects": [
+        {
+          "category": "treatment",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "id": "handoff",
+      "label": "Give a focused handoff with history, findings, ECG, medicines, and allergies",
+      "group": "follow-up",
+      "effects": [
+        {
+          "category": "treatment",
+          "points": 8
+        }
+      ]
+    },
+    {
+      "id": "self-drive",
+      "label": "Tell the patient to drive themselves to the emergency department",
+      "group": "disposition",
+      "effects": [
+        {
+          "category": "treatment",
+          "points": -20
+        }
+      ],
+      "unsafe": true,
+      "unsafeReason": "A symptomatic patient with suspected ACS should not self-transport."
+    },
+    {
+      "id": "discharge",
+      "label": "Discharge with routine outpatient follow-up",
+      "group": "disposition",
+      "effects": [
+        {
+          "category": "treatment",
+          "points": -20
+        }
+      ],
+      "unsafe": true,
+      "unsafeReason": "Ongoing suspected ACS requires emergency evaluation now."
+    }
+  ],
+  "correctPrimary": "acs",
+  "criticalRules": [
+    {
+      "id": "no-ems",
+      "when": [
+        "outpatient",
+        "discharge"
+      ],
+      "explanation": "Routine outpatient disposition is unsafe for ongoing suspected acute coronary syndrome."
+    },
+    {
+      "id": "self-transport",
+      "when": [
+        "self-drive"
+      ],
+      "explanation": "The patient should not drive themselves during a suspected cardiac emergency."
+    }
+  ],
+  "teachingPoints": [
+    "Emergency disposition takes priority over completing a routine outpatient workup.",
+    "ECG acquisition should not delay EMS activation."
+  ],
+  "idealPlan": [
+    "Activate EMS",
+    "Immediate stability assessment",
+    "ECG without delay",
+    "Safe monitored transfer"
+  ],
+  "clinicalReferences": [
+    {
+      "title": "Acute Coronary Syndromes Guideline",
+      "organization": "ACC/AHA/ACEP/NAEMSP/SCAI",
+      "url": "https://www.ahajournals.org/journal/circ",
+      "reviewed": "2026-09-19"
+    }
+  ],
+  "reviewStatus": "requires-clinician-review"
+}

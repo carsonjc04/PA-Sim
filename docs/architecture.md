@@ -30,7 +30,7 @@ React (src/App.tsx, src/features)      no scenario data, no grading, no SQL
 Boundaries are enforced, not just conventional:
 
 - `.oxlintrc.json` forbids non-test browser code from importing `server/**`,
-  `pg`, `data/scenarios`, `domain/grading` or `domain/schema`.
+  `pg`, `server/content`, `domain/grading` or `domain/schema`.
 - `npm run build` runs `scripts/check-bundle.ts`, which fails if any answer-key
   field name, hidden case text, unperformed finding or prompt marker appears
   in `dist/assets/*.js`.
@@ -53,6 +53,12 @@ Migration `0001_attempts.sql`:
 | `attempt_events`   | Append-only, ordered by `seq`: `action`, `phase_locked`, `live_started`. Each event records phase, action ID, kind, confirmed flag, revealed text and source. Retracting sets `retracted_at` and deletes nothing. |
 | `idempotency_keys` | `(attempt_id, key)` maps to the request hash and stored response.                                                                                                                                                 |
 | `attempt_results`  | One row per attempt. Holds grading version, content version, input digest, scores and the full `GradingResult`.                                                                                                   |
+
+Migration `0002_content_version_metadata.sql` adds `content_semver`,
+`manifest_version` and `lifecycle_status` to `content_versions`. They are NULL
+for rows written before Phase 3. Snapshots stored before schema 2.0 are read
+through `server/content/legacy.ts`, which fills the missing administrative
+fields at read time and never rewrites the stored row.
 
 **Why results stay explainable after content changes.**
 
@@ -153,6 +159,29 @@ The UI offers only to delete the local data. A future import would need real
 authentication, explicit user consent per record, and re-grading against a
 known content version, with imported rows clearly labeled.
 
+## Content package
+
+Cases live in `content/` (see `docs/case-authoring-guide.md`): a versioned
+`manifest.json`, one JSON `ScenarioDefinition` and one fixtures file per case,
+`taxonomy.json`, and `lock.json` with a fingerprint per released version.
+`ScenarioDefinition` and its stable IDs remain the canonical contract.
+
+- `server/content/validate.ts` is a pure function used by the CLI
+  (`npm run content:validate`), the server startup guard and the build.
+- `server/content/startup-check.ts` runs first in `server/index.ts`. An invalid
+  package makes the process exit non-zero before the app, database or listener
+  load. `CONTENT_DIR` is honoured outside production only.
+- `npm run build` starts with `content:check` (strict validation plus a check that
+  the generated reports are current), so an invalid package cannot ship.
+- Two identities per snapshot: `contentVersionId` (`<id>@<hash>`, exact) and
+  `lifecycle.contentVersion` (semantic, human-readable). The grading version is
+  stored on each result.
+- Lifecycle, reviews, notes, waivers, taxonomy and open items are maintainer
+  data. They never enter a projection. Learners get a coarse label only.
+- Retired cases stay in the manifest with `published: false`. They disappear
+  from the catalogue and `POST /api/attempts` returns 410 `scenario_retired`;
+  stored attempts still load from their pinned snapshot.
+
 ## Hidden state
 
 The browser receives only allowlisted projections built in
@@ -161,7 +190,7 @@ The browser receives only allowlisted projections built in
 - `toPublicScenario`, `toPublicAttempt`, `toPublicDebrief` and
   `toAttemptSummary` name the fields to include. A field added to the schema
   later cannot leak because someone forgot to delete it.
-- **Never sent:** `correctPrimary`, `criticalRules`, `omissions`, `effects`,
+- **Never sent:** `correctPrimary`, `criticalRules`, `criticalWaivers`, `omissions`, `effects`, `lifecycle`, reviews, reference notes, `taxonomy`,
   `rule`, `unsafeReason`, scoring weights, content `definition`, unperformed
   action `response`s, prompts, and system events (e.g. live session details).
 - **Before submission:** no debrief.

@@ -1,8 +1,10 @@
+import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { scenarios } from '../data/scenarios'
-import { validateScenarios } from './schema'
-import { GRADING_VERSION, gradeAttempt } from './grading'
-import type { Attempt } from './types'
+import { scenarios } from './scenarios'
+import { validateScenarios } from '../../src/domain/schema'
+import { GRADING_VERSION, gradeAttempt } from '../../src/domain/grading'
+import type { Attempt } from '../../src/domain/types'
+import { upgradeStoredDefinition } from './legacy'
 
 const blank = (scenarioId: string): Attempt => ({id:'test',scenarioId,startedAt:'2026-01-01',selectedByPhase:{history:[],exam:[],diagnostics:[],diagnosis:[],treatment:[]},phaseLocks:[],revealed:[],submitted:true})
 
@@ -39,15 +41,15 @@ describe('deterministic grading', () => {
 })
 
 describe('grading version pin', () => {
-  // Stored results cite GRADING_VERSION. If this snapshot changes, bump GRADING_VERSION in grading.ts.
-  it('produces the pinned result for a fixed attempt under the current version', () => {
-    const scenario = scenarios.find(s => s.id === 'chest-pressure')!
-    const attempt = blank(scenario.id)
+  // Stored results cite GRADING_VERSION. If these snapshots change, bump GRADING_VERSION in grading.ts.
+  it('still grades a stored schema-1.0 snapshot exactly as before (grader unchanged by Phase 3)', () => {
+    const legacy = upgradeStoredDefinition(JSON.parse(readFileSync(new URL('../test/fixtures/chest-pressure.v1.json', import.meta.url), 'utf8')))
+    const attempt = blank(legacy.id)
     attempt.selectedByPhase.history = ['onset', 'associated']
     attempt.selectedByPhase.diagnostics = ['ecg', 'ems']
     attempt.selectedByPhase.diagnosis = ['acs']
     attempt.selectedByPhase.treatment = ['ems', 'discharge']
-    const r = gradeAttempt(scenario, attempt)
+    const r = gradeAttempt(legacy, attempt)
     expect({ version: GRADING_VERSION, categoryScores: r.categoryScores, raw: r.rawScore, final: r.finalScore, passed: r.passed, critical: r.criticalSafetyError }).toMatchInlineSnapshot(`
       {
         "categoryScores": {
@@ -65,6 +67,40 @@ describe('grading version pin', () => {
         "version": "grading-2026-10-09.1",
       }
     `)
+  })
+
+  it('produces the pinned result for current content with unique IDs', () => {
+    const scenario = scenarios.find(s => s.id === 'chest-pressure')!
+    const attempt = blank(scenario.id)
+    attempt.selectedByPhase.history = ['onset', 'associated']
+    attempt.selectedByPhase.diagnostics = ['ecg', 'activate-ems-now']
+    attempt.selectedByPhase.diagnosis = ['acs']
+    attempt.selectedByPhase.treatment = ['ems', 'discharge']
+    const r = gradeAttempt(scenario, attempt)
+    expect({ contentVersion: scenario.lifecycle.contentVersion, categoryScores: r.categoryScores, raw: r.rawScore, final: r.finalScore, passed: r.passed, critical: r.criticalSafetyError }).toMatchInlineSnapshot(`
+      {
+        "categoryScores": {
+          "communication": 50,
+          "diagnosis": 70,
+          "diagnostics": 80,
+          "exam": 50,
+          "history": 76,
+          "treatment": 50,
+        },
+        "contentVersion": "2.0.1",
+        "critical": true,
+        "final": 59,
+        "passed": false,
+        "raw": 64,
+      }
+    `)
+  })
+
+  it('no longer lets a diagnostics action score as a plan option (ID collision fixed)', () => {
+    const scenario = scenarios.find(s => s.id === 'chest-pressure')!
+    const attempt = blank(scenario.id)
+    attempt.selectedByPhase.diagnostics = ['activate-ems-now']
+    expect(gradeAttempt(scenario, attempt).categoryScores.treatment).toBe(50)
   })
 })
 

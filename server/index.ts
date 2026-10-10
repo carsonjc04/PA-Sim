@@ -1,4 +1,5 @@
 import 'dotenv/config'
+import './content/startup-check'
 import { createApp } from './app'
 import { aiEnabled, env, insecureAuth } from './config/env'
 import { migrate } from './db/migrate'

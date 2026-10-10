@@ -8,14 +8,14 @@
   "overrides": [
     {
       "files": ["src/**/*.ts", "src/**/*.tsx"],
-      "excludeFiles": ["src/**/*.test.ts", "src/**/*.test.tsx", "src/domain/**", "src/data/**"],
+      "excludeFiles": ["src/**/*.test.ts", "src/**/*.test.tsx", "src/domain/**"],
       "rules": {
         "no-restricted-imports": [
           "error",
           {
             "patterns": [
               { "group": ["**/server/**", "pg"], "message": "Browser code must not import server or database modules." },
-              { "group": ["**/data/scenarios", "**/domain/grading", "**/domain/schema"], "message": "Scenario data and grading are server-only; use the API client." }
+              { "group": ["**/domain/grading", "**/domain/schema", "**/server/content/**", "**/content/*.json"], "message": "Scenario content and grading are server-only; use the API client." }
             ]
           }
         ]

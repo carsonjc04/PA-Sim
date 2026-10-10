@@ -1,6 +1,7 @@
 // The only module that issues SQL for users, attempts, events and results.
 import { randomUUID } from 'node:crypto'
 import type { PhaseId, ScenarioDefinition } from '../../src/domain/types'
+import { upgradeStoredDefinition } from '../content/legacy'
 import type { Queryable } from '../db/pool'
 
 export interface UserRow {
@@ -56,12 +57,21 @@ export async function upsertUser(q: Queryable, provider: string, subject: string
 
 export async function ensureContentVersion(
   q: Queryable,
-  version: { id: string; hash: string; scenario: ScenarioDefinition },
+  version: { id: string; hash: string; semver: string; manifestVersion: string; scenario: ScenarioDefinition },
 ): Promise<void> {
   await q.query(
-    `INSERT INTO content_versions (id, scenario_id, schema_version, content_hash, definition)
-     VALUES ($1, $2, $3, $4, $5) ON CONFLICT (id) DO NOTHING`,
-    [version.id, version.scenario.id, version.scenario.schemaVersion, version.hash, JSON.stringify(version.scenario)],
+    `INSERT INTO content_versions (id, scenario_id, schema_version, content_hash, definition, content_semver, manifest_version, lifecycle_status)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT (id) DO NOTHING`,
+    [
+      version.id,
+      version.scenario.id,
+      version.scenario.schemaVersion,
+      version.hash,
+      JSON.stringify(version.scenario),
+      version.semver,
+      version.manifestVersion,
+      version.scenario.lifecycle.status,
+    ],
   )
 }
 
@@ -71,7 +81,7 @@ export async function getContentDefinition(q: Queryable, contentVersionId: strin
     [contentVersionId],
   )
   if (!rows[0]) throw new Error(`Content version ${contentVersionId} is missing`)
-  return rows[0].definition
+  return upgradeStoredDefinition(rows[0].definition)
 }
 
 export async function ensureGradingVersion(q: Queryable, id: string): Promise<void> {

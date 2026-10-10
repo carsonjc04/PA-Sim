@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { scenarios } from '../../src/data/scenarios'
+import { scenarios } from '../content/scenarios'
 import { gradeAttempt } from '../../src/domain/grading'
 import type { ScenarioDefinition } from '../../src/domain/types'
 import { toPublicAttempt, toPublicScenario } from './projection'

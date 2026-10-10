@@ -1,0 +1,399 @@
+{
+  "schemaVersion": "2.0",
+  "id": "asthma",
+  "summary": {
+    "title": "Wheezing and shortness of breath",
+    "complaint": "Increasing wheeze after a respiratory trigger",
+    "age": "22 years",
+    "pronouns": "they/them",
+    "difficulty": "Urgent",
+    "duration": "10-15 min",
+    "urgent": true,
+    "setting": "Same-day care"
+  },
+  "patient": {
+    "name": "Sam Okafor",
+    "demographics": "22-year-old adult",
+    "portrait": {
+      "alt": "Portrait placeholder for Sam Okafor, fictional patient",
+      "fallback": "SO"
+    }
+  },
+  "clinician": {
+    "alt": "Portrait placeholder for PA student",
+    "fallback": "PA"
+  },
+  "opening": "I have been wheezing since yesterday and my rescue inhaler is barely helping.",
+  "initialInfo": [
+    "Using accessory muscles mildly",
+    "Can speak in short sentences",
+    "Respiratory symptoms followed a cold"
+  ],
+  "phases": [
+    {
+      "id": "history",
+      "label": "History",
+      "description": "Assess severity and response to rescue medication immediately.",
+      "actions": [
+        {
+          "id": "speak",
+          "label": "Assess ability to speak and work of breathing",
+          "paText": "Can you speak in full sentences? I am watching your breathing effort.",
+          "response": "I can only get out short sentences and I am working hard to breathe.",
+          "effects": [
+            {
+              "category": "history",
+              "points": 13
+            }
+          ]
+        },
+        {
+          "id": "rescue",
+          "label": "Ask about rescue-medication use and response",
+          "paText": "How often have you used your rescue inhaler, and does it help?",
+          "response": "Every two hours overnight with only brief relief.",
+          "effects": [
+            {
+              "category": "history",
+              "points": 12
+            }
+          ]
+        },
+        {
+          "id": "trigger",
+          "label": "Ask about trigger, prior severe attacks, and access to medicines",
+          "paText": "What triggered this, and have you ever needed emergency asthma care?",
+          "response": "A cold triggered it. I was hospitalized once as a child and ran out of controller medication.",
+          "effects": [
+            {
+              "category": "history",
+              "points": 10
+            }
+          ]
+        },
+        {
+          "id": "delay",
+          "label": "Focus on a routine outpatient follow-up next week",
+          "paText": "Let us schedule a routine follow-up next week.",
+          "response": "The patient remains breathless now.",
+          "effects": [
+            {
+              "category": "history",
+              "points": -5
+            }
+          ],
+          "unsafeReason": "Current severity requires immediate assessment and treatment."
+        }
+      ]
+    },
+    {
+      "id": "exam",
+      "label": "Physical exam",
+      "description": "Quantify severity before deciding disposition.",
+      "actions": [
+        {
+          "id": "vitals",
+          "label": "Obtain respiratory rate, pulse, and oxygen saturation",
+          "paText": "I am checking your vital signs now.",
+          "response": "Respiratory rate 30, pulse 118, oxygen saturation 91% on room air.",
+          "effects": [
+            {
+              "category": "exam",
+              "points": 15
+            }
+          ]
+        },
+        {
+          "id": "lungs",
+          "label": "Auscultate lungs and assess air movement",
+          "paText": "I am listening for wheeze and evaluating air movement.",
+          "response": "Diffuse expiratory wheezing with reduced air movement.",
+          "effects": [
+            {
+              "category": "exam",
+              "points": 14
+            }
+          ]
+        },
+        {
+          "id": "peak",
+          "label": "Measure peak flow when feasible without delaying treatment",
+          "paText": "We will measure peak flow if you can do so safely.",
+          "response": "Peak flow is 48% of personal best.",
+          "effects": [
+            {
+              "category": "exam",
+              "points": 10
+            }
+          ]
+        },
+        {
+          "id": "reassure",
+          "label": "Document a reassuring exam without measuring severity",
+          "paText": "Your exam seems reassuring.",
+          "response": "The findings remain concerning for a moderate exacerbation.",
+          "effects": [
+            {
+              "category": "exam",
+              "points": -5
+            }
+          ],
+          "unsafeReason": "The authored findings require objective severity assessment."
+        }
+      ]
+    },
+    {
+      "id": "diagnostics",
+      "label": "Diagnostics",
+      "description": "Reassess response while treating; do not delay urgent care.",
+      "actions": [
+        {
+          "id": "reassess",
+          "label": "Reassess after initial bronchodilator treatment",
+          "paText": "We will reassess breathing and oxygenation after treatment.",
+          "response": "After initial treatment, oxygen saturation improves to 95% and speech is easier but wheeze persists.",
+          "effects": [
+            {
+              "category": "diagnostics",
+              "points": 12
+            }
+          ]
+        },
+        {
+          "id": "xray",
+          "label": "Consider chest imaging only if alternate concern emerges",
+          "paText": "I will reserve imaging for a concern such as focal findings or another diagnosis.",
+          "response": "No focal findings currently require imaging.",
+          "effects": [
+            {
+              "category": "diagnostics",
+              "points": 7
+            }
+          ]
+        },
+        {
+          "id": "delay-test",
+          "label": "Wait for extensive testing before treatment",
+          "paText": "We will complete testing before treating.",
+          "response": "Breathing remains compromised.",
+          "effects": [
+            {
+              "category": "diagnostics",
+              "points": -5
+            }
+          ],
+          "unsafeReason": "Urgent asthma treatment should not be delayed for low-yield testing."
+        }
+      ]
+    },
+    {
+      "id": "diagnosis",
+      "label": "Diagnosis",
+      "description": "Identify the acute problem and its severity.",
+      "actions": []
+    },
+    {
+      "id": "treatment",
+      "label": "Treatment & follow-up",
+      "description": "Treat now, reassess, and set escalation thresholds.",
+      "actions": []
+    }
+  ],
+  "omissions": [
+    {
+      "id": "omit-vitals",
+      "phase": "exam",
+      "label": "Objective severity assessment",
+      "when": [
+        "vitals"
+      ],
+      "effects": [
+        {
+          "category": "exam",
+          "points": -15
+        }
+      ],
+      "feedback": "Vitals and oxygenation are essential in an acute exacerbation."
+    }
+  ],
+  "diagnoses": [
+    {
+      "id": "asthma-exac",
+      "label": "Moderate acute asthma exacerbation",
+      "primary": true,
+      "effects": [
+        {
+          "category": "diagnosis",
+          "points": 20
+        }
+      ],
+      "reasoning": "Increased work of breathing, low oxygen saturation, reduced peak flow, and wheeze support an exacerbation."
+    },
+    {
+      "id": "pneumonia",
+      "label": "Pneumonia",
+      "effects": [
+        {
+          "category": "diagnosis",
+          "points": 2
+        }
+      ]
+    },
+    {
+      "id": "pe",
+      "label": "Pulmonary embolism",
+      "effects": [
+        {
+          "category": "diagnosis",
+          "points": 2
+        }
+      ]
+    }
+  ],
+  "planOptions": [
+    {
+      "id": "bronchodilator",
+      "label": "Give prompt inhaled bronchodilator treatment and reassess",
+      "group": "treatment",
+      "effects": [
+        {
+          "category": "treatment",
+          "points": 15
+        }
+      ]
+    },
+    {
+      "id": "steroid",
+      "label": "Use severity-appropriate anti-inflammatory treatment",
+      "group": "treatment",
+      "effects": [
+        {
+          "category": "treatment",
+          "points": 12
+        }
+      ]
+    },
+    {
+      "id": "controller",
+      "label": "Review controller access and update the asthma action plan",
+      "group": "counseling",
+      "effects": [
+        {
+          "category": "treatment",
+          "points": 8
+        }
+      ]
+    },
+    {
+      "id": "escalate",
+      "label": "Escalate to emergency care if severe compromise persists or worsens",
+      "group": "disposition",
+      "effects": [
+        {
+          "category": "treatment",
+          "points": 10
+        }
+      ]
+    },
+    {
+      "id": "followup",
+      "label": "Arrange close follow-up after the acute episode",
+      "group": "follow-up",
+      "effects": [
+        {
+          "category": "treatment",
+          "points": 6
+        }
+      ]
+    },
+    {
+      "id": "discharge",
+      "label": "Discharge despite unresolved severe respiratory compromise",
+      "group": "disposition",
+      "effects": [
+        {
+          "category": "treatment",
+          "points": -15
+        }
+      ],
+      "unsafe": true,
+      "unsafeReason": "Unresolved severe compromise requires escalation rather than discharge."
+    }
+  ],
+  "correctPrimary": "asthma-exac",
+  "criticalRules": [
+    {
+      "id": "unsafe-discharge",
+      "when": [
+        "discharge"
+      ],
+      "explanation": "The patient has unresolved respiratory compromise and should not be discharged."
+    }
+  ],
+  "criticalWaivers": [],
+  "spoilerTerms": [
+    "asthma",
+    "asthma exacerbation"
+  ],
+  "teachingPoints": [
+    "Treat and reassess; disposition depends on response and objective severity."
+  ],
+  "idealPlan": [
+    "Immediate bronchodilator",
+    "Anti-inflammatory treatment",
+    "Reassessment",
+    "Explicit escalation and follow-up"
+  ],
+  "clinicalReferences": [
+    {
+      "title": "Global Strategy for Asthma Management and Prevention",
+      "organization": "Global Initiative for Asthma (GINA)",
+      "url": "https://ginasthma.org/",
+      "accessedAt": "2026-10-10",
+      "specificity": "general",
+      "verified": false,
+      "notes": "The home page was reachable on 2026-10-10 but names no report edition or date. Needs a pinned edition and section."
+    }
+  ],
+  "taxonomy": {
+    "provenance": "author-proposed-unreviewed",
+    "organSystems": [
+      "pulmonary-system"
+    ],
+    "panceTasks": [
+      "history-taking-physical-examination",
+      "clinical-intervention",
+      "pharmaceutical-therapeutics"
+    ],
+    "careSetting": "same-day-care",
+    "acuity": "urgent",
+    "ageGroup": "young-adult",
+    "eorRotations": [
+      "emergency-medicine",
+      "internal-medicine",
+      "family-medicine"
+    ]
+  },
+  "lifecycle": {
+    "status": "draft",
+    "contentVersion": "1.0.1",
+    "reviews": [],
+    "nextReviewDue": "2027-10-10",
+    "openItems": [
+      "Needs review by a qualified clinician (PA-C, MD, DO, NP or PharmD).",
+      "Taxonomy tags are author-proposed and unreviewed."
+    ],
+    "changeLog": [
+      {
+        "version": "1.0.0",
+        "date": "2026-10-10",
+        "summary": "Schema 2.0: lifecycle, taxonomy and reference metadata added. No id changes."
+      },
+      {
+        "version": "1.0.1",
+        "date": "2026-10-10",
+        "summary": "Taxonomy tags remapped to the NCCPA PANCE blueprint category names (unreviewed)."
+      }
+    ]
+  }
+}
