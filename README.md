@@ -38,15 +38,13 @@ hint until a key is configured. Keep the key in `.env` (gitignored) and never pr
 
 ## Deploying the backend (Render)
 
-Not yet verified against the live Render service; the deployed service needs
-these changes before this version can run there.
+Verified locally with a production-only install (`npm ci --omit=dev`, then
+`npm start`); not yet verified on the live Render service.
 
 - **Database:** create a Render Postgres instance. Set `DATABASE_URL` to its
   internal connection string and `DATABASE_SSL=true` if it requires TLS.
 - **Start command:** `npm start`. The server applies pending migrations before
-  listening.
-  - `tsx` is currently a devDependency. Either move it to `dependencies` or
-    make sure Render installs devDependencies.
+  listening. `tsx` is a production dependency for this reason.
 - **Environment:**
   - Set `NODE_ENV=production`.
   - Set `CLIENT_ORIGIN` to the full Vercel URL, including `https://`.
