@@ -1,3 +1,4 @@
+import type { Server } from 'node:http'
 import request from 'supertest'
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { scenarios } from '../content/scenarios'
@@ -5,6 +6,7 @@ import type { ScenarioDefinition } from '../../src/domain/types'
 import { createApp } from '../app'
 import { setOpenAIClient } from '../openai/client'
 import { createTestDatabase, type TestDatabase } from '../test/db'
+import { closeLocalServers, listenLocal } from '../test/http'
 import { resetRateLimit } from './live'
 
 const validSdp = `v=0\r\no=- 0 0 IN IP4 127.0.0.1\r\ns=-\r\n${'a=candidate:placeholder\r\n'.repeat(10)}`
@@ -15,16 +17,19 @@ let db: TestDatabase
 beforeAll(async () => {
   db = await createTestDatabase()
 })
-afterAll(() => db.close())
+afterAll(async () => {
+  await closeLocalServers()
+  await db.close()
+})
 
-async function newEncounter(app: ReturnType<typeof createApp>) {
+async function newEncounter(app: Server) {
   const res = await request(app).post('/api/attempts').set('X-Dev-User', USER).send({ scenarioId: 'chest-pressure' })
   return res.body.attempt.id as string
 }
 
-const session = (app: ReturnType<typeof createApp>, body: object) =>
+const session = (app: Server, body: object) =>
   request(app).post('/api/live/session').set('X-Dev-User', USER).send(body)
-const tool = (app: ReturnType<typeof createApp>, body: object) =>
+const tool = (app: Server, body: object) =>
   request(app).post('/api/live/tool').set('X-Dev-User', USER).send(body)
 
 describe('POST /api/live/session without a key', () => {
@@ -34,7 +39,7 @@ describe('POST /api/live/session without a key', () => {
   })
 
   it('explains the setup instead of failing opaquely', async () => {
-    const app = createApp()
+    const app = await listenLocal(createApp())
     const id = await newEncounter(app)
     const res = await session(app, { sdp: validSdp, attemptId: id })
     expect(res.status).toBe(503)
@@ -43,7 +48,7 @@ describe('POST /api/live/session without a key', () => {
   })
 
   it('leaves guided mode fully usable', async () => {
-    const app = createApp()
+    const app = await listenLocal(createApp())
     const id = await newEncounter(app)
     const target = getScenario('chest-pressure').phases[0].actions[0].id
     const res = await request(app)
@@ -57,7 +62,7 @@ describe('POST /api/live/session without a key', () => {
 })
 
 describe('POST /api/live/session with a key', () => {
-  let app: ReturnType<typeof createApp>
+  let app: Server
   let create: ReturnType<typeof vi.fn>
 
   beforeEach(async () => {
@@ -75,7 +80,7 @@ describe('POST /api/live/session with a key', () => {
       transport: { type: 'webrtc', sdp: 'v=0\r\nanswer-sdp\r\n' },
     })
     setClient({ live: { create } } as never)
-    app = freshApp()
+    app = await listenLocal(freshApp())
   })
 
   afterEach(() => {

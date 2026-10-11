@@ -1,4 +1,3 @@
-import type { AddressInfo } from 'node:net'
 import type { Server } from 'node:http'
 import request from 'supertest'
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest'
@@ -12,24 +11,12 @@ import { contentPackage } from '../content/scenarios'
 import { setClock } from '../lib/clock'
 import { createFsrsScheduler, DEFAULT_FSRS_PARAMS, getScheduler, setSchedulerForTests } from '../review/scheduler'
 import { createTestDatabase, type TestDatabase } from '../test/db'
+import { closeLocalServers, listenLocal } from '../test/http'
 
 type Selections = Record<PhaseId, string[]>
 
 let db: TestDatabase
-const servers: Server[] = []
-/**
- * One server per app, bound to 127.0.0.1. supertest's default binds a fresh server on the IPv6
- * wildcard for every request; on macOS another local process can hold the same port on 127.0.0.1,
- * and with hundreds of requests a request occasionally lands there.
- */
-async function serve(app: ReturnType<typeof createApp>): Promise<string> {
-  const server = await new Promise<Server>((resolve) => {
-    const s = app.listen(0, '127.0.0.1', () => resolve(s))
-  })
-  servers.push(server)
-  return `http://127.0.0.1:${(server.address() as AddressInfo).port}`
-}
-let app: string
+let app: Server
 const TZ = 'America/Denver'
 const pkg = contentPackage()
 const fixture = (scenarioId: string, kind: string): Selections => structuredClone(pkg.fixtures[scenarioId].fixtures.find((f) => f.kind === kind)!.selections)
@@ -45,10 +32,10 @@ const DAY = 86_400_000
 
 beforeAll(async () => {
   db = await createTestDatabase()
-  app = await serve(createApp())
+  app = await listenLocal(createApp())
 })
 afterAll(async () => {
-  await Promise.all(servers.map((s) => new Promise((resolve) => s.close(resolve))))
+  await closeLocalServers()
   await db.close()
 })
 beforeEach(async () => {
@@ -71,7 +58,7 @@ const planToolFor: Record<string, string> = {
   return: 'record_follow_up',
 }
 
-const as = (user: string, server: string = app) => {
+const as = (user: string, server: Server = app) => {
   const r = () => request(server)
   return {
     start: (scenarioId: string) => r().post('/api/attempts').set('X-Dev-User', user).send({ scenarioId }),
@@ -268,7 +255,7 @@ describe('progress survives refresh', () => {
       expect((await as('alice').review(item.cardId, { sessionId: s.id, promptId: item.prompt.id, rating: 3 })).status).toBe(200)
     }
 
-    const otherDevice = await serve(createApp())
+    const otherDevice = await listenLocal(createApp())
     const resumed = (await as('alice', otherDevice).current()).body as ReviewSessionResponse
     expect(resumed.resumed).toBe(true)
     expect(resumed.session).toMatchObject({ id: s.id, position: 2, total: 5, done: false })

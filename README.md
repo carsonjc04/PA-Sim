@@ -199,3 +199,11 @@ with a mocked `RTCPeerConnection` including microphone denial and cleanup.
 `npm test` never contacts OpenAI. `npm run test:live` is opt-in and billable; it
 verifies the credential and the SDK surface but cannot open a session, because
 `live.create` needs a browser-generated SDP offer.
+
+`server/api/review.test.ts` covers the remediation loop: a missed objective becoming due, a review changing the schedule, duplicate review events, no duplicate cards per knowledge component, resume after refresh, leakage before submission, unmapped cases, backfill, algorithm upgrades, and an acceptance check that every graded miss of every fixture has a traceable remediation state. See [docs/remediation.md](docs/remediation.md).
+
+**Running the tests.**
+
+- API and playthrough tests need Postgres: `npm run db:up` first.
+- Use Node 22 or newer (`.nvmrc`). On Node 25, jsdom tests (`src/features/`, `src/voice/`) fail with `localStorage.setItem is not a function` because Node's experimental Web Storage global shadows jsdom's. Run them with `NODE_OPTIONS=--no-experimental-webstorage npm test`.
+- HTTP tests bind one server per app to `127.0.0.1` through `server/test/http.ts` (`listenLocal`). Do not pass a bare `createApp()` to supertest: its default opens a fresh server on the IPv6 wildcard for each request, and on macOS a request can occasionally reach another local process on the same port, which shows up as stray 401 or 404 responses.

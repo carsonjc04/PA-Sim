@@ -1,3 +1,4 @@
+import type { Server } from 'node:http'
 import request from 'supertest'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import type { PublicAttempt } from '../../src/api/contracts'
@@ -6,9 +7,10 @@ import type { ScenarioDefinition } from '../../src/domain/types'
 import { createApp } from '../app'
 import { noAuthProvider, setAuthProvider, devAuthProvider } from '../auth/context'
 import { createTestDatabase, type TestDatabase } from '../test/db'
+import { closeLocalServers, listenLocal } from '../test/http'
 
 let db: TestDatabase
-const app = createApp()
+let app: Server
 const scenario = scenarios.find((s) => s.id === 'chest-pressure') as ScenarioDefinition
 const firstAction = (phase: string) => scenario.phases.find((p) => p.id === phase)!.actions[0]
 let keySeq = 0
@@ -16,8 +18,12 @@ const nextKey = () => `test-key-${(keySeq += 1).toString().padStart(4, '0')}`
 
 beforeAll(async () => {
   db = await createTestDatabase()
+  app = await listenLocal(createApp())
 })
-afterAll(() => db.close())
+afterAll(async () => {
+  await closeLocalServers()
+  await db.close()
+})
 beforeEach(async () => {
   await db.reset()
   setAuthProvider(devAuthProvider)
@@ -309,7 +315,7 @@ describe('refresh, resume and new device', () => {
     const id = await completeAttempt('alice')
     const submitted = (await as('alice').submit(id)).body as PublicAttempt
 
-    const otherDevice = createApp()
+    const otherDevice = await listenLocal(createApp())
     const detail = await request(otherDevice).get(`/api/attempts/${id}`).set('X-Dev-User', 'alice')
     expect(detail.status).toBe(200)
     expect(detail.body.debrief).toEqual(submitted.debrief)

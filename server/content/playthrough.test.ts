@@ -1,3 +1,4 @@
+import type { Server } from 'node:http'
 import request from 'supertest'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import type { PublicAttempt } from '../../src/api/contracts'
@@ -6,18 +7,23 @@ import { phaseOrder, type PhaseId, type ScenarioDefinition } from '../../src/dom
 import { createApp } from '../app'
 import { devAuthProvider, setAuthProvider } from '../auth/context'
 import { createTestDatabase, type TestDatabase } from '../test/db'
+import { closeLocalServers, listenLocal } from '../test/http'
 import { contentPackage } from './scenarios'
 
 const pkg = contentPackage()
-const app = createApp()
+let app: Server
 let db: TestDatabase
 let seq = 0
 const key = () => `playthrough-${(seq += 1).toString().padStart(5, '0')}`
 
 beforeAll(async () => {
   db = await createTestDatabase()
+  app = await listenLocal(createApp())
 })
-afterAll(() => db.close())
+afterAll(async () => {
+  await closeLocalServers()
+  await db.close()
+})
 beforeEach(async () => {
   await db.reset()
   setAuthProvider(devAuthProvider)

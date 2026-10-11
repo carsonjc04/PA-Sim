@@ -19,6 +19,7 @@ The product distinction is: **OSCE Practice = conduct the encounter; Clinical Si
 - The OpenAI live voice integration has worked in a deployed version. The frontend has been deployed on Vercel and the backend on Render. Verify current URLs, routes, environment settings, and feature availability from the repository and deployment configuration before changing them.
 - OpenAI credentials belong only on the server. The browser may receive only appropriate short lived session credentials or capabilities through the existing server flow. Never put `OPENAI_API_KEY` in Vite client variables, frontend code, logs, test snapshots, or documentation.
 - Previous environment options have included `CLIENT_ORIGIN`, `PORT`, voice model settings, session rate limits, maximum session length, and `STORE_TRANSCRIPTS=false`. Verify current names and behavior in code. Do not silently enable transcript storage.
+- Tests: Node 22+ and Postgres (`npm run db:up`). On Node 25, jsdom tests need `NODE_OPTIONS=--no-experimental-webstorage`. HTTP tests must use `listenLocal` from `server/test/http.ts`, not a bare `createApp()`, with supertest. See the README's Tests section.
 - A reference home screen uses warm paper, burgundy accents, editorial typography, a PA study book image, and two prominent actions: Start OSCE Practice and Start Clinical Sim. Preserve this design direction where relevant, but connect actions only to real flows. Do not invent case counts, streaks, user identities, grades, subscriptions, or book code support.
 
 ## Working method

@@ -4,9 +4,11 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import request from 'supertest'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import type { Server } from 'node:http'
 import { createApp } from '../app'
 import { devAuthProvider, setAuthProvider } from '../auth/context'
 import { createTestDatabase, type TestDatabase } from '../test/db'
+import { closeLocalServers, listenLocal } from '../test/http'
 import { DEFAULT_CONTENT_DIR } from './loader'
 import { loadContent, ContentPackageError } from './package'
 import { contentVersionOf, currentContent, currentScenarios } from './versions'
@@ -78,11 +80,15 @@ describe('an invalid content package cannot ship', () => {
 
 describe('historical attempts keep their exact content and grading version', () => {
   let db: TestDatabase
-  const app = createApp()
+  let app: Server
   beforeAll(async () => {
     db = await createTestDatabase()
+    app = await listenLocal(createApp())
   })
-  afterAll(() => db.close())
+  afterAll(async () => {
+    await closeLocalServers()
+    await db.close()
+  })
   beforeEach(async () => {
     await db.reset()
     setAuthProvider(devAuthProvider)
