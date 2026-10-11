@@ -206,6 +206,10 @@ verifies the credential and the SDK surface but cannot open a session, because
 
 `server/content/blueprints.test.ts`, `server/content/taxonomy-history.test.ts`, `server/content/sprints.test.ts`, `server/study/*.test.ts`, `server/api/study.test.ts` and `src/features/study/study.test.tsx` cover the exam blueprints and study modes: taxonomy completeness, weight totals for every blueprint matrix, retired and legacy versions, historical tag stability for stored snapshots, empty categories, the full-exam and alignment gates, weakness ranking, sprint locking, and the case filters. See [docs/exam-blueprints.md](docs/exam-blueprints.md).
 
+`src/features/encounter`, `src/features/debrief` and `src/features/settings` have jsdom tests for the redesigned encounter, voice cost states, debrief and display settings, including axe checks. `server/api/notes.test.ts` covers learner notes and annotations, including leakage scans. See [docs/accessibility.md](docs/accessibility.md).
+
+**Browser tests (opt-in).** `npm run test:e2e` runs Playwright against a real server (port 8788, test database, AI disabled) and Vite (port 5180). It covers a keyboard-only full case at 360 px, microphone denial, offline then sync, downtime mode, both themes at 100% and 150% text, axe including contrast, and horizontal overflow. `npm run test:audit` captures the UX audit screenshots and measurements. It needs `npm run db:up`. Install the browser once with `npx playwright install chromium`.
+
 **Running the tests.**
 
 - API and playthrough tests need Postgres: `npm run db:up` first.

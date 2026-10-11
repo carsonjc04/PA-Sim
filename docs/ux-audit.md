@@ -1,5 +1,7 @@
 # Encounter and debrief UX audit
 
+**After the redesign (2026-10-11):** in every audited state at all four widths there are **0 axe violations** (WCAG 2.2 A/AA, color contrast included) and **0 px horizontal overflow**. The states include loading, fresh, finding revealed, resumed, lock dialog, offline, downtime mode, and the passed and critical debriefs. The baseline below is kept for comparison. Run `npm run test:audit` to regenerate it; screenshots go to `test-results/ux-audit/`.
+
 Baseline captured on 2026-10-11, before the redesign, by `npm run test:audit` (`e2e/audit.spec.ts`).
 
 - **Environment:** a real server with **AI voice disabled** and a real browser (Playwright Chromium).

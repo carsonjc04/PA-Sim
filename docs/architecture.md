@@ -243,10 +243,43 @@ recorded. A newly confirmed diagnosis replaces the previous one.
   A failure there never blocks grading; the attempt is derived lazily on the
   next review request.
 
+## Learner notes and annotations
+
+Migration `0004_learner_notes.sql` adds two tables, both deleted with their attempt.
+
+- **`attempt_annotations`:** structured marks (`ruled_out`, `key`, `revisit`) on an action, diagnosis or plan option. They are validated against the attempt's pinned case version and contain no free text.
+- **`attempt_notes`:** the learner's free text, up to 4000 characters, with an integer version for optimistic concurrency. A stale save returns 409 `notes_conflict` with the saved copy and never overwrites it.
+
+Notes are **structurally isolated**:
+
+- They are read and written only by `server/notes/service.ts`, for the attempt's owner, through `GET/PUT /api/attempts/:id/notes`.
+- They are never copied into `attempt_events`, `content_versions`, `attempt_results`, `remediation_evidence` or `learning_events`.
+- They are never part of grading input, never embedded in attempt, history, debrief or remediation payloads, never sent to the voice model, and never logged.
+- `server/api/notes.test.ts` scans every other table and payload for a note's text and captures the log.
+
+In the browser, unsaved text is buffered in `localStorage` (keyed by attempt), so it survives going offline or closing the tab. It syncs when the connection returns. The privacy notice is shown at the notes field itself.
+
+## Reasoning debrief
+
+`server/attempts/debrief.ts` builds `debrief.reasoning` after submission, only from authored case content placed on the learner's own events:
+
+- misses with `whyItMattered` (verbatim omission feedback, unsafe reasons, critical-rule explanations or option reasoning);
+- a timeline (findings, phase locks, diagnosis with confidence, plan items), with a `key` flag where the rubric scores a choice positively;
+- the authored differential with per-option reasoning;
+- the key findings uncovered before the diagnosis;
+- missed data-gathering items.
+
+It does not generate text. It does not link findings to diagnoses beyond what the rubric already scores. Authored evidence links are a possible future schema extension, and each would need clinical review.
+
+Clinical images are attached to the public event of the action that reveals them, and are never sent before that action is recorded.
+
 ## Known limitations
 
-- **Session length is advertised, not enforced.** `MAX_LIVE_SESSION_MINUTES`
-  is reported, but nothing closes a session when it elapses.
+- **Session length is enforced by the client only.** `MAX_LIVE_SESSION_MINUTES`
+  is reported in `/api/ai/status`, and the voice panel ends the session at that
+  point (with a warning in the last two minutes). The server does not close it,
+  so a modified client could keep a session open. Server-side enforcement is an
+  open decision.
 - **Rate limiting keys on `req.ip`** with no `trust proxy` setting, so behind a
   hosting proxy every client may share one bucket. The bucket map is in memory.
 - **The browser still relays voice tool calls.** The server validates every ID
