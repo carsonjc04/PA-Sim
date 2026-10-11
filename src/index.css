@@ -483,3 +483,7 @@ body{background:var(--bg);color:var(--navy)}*{box-sizing:border-box}body{margin:
 .debrief>*{min-width:0}
 .debrief{overflow-wrap:anywhere}
 .score-table td{flex-wrap:wrap}
+.entry-media{margin:10px 0 0}
+.entry-media img{display:block;max-width:100%;height:auto;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
+.entry-media summary{cursor:pointer;font-size:0.8125rem;font-weight:600;margin-top:6px;color:var(--teal-dark)}
+.entry-media details p{margin:4px 0 0;font-size:0.875rem;color:var(--text-2)}

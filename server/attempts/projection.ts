@@ -3,6 +3,7 @@ import type {
   PublicAttempt,
   PublicDebrief,
   PublicEvent,
+  PublicMedia,
   PublicScenario,
 } from '../../src/api/contracts'
 import { canonicalTags } from '../../src/domain/study/taxonomy'
@@ -49,8 +50,16 @@ function publicTags(s: ScenarioDefinition): PublicScenario['tags'] {
   return { organSystems: t.organSystems, panceTasks: t.panceTasks, eorRotations: t.eorRotations, suitability: { ...s.taxonomy.suitability, modes: [...s.taxonomy.suitability.modes] } }
 }
 
-function toPublicEvent(e: EventRow): PublicEvent | null {
+/** Images released by an action, projected by allowlist; license notes stay server-side. */
+function mediaFor(scenario: ScenarioDefinition, actionId: string): PublicMedia[] {
+  return (scenario.clinicalImages ?? [])
+    .filter((m) => m.revealedBy === actionId)
+    .map((m) => ({ id: m.id, src: m.src, kind: m.kind, alt: m.decorative ? '' : m.alt, ...(m.longDescription ? { longDescription: m.longDescription } : {}), decorative: m.decorative }))
+}
+
+function toPublicEvent(e: EventRow, scenario: ScenarioDefinition): PublicEvent | null {
   if (e.type !== 'action' || !e.actionId) return null
+  const media = mediaFor(scenario, e.actionId)
   return {
     seq: e.seq,
     phase: e.phase,
@@ -60,6 +69,7 @@ function toPublicEvent(e: EventRow): PublicEvent | null {
     revealed: e.revealed,
     source: e.source === 'voice' ? 'voice' : 'guided',
     at: e.createdAt,
+    ...(media.length ? { media } : {}),
   }
 }
 
@@ -100,7 +110,7 @@ export function toPublicAttempt(
     currentPhase: attempt.currentPhase,
     lockedPhases: [...attempt.lockedPhases],
     scenario: toPublicScenario(scenario),
-    events: events.map(toPublicEvent).filter((e): e is PublicEvent => e !== null),
+    events: events.map((e) => toPublicEvent(e, scenario)).filter((e): e is PublicEvent => e !== null),
     createdAt: attempt.createdAt,
     submittedAt: attempt.submittedAt,
     debrief: attempt.status === 'submitted' && result ? toPublicDebrief(scenario, result, events, attempt.createdAt) : null,

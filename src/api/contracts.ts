@@ -147,6 +147,18 @@ export interface PublicEvent {
   revealed: string | null
   source: 'guided' | 'voice'
   at: string
+  /** Clinical images released by this action (never sent before the action is recorded). */
+  media?: PublicMedia[]
+}
+
+export interface PublicMedia {
+  id: string
+  src: string
+  kind: 'ecg' | 'xray' | 'photo' | 'diagram' | 'other'
+  /** Empty only for decorative images. */
+  alt: string
+  longDescription?: string
+  decorative: boolean
 }
 
 /** Released only after submission, and only from the stored result. */

@@ -1,4 +1,4 @@
-import type { AnnotationMark, AnnotationTargetKind, PublicAnnotation, PublicAttempt, PublicScenario, ToolName } from '../../api/contracts'
+import type { AnnotationMark, AnnotationTargetKind, PublicAnnotation, PublicAttempt, PublicMedia, PublicScenario, ToolName } from '../../api/contracts'
 import type { PhaseId } from '../../domain/types'
 
 export const PHASE_TOOL: Record<'history' | 'exam' | 'diagnostics', ToolName> = {
@@ -39,6 +39,8 @@ export interface CaseEntryData {
   /** The action that revealed it, so it can be annotated. */
   actionId?: string
   tone?: 'info' | 'warning' | 'error'
+  /** Clinical images this finding released. */
+  media?: PublicMedia[]
 }
 
 export const entryKindForPhase = (phase: PhaseId): EntryKind => (phase === 'history' ? 'patient' : phase === 'exam' ? 'finding' : 'result')
@@ -58,6 +60,7 @@ export function buildEntries(attempt: PublicAttempt): CaseEntryData[] {
       context: [labelOf.get(e.actionId), e.source === 'voice' ? 'from voice' : null].filter(Boolean).join(' · ') || undefined,
       text: e.revealed,
       actionId: e.actionId,
+      ...(e.media?.length ? { media: e.media } : {}),
     })
   }
   return entries

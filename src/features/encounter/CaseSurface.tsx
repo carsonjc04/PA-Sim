@@ -46,6 +46,19 @@ export function CaseEntry({ entry, marks = [] }: { entry: CaseEntryData; marks?:
         <MarkBadges marks={marks} />
       </p>
       {entry.kind === 'patient' ? <blockquote className="entry-text">{entry.text}</blockquote> : <p className="entry-text">{entry.text}</p>}
+      {entry.media?.map((m) => (
+        <figure key={m.id} className="entry-media">
+          <img src={m.src} alt={m.decorative ? '' : m.alt} loading="lazy" />
+          {!m.decorative && m.longDescription && (
+            <figcaption>
+              <details>
+                <summary>Image description</summary>
+                <p>{m.longDescription}</p>
+              </details>
+            </figcaption>
+          )}
+        </figure>
+      ))}
     </li>
   )
 }

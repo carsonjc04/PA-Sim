@@ -81,3 +81,28 @@ describe('public projection withholds the answer key', () => {
     expect(toPublicAttempt(attempt('active'), scenario, events, null).events).toEqual([])
   })
 })
+
+describe('clinical media', () => {
+  const withImage: ScenarioDefinition = {
+    ...scenario,
+    clinicalImages: [
+      { id: 'ecg-strip', src: '/media/ecg.png', kind: 'ecg', alt: 'Twelve-lead ECG', longDescription: 'Sinus tachycardia with ST changes in the anterior leads.', decorative: false, revealedBy: 'ecg', licenseSource: 'Synthetic test image' },
+    ],
+  }
+  const ecgEvent: EventRow = { seq: 2, type: 'action', phase: 'diagnostics', actionId: 'ecg', kind: 'test', confirmed: true, revealed: 'ECG obtained.', source: 'guided', detail: null, createdAt: '2026-10-09T00:02:00.000Z' }
+
+  it('sends nothing about an image before its action is recorded', () => {
+    const payload = toPublicAttempt(attempt('active'), withImage, events, null)
+    const keys = collectKeys(payload)
+    expect(keys.has('clinicalImages')).toBe(false)
+    expect(keys.has('media')).toBe(false)
+    expect(JSON.stringify(payload)).not.toContain('ecg.png')
+  })
+
+  it('releases the image with alt text and long description once the action is recorded, without license notes', () => {
+    const payload = toPublicAttempt(attempt('active'), withImage, [...events, ecgEvent], null)
+    const e = payload.events.find((x) => x.actionId === 'ecg')!
+    expect(e.media).toEqual([{ id: 'ecg-strip', src: '/media/ecg.png', kind: 'ecg', alt: 'Twelve-lead ECG', longDescription: 'Sinus tachycardia with ST changes in the anterior leads.', decorative: false }])
+    expect(JSON.stringify(payload)).not.toContain('licenseSource')
+  })
+})

@@ -271,6 +271,16 @@ describe('case surface', () => {
   })
 })
 
+describe('clinical media', () => {
+  it('renders revealed images with alt text and an expandable description', async () => {
+    attempt.events.push({ seq: 1, phase: 'history', actionId: def.phases[0].actions[0].id, kind: 'action', confirmed: true, revealed: 'See image.', source: 'guided', at: new Date().toISOString(), media: [{ id: 'm', src: '/x.png', kind: 'photo', alt: 'Erythematous posterior pharynx without exudate', longDescription: 'Diffuse mild redness of the posterior pharynx; tonsils not enlarged.', decorative: false }] })
+    renderEncounter()
+    await ready()
+    expect(screen.getByRole('img', { name: 'Erythematous posterior pharynx without exudate' })).toBeInTheDocument()
+    expect(screen.getByText('Image description')).toBeInTheDocument()
+  })
+})
+
 describe('offline and failures', () => {
   it('pauses choices with a reason while offline, and keeps notes on the device', async () => {
     const user = userEvent.setup()
