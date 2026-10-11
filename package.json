@@ -19,6 +19,7 @@
     "db:up": "docker compose up -d --wait",
     "db:down": "docker compose down",
     "db:migrate": "tsx server/db/cli.ts",
+    "review:upgrade": "tsx scripts/review/upgrade.ts",
     "test:live": "RUN_OPENAI_LIVE_SMOKE=1 vitest run server/openai/live-smoke.test.ts",
     "preview": "vite preview"
   },
@@ -32,6 +33,7 @@
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-router-dom": "^7.18.4",
+    "ts-fsrs": "5.4.2",
     "tsx": "^4.23.15",
     "zod": "^4.6.5"
   },

@@ -15,6 +15,10 @@ export interface RawPackage {
   fixtures: Record<string, unknown>
   /** Scenario file names found on disk, relative to `scenarios/`. */
   scenarioFilesOnDisk: string[]
+  /** content/knowledge/library.json, or undefined when no remediation content exists. */
+  knowledge: unknown
+  /** Raw remediation sidecars by file stem (content/remediation/<scenarioId>.json). */
+  remediation: Record<string, unknown>
   loadIssues: Issue[]
 }
 
@@ -57,5 +61,16 @@ export function readPackage(dir: string = DEFAULT_CONTENT_DIR): RawPackage {
 
   const scenarioDir = join(root, 'scenarios')
   const scenarioFilesOnDisk = existsSync(scenarioDir) ? readdirSync(scenarioDir).filter((f) => f.endsWith('.json') && !f.endsWith('.fixtures.json')) : []
-  return { dir: root, manifest, lock, taxonomy, scenarios, fixtures, scenarioFilesOnDisk, loadIssues }
+
+  // Remediation is optional per case: only cases with a sidecar get review cards; the rest are "not yet authored".
+  const remediationDir = join(root, 'remediation')
+  const remediation: Record<string, unknown> = {}
+  if (existsSync(remediationDir)) {
+    for (const f of readdirSync(remediationDir).filter((f) => f.endsWith('.json')).sort()) {
+      remediation[f.replace(/\.json$/, '')] = readJson(join(remediationDir, f), `remediation/${f}`, loadIssues)
+    }
+  }
+  const knowledgePath = join(root, 'knowledge', 'library.json')
+  const knowledge = existsSync(knowledgePath) || Object.keys(remediation).length ? readJson(knowledgePath, 'knowledge/library.json', loadIssues) : undefined
+  return { dir: root, manifest, lock, taxonomy, scenarios, fixtures, scenarioFilesOnDisk, knowledge, remediation, loadIssues }
 }

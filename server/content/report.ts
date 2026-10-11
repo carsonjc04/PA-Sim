@@ -2,6 +2,7 @@ import type { ContentLock } from '../../src/domain/schema'
 import type { ScenarioDefinition } from '../../src/domain/types'
 import { contentFingerprint } from './hash'
 import type { LoadedContent } from './package'
+import { remediationFingerprint } from './remediation'
 import type { Issue } from './validate'
 
 const label = (list: { id: string; label: string }[], id: string) => list.find((x) => x.id === id)?.label ?? id
@@ -98,7 +99,13 @@ export function lockFor(pkg: LoadedContent, existing: ContentLock): ContentLock 
     }
   }
   releases.sort((a, b) => (a.id === b.id ? a.contentVersion.localeCompare(b.contentVersion, undefined, { numeric: true }) : a.id.localeCompare(b.id)))
-  return { lockVersion: 1, releases }
+  const remediation = [...(existing.remediation ?? [])]
+  for (const r of Object.values(pkg.remediation)) {
+    if (!pkg.knowledge || remediation.some((e) => e.scenarioId === r.scenarioId && e.remediationVersion === r.remediationVersion)) continue
+    remediation.push({ scenarioId: r.scenarioId, remediationVersion: r.remediationVersion, fingerprint: remediationFingerprint(r, pkg.knowledge) })
+  }
+  remediation.sort((a, b) => (a.scenarioId === b.scenarioId ? a.remediationVersion.localeCompare(b.remediationVersion, undefined, { numeric: true }) : a.scenarioId.localeCompare(b.scenarioId)))
+  return remediation.length ? { lockVersion: 1, releases, remediation } : { lockVersion: 1, releases }
 }
 
 export type { Issue }

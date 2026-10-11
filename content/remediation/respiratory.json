@@ -1,0 +1,182 @@
+{
+  "scenarioId": "respiratory",
+  "remediationVersion": "0.1.0",
+  "provenance": "author-proposed-unreviewed",
+  "mappings": {
+    "omit-redflags": { "kcIds": ["sore-throat-red-flag-screen"] },
+    "omit-lungs": { "kcIds": ["focused-lung-exam-acute-cough"] },
+    "antibiotic": { "kcIds": ["antibiotic-expectation-conversation"], "errorType": "communication-lapse" },
+    "imaging": { "kcIds": ["chest-imaging-indications-acute-cough"] },
+    "flu": { "kcIds": ["low-value-testing-viral-uri"] },
+    "cbc": { "kcIds": ["low-value-testing-viral-uri"] },
+    "strep": { "kcIds": ["strep-vs-viral-pharyngitis"] },
+    "pneumonia": { "kcIds": ["pneumonia-vs-viral-uri"] },
+    "guessed-correct": { "kcIds": ["strep-vs-viral-pharyngitis", "pneumonia-vs-viral-uri"] },
+    "antibiotics": { "kcIds": ["antibiotic-stewardship-viral-uri"] },
+    "ed": { "kcIds": ["outpatient-disposition-stable-uri"] }
+  },
+  "prompts": [
+    {
+      "id": "red-flag-recall",
+      "kcId": "sore-throat-red-flag-screen",
+      "type": "recall",
+      "front": "An adult has sore throat and cough. Name the red-flag symptoms you screen for before treating it as a minor illness.",
+      "answer": "Difficulty breathing or stridor, chest pain, drooling or inability to swallow secretions, trismus, a muffled voice, and unilateral neck swelling.",
+      "explanation": "These point to airway threat or a deep neck infection (for example epiglottitis or a peritonsillar abscess) or to a lower respiratory process. A brief screen takes seconds and changes disposition if positive."
+    },
+    {
+      "id": "red-flag-next-step",
+      "kcId": "sore-throat-red-flag-screen",
+      "type": "next-best-step",
+      "front": "A patient with sore throat mentions they now have trouble swallowing their own saliva and their voice sounds muffled. What is the next best step?",
+      "choices": ["Rapid strep test and outpatient follow-up", "Urgent evaluation for airway compromise", "Start antibiotics and reassess in 48 hours", "Reassure and recommend lozenges"],
+      "answer": "Urgent evaluation for airway compromise.",
+      "explanation": "Drooling and a muffled voice suggest epiglottitis or a deep neck space infection. Airway assessment takes priority over routine testing or empiric treatment."
+    },
+    {
+      "id": "lung-exam-recall",
+      "kcId": "focused-lung-exam-acute-cough",
+      "type": "recall",
+      "front": "In acute cough, which lung exam findings would raise concern for pneumonia rather than an upper respiratory illness?",
+      "answer": "Focal crackles, bronchial breath sounds, egophony or dullness to percussion, especially with abnormal vital signs.",
+      "explanation": "A focused lung exam plus vital signs is how you support the absence of pneumonia or bronchospasm. A normal exam with normal vitals makes pneumonia unlikely in a healthy adult."
+    },
+    {
+      "id": "lung-exam-discrimination",
+      "kcId": "focused-lung-exam-acute-cough",
+      "type": "discrimination",
+      "front": "Two adults have four days of cough. Which one most needs further evaluation for pneumonia?",
+      "choices": ["Clear lungs, heart rate 78, temperature 37.0 °C", "Right basilar crackles, heart rate 108, temperature 38.6 °C"],
+      "answer": "The patient with right basilar crackles, tachycardia and fever.",
+      "explanation": "Focal crackles combined with fever and tachycardia raise the probability of pneumonia. Clear lungs with normal vitals support an uncomplicated upper respiratory process."
+    },
+    {
+      "id": "imaging-recall",
+      "kcId": "chest-imaging-indications-acute-cough",
+      "type": "recall",
+      "front": "In an otherwise healthy, non-elderly adult with acute cough, which findings make chest imaging reasonable?",
+      "answer": "Heart rate ≥100, respiratory rate ≥24, temperature ≥38 °C, or focal findings on the chest exam.",
+      "explanation": "When vital signs and the chest exam are normal, pneumonia is unlikely and a chest x-ray rarely changes management. Imaging is reserved for abnormal vitals, focal findings, or higher-risk patients."
+    },
+    {
+      "id": "imaging-next-step",
+      "kcId": "chest-imaging-indications-acute-cough",
+      "type": "next-best-step",
+      "front": "A 30-year-old has cough for five days, normal vital signs and clear lungs. They ask for a chest x-ray to be safe. What is the best response?",
+      "choices": ["Order a chest x-ray", "Explain imaging is not needed now and give return precautions", "Order a CT of the chest", "Order a chest x-ray and a CBC"],
+      "answer": "Explain imaging is not needed now and give return precautions.",
+      "explanation": "Normal vitals and a normal chest exam make pneumonia unlikely, so imaging adds cost and incidental findings without changing care. Specific return precautions are the safety net."
+    },
+    {
+      "id": "pneumonia-differential",
+      "kcId": "pneumonia-vs-viral-uri",
+      "type": "differential",
+      "front": "Afebrile adult, four days of dry cough and clear rhinorrhea, oxygen saturation 99%, clear lungs. Which is most likely?",
+      "choices": ["Community-acquired pneumonia", "Uncomplicated viral upper respiratory infection", "Group A streptococcal pharyngitis", "Pulmonary embolism"],
+      "answer": "Uncomplicated viral upper respiratory infection.",
+      "explanation": "Rhinorrhea and cough with normal vital signs and a clear lung exam fit a viral process. Pneumonia usually brings fever, tachycardia, tachypnea or focal lung findings."
+    },
+    {
+      "id": "pneumonia-recall",
+      "kcId": "pneumonia-vs-viral-uri",
+      "type": "recall",
+      "front": "Which features shift an acute cough illness from viral URI toward pneumonia?",
+      "answer": "Fever, tachycardia, tachypnea, hypoxia, pleuritic chest pain, and focal lung findings such as crackles or dullness.",
+      "explanation": "Pneumonia is a lower respiratory infection; its signs show up in vital signs and the chest exam. Their absence is the main reason a viral URI diagnosis is reasonable."
+    },
+    {
+      "id": "strep-recall",
+      "kcId": "strep-vs-viral-pharyngitis",
+      "type": "recall",
+      "front": "List the Centor criteria for streptococcal pharyngitis.",
+      "answer": "Fever, tonsillar exudate or swelling, tender anterior cervical lymphadenopathy, and absence of cough.",
+      "explanation": "The modified (McIsaac) version also adjusts for age. Cough is a criterion by its absence, so prominent cough points away from strep."
+    },
+    {
+      "id": "strep-discrimination",
+      "kcId": "strep-vs-viral-pharyngitis",
+      "type": "discrimination",
+      "front": "Which presentation is more consistent with streptococcal pharyngitis?",
+      "choices": ["Sore throat with cough, rhinorrhea and hoarseness", "Sore throat with fever, tonsillar exudate, tender anterior nodes and no cough"],
+      "answer": "Fever, tonsillar exudate, tender anterior nodes and no cough.",
+      "explanation": "Cough, rhinorrhea, hoarseness and oral ulcers suggest a viral cause, and guidelines advise against strep testing when those features are prominent."
+    },
+    {
+      "id": "strep-next-step",
+      "kcId": "strep-vs-viral-pharyngitis",
+      "type": "next-best-step",
+      "front": "An adult with sore throat has cough, runny nose, no fever and no exudate. Should you test for group A strep?",
+      "choices": ["Yes, rapid antigen test", "Yes, throat culture", "No, the features suggest a viral cause", "Treat empirically for strep"],
+      "answer": "No, the features suggest a viral cause.",
+      "explanation": "With cough and rhinorrhea and few Centor criteria, the probability of strep is low enough that testing and empiric antibiotics are not recommended."
+    },
+    {
+      "id": "abx-recall",
+      "kcId": "antibiotic-stewardship-viral-uri",
+      "type": "recall",
+      "front": "Why are antibiotics not recommended for an uncomplicated viral respiratory illness?",
+      "answer": "They do not shorten the illness or prevent complications, and they cause adverse effects and drive resistance.",
+      "explanation": "Antibiotics act on bacteria, not viruses. In uncomplicated viral illness they add risk (rash, diarrhea, C. difficile, resistance) without benefit. Supportive care is the treatment."
+    },
+    {
+      "id": "abx-next-step",
+      "kcId": "antibiotic-stewardship-viral-uri",
+      "type": "next-best-step",
+      "front": "Stable adult, likely viral URI, day 4 and slowly improving. What is the best treatment plan?",
+      "choices": ["Amoxicillin for 10 days", "Supportive care, expected-course counseling and return precautions", "Azithromycin for 5 days", "Oral corticosteroids"],
+      "answer": "Supportive care, expected-course counseling and return precautions.",
+      "explanation": "Symptom relief plus a clear explanation of the usual course (cough can last two to three weeks) and specific reasons to return is the evidence-based plan."
+    },
+    {
+      "id": "expectation-recall",
+      "kcId": "antibiotic-expectation-conversation",
+      "type": "recall",
+      "front": "A patient opens with \"I just need antibiotics.\" What is a better way to approach the conversation?",
+      "answer": "Acknowledge the concern, complete the assessment first, then explain the findings, offer a concrete symptom plan, and give specific return precautions.",
+      "explanation": "Leading with antibiotics frames the visit around a prescription before you have data. Patient satisfaction tracks feeling heard and having a plan, not receiving antibiotics."
+    },
+    {
+      "id": "expectation-next-step",
+      "kcId": "antibiotic-expectation-conversation",
+      "type": "next-best-step",
+      "front": "After your exam supports a viral illness, the patient says they were hoping for antibiotics. What is the best next step?",
+      "choices": ["Prescribe to preserve rapport", "Explain why antibiotics won't help and offer a specific symptom-relief and return plan", "Tell them antibiotics are never used for sore throat", "Refer to a specialist"],
+      "answer": "Explain why antibiotics won't help and offer a specific symptom-relief and return plan.",
+      "explanation": "A positive plan (what to do, what to expect, when to return) addresses the underlying worry. Absolute statements are inaccurate and erode trust."
+    },
+    {
+      "id": "low-value-recall",
+      "kcId": "low-value-testing-viral-uri",
+      "type": "recall",
+      "front": "Before ordering a test in an uncomplicated respiratory illness, what question should you ask yourself?",
+      "answer": "Would any result change what I do next?",
+      "explanation": "Routine CBCs and broad viral panels rarely change management in a stable adult with a viral picture. They add cost, delay and incidental findings."
+    },
+    {
+      "id": "low-value-discrimination",
+      "kcId": "low-value-testing-viral-uri",
+      "type": "discrimination",
+      "front": "In which situation is viral testing more likely to change management?",
+      "choices": ["Healthy adult with a mild cold, improving on day 4", "High-risk patient with influenza-like illness during flu season, within 48 hours of onset"],
+      "answer": "The high-risk patient with influenza-like illness early in the course.",
+      "explanation": "Testing helps when a positive result would trigger antiviral treatment or infection-control measures. For a mild, improving cold it does not change care."
+    },
+    {
+      "id": "disposition-recall",
+      "kcId": "outpatient-disposition-stable-uri",
+      "type": "recall",
+      "front": "Which findings would justify sending a patient with an acute respiratory illness to the emergency department?",
+      "answer": "Hypoxia, respiratory distress, signs of airway compromise, inability to keep fluids down, altered mental status or hemodynamic instability.",
+      "explanation": "Without these, a stable patient with a viral picture is best managed as an outpatient with return precautions. ED referral without a reason adds cost and exposure."
+    },
+    {
+      "id": "disposition-next-step",
+      "kcId": "outpatient-disposition-stable-uri",
+      "type": "next-best-step",
+      "front": "Comfortable adult with normal vital signs, clear lungs and tolerating fluids, diagnosed with a viral respiratory illness. Where should care continue?",
+      "choices": ["Emergency department now", "Home with supportive care and return precautions", "Hospital admission for observation", "Urgent chest CT"],
+      "answer": "Home with supportive care and return precautions.",
+      "explanation": "Normal vitals, a reassuring exam and adequate oral intake support outpatient care. The safety net is specific advice on when to return."
+    }
+  ]
+}

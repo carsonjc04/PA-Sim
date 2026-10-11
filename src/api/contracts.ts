@@ -1,5 +1,6 @@
 // Shared by the server (validation) and the browser (typing). Must never import scenario data or grading.
 import { z } from 'zod'
+import type { ErrorType, MissKind, PromptType } from '../domain/remediation/types'
 import type { Category, PhaseId } from '../domain/types'
 
 export const phaseIds = ['history', 'exam', 'diagnostics', 'diagnosis', 'treatment'] as const satisfies readonly PhaseId[]
@@ -30,11 +31,16 @@ export const attemptEventBody = z.discriminatedUnion('type', [
       tool: toolNameSchema,
       actionIds: z.array(stableId).min(1).max(12),
       confirmed: z.boolean().optional(),
+      /** Optional, primary diagnosis only: how sure the student is, captured before the outcome is known. */
+      confidence: z.enum(['sure', 'unsure']).optional(),
     })
     .strict(),
   z.object({ type: z.literal('lock_phase'), phase: phaseSchema }).strict(),
   z.object({ type: z.literal('retract'), phase: phaseSchema, actionId: stableId }).strict(),
-])
+]).refine((b) => b.type !== 'action' || b.confidence === undefined || b.tool === 'propose_diagnosis', {
+  message: 'confidence is only recorded with propose_diagnosis',
+  path: ['confidence'],
+})
 export type AttemptEventBody = z.infer<typeof attemptEventBody>
 
 export const idempotencyKeySchema = z.string().min(8).max(200).regex(/^[A-Za-z0-9:_-]+$/)
@@ -76,6 +82,11 @@ export type ApiErrorCode =
   | 'rate_limited'
   | 'not_found'
   | 'internal_error'
+  | 'attempt_not_submitted'
+  | 'invalid_time_zone'
+  | 'review_card_not_found'
+  | 'review_session_not_found'
+  | 'review_out_of_order'
 
 export interface ApiErrorBody {
   error: { code: ApiErrorCode; message: string; requestId?: string }
@@ -197,4 +208,98 @@ export interface AuthStatus {
   /** True when the impersonable dev provider serves a production deployment. */
   insecure: boolean
   user: { displayName: string } | null
+}
+
+// ---- Remediation and Today's Review ----
+
+/** IANA zone name from the browser. Validity is checked on the server with Intl. */
+export const timeZoneSchema = z.string().min(1).max(64).regex(/^[A-Za-z0-9_+\-/]+$/)
+const uuidSchema = z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)
+
+export const reviewModes = ['all', 'micro'] as const
+export type ReviewMode = (typeof reviewModes)[number]
+/** Size of the "Quick 5" micro-session. */
+export const MICRO_SESSION_SIZE = 5
+
+export const startReviewSessionBody = z.object({ mode: z.enum(reviewModes), timeZone: timeZoneSchema, restart: z.boolean().optional() }).strict()
+export type StartReviewSessionBody = z.infer<typeof startReviewSessionBody>
+export const timeZoneQuery = z.object({ timeZone: timeZoneSchema }).strict()
+
+export const submitReviewBody = z
+  .object({
+    sessionId: uuidSchema,
+    promptId: stableId,
+    /** 1 Missed it · 2 Hard · 3 Got it · 4 Easy */
+    rating: z.number().int().min(1).max(4),
+    /** Milliseconds from the prompt being shown to the answer being revealed. */
+    latencyMs: z.number().int().min(0).max(3_600_000).nullable().optional(),
+  })
+  .strict()
+export type SubmitReviewBody = z.infer<typeof submitReviewBody>
+
+export const reviewEventBody = z
+  .object({ type: z.enum(['shown', 'answered']), cardId: uuidSchema, latencyMs: z.number().int().min(0).max(3_600_000).optional() })
+  .strict()
+export type ReviewEventBody = z.infer<typeof reviewEventBody>
+
+export interface PublicReviewItem {
+  cardId: string
+  status: 'done' | 'current' | 'upcoming'
+  knowledgeLabel: string
+  prompt: { id: string; type: PromptType; front: string; choices?: string[] }
+  answer: string
+  explanation: string
+  /** Why this item is due. Deterministic: derived from the stored due reason. */
+  reason: { code: 'new-miss' | 'new-evidence' | 'scheduled'; text: string }
+  /** The graded miss this card came from, for the jump back to the debrief. */
+  source: { attemptId: string; scenarioTitle: string; rubricItemId: string; label: string } | null
+}
+
+export interface PublicReviewSession {
+  id: string
+  localDay: string
+  mode: ReviewMode
+  position: number
+  total: number
+  done: boolean
+  /** True while any shown content is unreviewed draft content. */
+  draftContent: boolean
+  items: PublicReviewItem[]
+}
+
+export interface ReviewSessionResponse {
+  session: PublicReviewSession | null
+  resumed: boolean
+  dueToday: number
+}
+
+export interface SubmitReviewResponse {
+  cardId: string
+  rating: number
+  nextDue: string
+  nextDueInDays: number
+  session: { id: string; position: number; total: number; done: boolean }
+}
+
+export interface ReviewSummary {
+  localDay: string
+  dueToday: number
+  totalCards: number
+}
+
+export interface PublicRemediationItem {
+  rubricItemId: string
+  label: string
+  kind: MissKind
+  errorType: ErrorType
+  status: 'linked' | 'unmapped'
+  cards: { cardId: string; knowledgeLabel: string; due: string; dueToday: boolean }[]
+}
+
+export interface AttemptRemediation {
+  attemptId: string
+  /** False when review content has not been authored for this case yet. */
+  authored: boolean
+  draftContent: boolean
+  items: PublicRemediationItem[]
 }

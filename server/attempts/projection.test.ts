@@ -30,7 +30,7 @@ const attempt = (status: 'active' | 'submitted'): AttemptRow => ({
   submittedAt: status === 'submitted' ? '2026-10-09T00:10:00.000Z' : null,
 })
 const events: EventRow[] = [
-  { seq: 1, type: 'live_started', phase: 'history', actionId: null, kind: null, confirmed: false, revealed: null, source: 'system', createdAt: '2026-10-09T00:00:01.000Z' },
+  { seq: 1, type: 'live_started', phase: 'history', actionId: null, kind: null, confirmed: false, revealed: null, source: 'system', detail: { confidence: 'unsure' }, createdAt: '2026-10-09T00:00:01.000Z' },
 ]
 
 describe('public projection withholds the answer key', () => {

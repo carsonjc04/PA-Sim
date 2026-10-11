@@ -346,3 +346,58 @@ describe('on-disk loading', () => {
     expect(result.package).toBeNull()
   })
 })
+
+describe('remediation sidecars', () => {
+  const rem = (raw: RawPackage) => raw.remediation.respiratory as Json
+  const remCodes = (raw: RawPackage) => validatePackage(raw).errors.map((e) => e.code)
+
+  it('ships remediation for respiratory only, and every possible miss there is mapped', () => {
+    const pkg = validatePackage(fresh(), { strict: true }).package!
+    expect(Object.keys(pkg.remediation)).toEqual(['respiratory'])
+    expect(pkg.knowledge?.components.length).toBeGreaterThan(0)
+  })
+  it('rejects a rubric item with no mapping', () => {
+    const raw = fresh()
+    delete rem(raw).mappings['omit-lungs']
+    expect(remCodes(raw)).toContain('remediation-unmapped')
+  })
+  it('rejects a mapping for an item that cannot be missed', () => {
+    const raw = fresh()
+    rem(raw).mappings.vitals = { kcIds: ['focused-lung-exam-acute-cough'] }
+    expect(remCodes(raw)).toContain('remediation-stale-mapping')
+  })
+  it('rejects an unknown knowledge component', () => {
+    const raw = fresh()
+    rem(raw).mappings['omit-lungs'].kcIds = ['not-a-kc']
+    expect(remCodes(raw)).toContain('remediation-ref')
+  })
+  it('rejects a mapped knowledge component with no prompt', () => {
+    const raw = fresh()
+    rem(raw).prompts = rem(raw).prompts.filter((p: Json) => p.kcId !== 'focused-lung-exam-acute-cough')
+    expect(remCodes(raw)).toContain('remediation-no-prompt')
+  })
+  it('rejects URLs and overlong explanations in prompts', () => {
+    const raw = fresh()
+    rem(raw).prompts[0].explanation = 'See https://example.org for more.'
+    rem(raw).prompts[1].explanation = 'x'.repeat(301)
+    expect(remCodes(raw)).toEqual(expect.arrayContaining(['teaching-url', 'teaching-length']))
+  })
+  it('rejects a discrimination prompt without choices', () => {
+    const raw = fresh()
+    delete rem(raw).prompts.find((p: Json) => p.type === 'discrimination').choices
+    expect(remCodes(raw)).toContain('remediation-prompt')
+  })
+  it('locks remediation content: editing a locked version needs a bump', () => {
+    const raw = fresh()
+    rem(raw).prompts[0].answer = 'A different answer.'
+    expect(remCodes(raw)).toContain('lock-mismatch')
+    rem(raw).remediationVersion = '0.1.1'
+    expect(validatePackage(raw).errors.map((e) => e.code)).not.toContain('lock-mismatch')
+    expect(validatePackage(raw, { strict: true }).errors.map((e) => e.code)).toContain('lock-missing')
+  })
+  it('locks the knowledge components a remediation file uses', () => {
+    const raw = fresh()
+    ;(raw.knowledge as Json).components.find((c: Json) => c.id === 'focused-lung-exam-acute-cough').label = 'Renamed'
+    expect(remCodes(raw)).toContain('lock-mismatch')
+  })
+})

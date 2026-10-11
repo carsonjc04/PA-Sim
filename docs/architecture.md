@@ -60,6 +60,14 @@ for rows written before Phase 3. Snapshots stored before schema 2.0 are read
 through `server/content/legacy.ts`, which fills the missing administrative
 fields at read time and never rewrites the stored row.
 
+Migration `0003_remediation.sql` adds the remediation loop: `users.time_zone`,
+`scheduler_params`, `review_cards` (unique per user and knowledge component),
+`remediation_evidence` (one row per graded miss, `linked` or `unmapped`),
+`evidence_cards`, `remediation_derivations`, `review_sessions` (frozen queue
+and position), `review_events` (append-only review log with idempotent
+responses) and `learning_events` (instrumentation). See
+[remediation.md](remediation.md).
+
 **Why results stay explainable after content changes.**
 
 - An attempt is pinned to the `content_version_id` that existed when it
@@ -86,7 +94,7 @@ fields at read time and never rewrites the stored row.
 
 ## API
 
-All `/api/attempts` and `/api/live` routes require an `AuthContext`.
+All `/api/attempts`, `/api/review` and `/api/live` routes require an `AuthContext`.
 
 | Route                                      | Behavior                                                                                                                    |
 | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
@@ -98,6 +106,8 @@ All `/api/attempts` and `/api/live` routes require an `AuthContext`.
 | `POST /api/attempts/:id/events`            | Requires an `Idempotency-Key` header. Body is one of `action`, `lock_phase` or `retract`.                                   |
 | `POST /api/attempts/:id/submit`            | Grades once; later calls return the stored result.                                                                          |
 | `POST /api/live/session`, `/api/live/tool` | Voice. Take an `attemptId` with the same ownership check.                                                                   |
+| `GET /api/attempts/:id/remediation`        | Per-miss remediation state. `409 attempt_not_submitted` before submission.                                                  |
+| `/api/review/*`                            | Today's review: summary, sessions (start, resume), ratings (idempotent) and shown/answered events. See remediation.md §5.    |
 
 Errors always have the shape `{ error: { code, message, requestId } }`. The
 codes are listed in `ApiErrorCode`.
@@ -227,6 +237,11 @@ recorded. A newly confirmed diagnosis replaces the previous one.
   grades it against the pinned content.
 - The result is stored once and returned on every later read or submit.
 - A critical safety error always sets `passed: false` and caps `finalScore` at 59. No AI output may change this.
+- After grading, the same transaction derives remediation: id-level misses
+  are recomputed from the pinned definition (`deriveMisses`, checked 1:1
+  against the grader on every fixture) and stored as evidence and review cards.
+  A failure there never blocks grading; the attempt is derived lazily on the
+  next review request.
 
 ## Known limitations
 

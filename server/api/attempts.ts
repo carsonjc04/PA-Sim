@@ -5,10 +5,12 @@ import {
   historyQuery,
   idempotencyKeySchema,
   startAttemptBody,
+  timeZoneSchema,
 } from '../../src/api/contracts'
 import { authOf, requireAuth } from '../auth/context'
 import { ApiError } from '../http/errors'
 import * as service from '../attempts/service'
+import { attemptRemediation } from '../review/service'
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -57,4 +59,10 @@ attemptsRouter.post('/:id/events', async (req, res) => {
 
 attemptsRouter.post('/:id/submit', async (req, res) => {
   res.json(await service.submitAttempt(authOf(req), attemptIdOf(req)))
+})
+
+attemptsRouter.get('/:id/remediation', async (req, res) => {
+  const id = attemptIdOf(req)
+  const timeZone = req.query.timeZone === undefined ? undefined : parse(timeZoneSchema, req.query.timeZone, 'invalid_query')
+  res.json(await attemptRemediation(authOf(req), id, timeZone))
 })

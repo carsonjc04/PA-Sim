@@ -119,3 +119,39 @@ Tags come from `content/taxonomy.json` and are `author-proposed-unreviewed` unti
 ## 12. What learners can and cannot see
 
 Learners see the scenario summary, action labels, references (title, organization, link) and a coarse label: "Requires clinician review". Lifecycle, reviews, notes, waivers, taxonomy, fingerprints and the answer key never reach the browser; the bundle check and the leakage tests enforce this. Maintainers read `docs/content-status.md` or run `npm run content:validate`.
+
+## 13. Review content: knowledge components and prompts
+
+Graded misses become review cards only for cases that have a remediation file. Currently only `respiratory` has one. The other cases record each miss as `unmapped`, and learners see "Review not yet authored for this case". The model, rules and scheduler are described in [remediation.md](remediation.md).
+
+**Checklist for adding review content to a case** (`<id>` is the scenario id):
+
+1. **List what can be missed.** Every rubric item that can become a miss needs a mapping:
+   - omissions;
+   - negatively scored or `unsafeReason` actions;
+   - unsafe, `unsafeReason` or negatively scored plan options;
+   - critical rules;
+   - each distractor diagnosis;
+   - the synthetic `guessed-correct`.
+
+   `npm run content:validate` reports any that are missing (`remediation-unmapped`) or stale (`remediation-stale-mapping`).
+2. **Reuse knowledge components first.** Look in `content/knowledge/library.json` for an existing KC before adding one. A student has one card per KC across all cases, so shared KCs merge evidence instead of duplicating cards.
+3. **Add any new objectives or KCs to the library.**
+   - IDs are kebab-case.
+   - `panceTasks` and `organSystems` must come from `content/taxonomy.json`.
+   - Changing a KC that another case already uses changes that case's remediation fingerprint, so bump its `remediationVersion` too.
+4. **Create `content/remediation/<id>.json`:**
+   - `scenarioId`, `remediationVersion: "0.1.0"` and `provenance: "author-proposed-unreviewed"`;
+   - `mappings`: `{ "<rubricItemId>": { "kcIds": [...], "errorType"?: ... } }`. Override `errorType` only when the default rules in remediation.md §3 mislabel the miss. For example, the respiratory "ask for antibiotics immediately" action is a `communication-lapse`.
+5. **Write prompts:**
+   - Every mapped KC needs at least one prompt in this file, and should have two or more of different types (`recall`, `discrimination`, `next-best-step`, `differential`).
+   - Discrimination and differential prompts need `choices`.
+   - Explanations are at most 300 characters. No URLs; sources belong in the case's `clinicalReferences`.
+   - Prompt IDs are unique across all remediation files.
+   - Write prompts that test the knowledge component, not this patient's specifics, so they still teach after the case is replayed.
+   - Prompts are shown only after the student has submitted this case, so naming the diagnosis is allowed.
+6. **Validate and lock.** Run `npm run content:validate`. When final, run `npm run content:lock` (it appends a `remediation` entry) and `npm run content:coverage`. Editing a locked remediation file later requires a `remediationVersion` bump.
+7. **Test.** `npm test` runs:
+   - the miss-derivation consistency check;
+   - the acceptance test, which requires every miss of every fixture to reach a `linked` state for authored cases.
+8. **Review.** Treat prompts like teaching text: AI-drafted or author-proposed content stays `author-proposed-unreviewed` (shown to learners as draft) until a qualified reviewer checks it. Then set `provenance: "reviewed"` and bump the version.

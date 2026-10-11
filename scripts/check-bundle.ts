@@ -1,7 +1,7 @@
 // Fails the build if answer-key fields, hidden case text or prompts reach the browser bundle.
 import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { scenarios } from '../server/content/scenarios'
+import { contentPackage, scenarios } from '../server/content/scenarios'
 
 const dir = 'dist/assets'
 const bundle = readdirSync(dir)
@@ -34,6 +34,8 @@ const markers = [
     ...s.lifecycle.changeLog.map((c) => c.summary),
     ...s.clinicalReferences.map((r) => r.notes ?? ''),
   ]),
+  // Review prompts are served by the API only after a case is submitted.
+  ...Object.values(contentPackage().remediation).flatMap((r) => r.prompts.flatMap((p) => [p.front, p.answer, p.explanation])),
 ].filter((m) => m.length > 8)
 
 const leaks = markers.filter((m) => bundle.includes(m))

@@ -1,0 +1,91 @@
+{
+  "libraryVersion": "0.1.0",
+  "provenance": "author-proposed-unreviewed",
+  "objectives": [
+    {
+      "id": "acute-cough-sore-throat-assessment",
+      "statement": "Perform a focused, safety-oriented history and exam for an adult with acute cough and sore throat.",
+      "panceTasks": ["history-taking-physical-examination"]
+    },
+    {
+      "id": "acute-respiratory-differential",
+      "statement": "Distinguish an uncomplicated viral respiratory illness from streptococcal pharyngitis and pneumonia using history, vital signs and exam findings.",
+      "panceTasks": ["formulating-the-most-likely-diagnosis"]
+    },
+    {
+      "id": "acute-respiratory-diagnostic-stewardship",
+      "statement": "Order testing and imaging for acute respiratory symptoms only when the result would change management.",
+      "panceTasks": ["using-diagnostic-laboratory-studies"]
+    },
+    {
+      "id": "uncomplicated-uri-management",
+      "statement": "Manage an uncomplicated viral respiratory illness with supportive care, antibiotic stewardship, an appropriate setting of care and clear return precautions.",
+      "panceTasks": ["clinical-intervention", "pharmaceutical-therapeutics", "patient-education"]
+    }
+  ],
+  "components": [
+    {
+      "id": "sore-throat-red-flag-screen",
+      "label": "Red-flag screen in sore throat and cough",
+      "objectiveIds": ["acute-cough-sore-throat-assessment"],
+      "panceTasks": ["history-taking-physical-examination"],
+      "organSystems": ["eyes-ears-nose-throat", "pulmonary-system"]
+    },
+    {
+      "id": "focused-lung-exam-acute-cough",
+      "label": "Focused lung exam in acute cough",
+      "objectiveIds": ["acute-cough-sore-throat-assessment"],
+      "panceTasks": ["history-taking-physical-examination"],
+      "organSystems": ["pulmonary-system"]
+    },
+    {
+      "id": "chest-imaging-indications-acute-cough",
+      "label": "When chest imaging is indicated in acute cough",
+      "objectiveIds": ["acute-respiratory-diagnostic-stewardship"],
+      "panceTasks": ["using-diagnostic-laboratory-studies"],
+      "organSystems": ["pulmonary-system"]
+    },
+    {
+      "id": "pneumonia-vs-viral-uri",
+      "label": "Pneumonia versus uncomplicated viral illness",
+      "objectiveIds": ["acute-respiratory-differential"],
+      "panceTasks": ["formulating-the-most-likely-diagnosis"],
+      "organSystems": ["pulmonary-system", "infectious-diseases"]
+    },
+    {
+      "id": "strep-vs-viral-pharyngitis",
+      "label": "Streptococcal versus viral pharyngitis",
+      "objectiveIds": ["acute-respiratory-differential"],
+      "panceTasks": ["formulating-the-most-likely-diagnosis"],
+      "organSystems": ["eyes-ears-nose-throat", "infectious-diseases"]
+    },
+    {
+      "id": "antibiotic-stewardship-viral-uri",
+      "label": "Antibiotic stewardship in viral respiratory illness",
+      "objectiveIds": ["uncomplicated-uri-management"],
+      "panceTasks": ["pharmaceutical-therapeutics"],
+      "organSystems": ["infectious-diseases"]
+    },
+    {
+      "id": "antibiotic-expectation-conversation",
+      "label": "Responding to a patient who expects antibiotics",
+      "objectiveIds": ["uncomplicated-uri-management"],
+      "panceTasks": ["patient-education"],
+      "organSystems": ["infectious-diseases"]
+    },
+    {
+      "id": "low-value-testing-viral-uri",
+      "label": "Low-value testing in uncomplicated viral illness",
+      "objectiveIds": ["acute-respiratory-diagnostic-stewardship"],
+      "panceTasks": ["using-diagnostic-laboratory-studies"],
+      "organSystems": ["infectious-diseases"]
+    },
+    {
+      "id": "outpatient-disposition-stable-uri",
+      "label": "Setting of care for a stable respiratory illness",
+      "objectiveIds": ["uncomplicated-uri-management"],
+      "panceTasks": ["clinical-intervention"],
+      "organSystems": ["pulmonary-system"]
+    }
+  ]
+}

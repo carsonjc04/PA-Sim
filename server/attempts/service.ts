@@ -13,6 +13,8 @@ import type { AuthContext } from '../auth/context'
 import { GRADING_VERSION, canonicalJson, currentContent, sha256 } from '../content/versions'
 import { getPool, withTransaction, type Queryable } from '../db/pool'
 import { ApiError } from '../http/errors'
+import { now } from '../lib/clock'
+import { confidenceOf, deriveRemediationSafely } from '../review/derive'
 import { planTool } from '../tools/execute'
 import { toAttemptSummary, toPublicAttempt } from './projection'
 import * as repo from './repository'
@@ -122,8 +124,11 @@ async function applyEvent(
       .map((e) => e.actionId as string)
     if (replaced.length) await repo.retractActions(q, attempt.id, 'diagnosis', replaced)
   }
+  // Diagnosis confidence (guided flow only) is stored with the confirmed diagnosis; skipping it records nothing.
+  const detail = body.tool === 'propose_diagnosis' && body.confidence ? { confidence: body.confidence } : undefined
   for (const action of plan.actions) {
     if (live.some((e) => e.type === 'action' && e.phase === plan.phase && e.actionId === action.id)) {
+      if (detail && plan.confirmed) await repo.setActionDetail(q, attempt.id, plan.phase, action.id, detail)
       result.duplicates.push(action.id)
       continue
     }
@@ -135,6 +140,7 @@ async function applyEvent(
       confirmed: plan.confirmed,
       revealed: action.text,
       source,
+      ...(detail ? { detail } : {}),
     })
     result.recorded.push(action.id)
     result.reveals.push({ id: action.id, text: action.text })
@@ -224,6 +230,12 @@ export async function submitAttempt(auth: AuthContext, attemptId: string): Promi
       lockedPhases: [...phaseOrder],
       status: 'submitted',
     })
+    // Every graded miss gets a traceable remediation state in the same transaction.
+    await deriveRemediationSafely(
+      q,
+      { attemptId: attempt.id, userId: auth.userId, scenarioId: attempt.scenarioId, scenario, selectedByPhase, confidence: confidenceOf(events) },
+      now(),
+    )
     const updated = await repo.getOwnedAttempt(q, auth.userId, attempt.id)
     return snapshot(q, updated!)
   })

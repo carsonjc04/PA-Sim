@@ -3,6 +3,7 @@ import cors from 'cors'
 import express, { type NextFunction, type Request, type Response } from 'express'
 import { attemptsRouter } from './api/attempts'
 import { liveRouter } from './api/live'
+import { reviewRouter } from './api/review'
 import { router } from './api/routes'
 import { insecureAuthHeader } from './auth/context'
 import { env } from './config/env'
@@ -29,6 +30,7 @@ export function createApp() {
   app.get('/api/health', (_req, res) => res.json({ ok: true }))
   app.use('/api/live', liveRouter)
   app.use('/api/attempts', attemptsRouter)
+  app.use('/api/review', reviewRouter)
   app.use('/api', router)
 
   app.use((_req, res) => {

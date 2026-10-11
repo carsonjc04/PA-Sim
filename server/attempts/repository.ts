@@ -30,6 +30,8 @@ export interface EventRow {
   confirmed: boolean
   revealed: string | null
   source: 'guided' | 'voice' | 'system'
+  /** Server-internal; never projected to the browser as-is. */
+  detail: unknown
   createdAt: string
 }
 
@@ -153,7 +155,7 @@ export async function updateAttemptState(
 
 export async function listLiveEvents(q: Queryable, attemptId: string): Promise<EventRow[]> {
   const { rows } = await q.query(
-    `SELECT seq, type, phase, action_id, kind, confirmed, revealed, source, created_at
+    `SELECT seq, type, phase, action_id, kind, confirmed, revealed, source, detail, created_at
      FROM attempt_events WHERE attempt_id = $1 AND retracted_at IS NULL ORDER BY seq`,
     [attemptId],
   )
@@ -166,6 +168,7 @@ export async function listLiveEvents(q: Queryable, attemptId: string): Promise<E
     confirmed: row.confirmed ?? false,
     revealed: row.revealed,
     source: row.source,
+    detail: row.detail ?? null,
     createdAt: iso(row.created_at)!,
   }))
 }
@@ -199,6 +202,15 @@ export async function insertEvent(
       event.source,
       event.detail === undefined ? null : JSON.stringify(event.detail),
     ],
+  )
+}
+
+/** Replaces the detail of a live action event (used to record diagnosis confidence on a re-confirmation). */
+export async function setActionDetail(q: Queryable, attemptId: string, phase: PhaseId, actionId: string, detail: unknown): Promise<void> {
+  await q.query(
+    `UPDATE attempt_events SET detail = $4
+     WHERE attempt_id = $1 AND phase = $2 AND action_id = $3 AND type = 'action' AND retracted_at IS NULL`,
+    [attemptId, phase, actionId, detail === null ? null : JSON.stringify(detail)],
   )
 }
 

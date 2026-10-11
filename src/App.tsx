@@ -48,6 +48,13 @@ import {
   type ToolName,
 } from "./api/contracts";
 import { VoicePanel } from "./features/encounter/VoicePanel";
+import {
+  ConfidenceToggle,
+  type Confidence,
+} from "./features/review/ConfidenceToggle";
+import { RemediationPanel } from "./features/review/RemediationPanel";
+import { ReviewDueNote } from "./features/review/ReviewDueNote";
+import { TodayReview } from "./features/review/TodayReview";
 
 const categories: { id: Category; label: string }[] = [
   { id: "history", label: "History taking" },
@@ -207,6 +214,7 @@ function Header({ showIdentity = true }: { showIdentity?: boolean }) {
         </Link>
         <nav>
           <Link to="/cases">Case library</Link>
+          <Link to="/review">Today&rsquo;s review</Link>
           <Link to="/dashboard">Dashboard</Link>
         </nav>
         {showIdentity && <IdentityControl />}
@@ -454,6 +462,7 @@ function DashboardContent() {
             Start an encounter <ArrowRight size={17} />
           </Link>
         </div>
+        <ReviewDueNote user={user} />
       </section>
       <section className="stats-grid">
         <Stat
@@ -686,6 +695,8 @@ function EncounterContent() {
     treatment: string[];
   }>({ diagnosis: [], treatment: [] });
   const [confirm, setConfirm] = useState(false);
+  // Optional and unrecorded unless the student taps one.
+  const [confidence, setConfidence] = useState<Confidence | null>(null);
 
   useEffect(() => {
     if (!scenarioId) return;
@@ -790,6 +801,7 @@ function EncounterContent() {
           tool: "propose_diagnosis",
           actionIds: draft.diagnosis,
           confirmed: true,
+          ...(confidence ? { confidence } : {}),
         })
       ).attempt;
     }
@@ -971,6 +983,15 @@ function EncounterContent() {
               </span>
             </button>
           ))}
+          {phase === "diagnosis" &&
+            draft.diagnosis.length > 0 &&
+            !locked.includes(phase) && (
+              <ConfidenceToggle
+                value={confidence}
+                onChange={setConfidence}
+                disabled={busy}
+              />
+            )}
           <div className="action-footer">
             <span>
               {locked.includes(phase) ? (
@@ -1141,6 +1162,7 @@ function ResultsContent() {
           />
         </div>
       </section>
+      <RemediationPanel attemptId={attempt.id} />
       <section className="results-grid lower">
         <div className="panel">
           <p className="eyebrow">DIAGNOSTIC REASONING</p>
@@ -1254,6 +1276,15 @@ function Feedback({ title, items }: { title: string; items: string[] }) {
     </div>
   );
 }
+function Review() {
+  return (
+    <Layout>
+      <RequireUser>
+        <TodayReview />
+      </RequireUser>
+    </Layout>
+  );
+}
 function App() {
   return (
     <Routes>
@@ -1262,6 +1293,7 @@ function App() {
       <Route path="/cases" element={<Cases />} />
       <Route path="/encounter/:scenarioId" element={<Encounter />} />
       <Route path="/results/:attemptId" element={<Results />} />
+      <Route path="/review" element={<Review />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

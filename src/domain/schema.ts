@@ -168,6 +168,8 @@ export type ContentManifest = z.infer<typeof manifestSchema>
 export const lockSchema = z.strictObject({
   lockVersion: z.literal(1),
   releases: z.array(z.strictObject({ id, contentVersion: semver, fingerprint: z.string().regex(/^[0-9a-f]{64}$/) })),
+  /** Locked remediation sidecars (content/remediation/<scenarioId>.json), versioned independently of the case. */
+  remediation: z.array(z.strictObject({ scenarioId: id, remediationVersion: semver, fingerprint: z.string().regex(/^[0-9a-f]{64}$/) })).optional(),
 })
 export type ContentLock = z.infer<typeof lockSchema>
 

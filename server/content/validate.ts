@@ -14,6 +14,7 @@ import {
 import { type Attempt, type ScenarioDefinition, QUALIFIED_REVIEWER_ROLES } from '../../src/domain/types'
 import { contentFingerprint } from './hash'
 import type { RawPackage } from './loader'
+import { validateRemediation, type ValidatedRemediation } from './remediation'
 
 export interface Issue {
   severity: 'error' | 'warning'
@@ -23,7 +24,7 @@ export interface Issue {
   message: string
 }
 
-export interface ValidatedPackage {
+export interface ValidatedPackage extends ValidatedRemediation {
   manifest: ContentManifest
   lock: ContentLock
   taxonomy: TaxonomyVocabulary
@@ -452,6 +453,7 @@ export function validatePackage(raw: RawPackage, options: ValidateOptions = {}):
 
   const scenarios: ScenarioDefinition[] = []
   const fixtures: Record<string, ScenarioFixtureFile> = {}
+  let remediation: ValidatedRemediation = { knowledge: null, remediation: {} }
 
   if (manifest.success) {
     const m = manifest.data
@@ -515,6 +517,7 @@ export function validatePackage(raw: RawPackage, options: ValidateOptions = {}):
         if (!m.scenarios.some((e) => e.id === r.id)) pkgC.add('error', 'lock-orphan', 'lock.releases', `"${r.id}" has locked releases but is not in the manifest. Retire cases instead of deleting them.`)
       }
     }
+    remediation = validateRemediation(raw, scenarios, vocab.success ? vocab.data : null, lock.success ? lock.data : null, options, issues)
     if (manifest.data.scenarios.some((e) => !e.published && e.status !== 'retired')) {
       pkgC.add('warning', 'unpublished', 'manifest.scenarios', 'A case that is not retired is unpublished and invisible to learners.')
     }
@@ -526,7 +529,7 @@ export function validatePackage(raw: RawPackage, options: ValidateOptions = {}):
     issues,
     errors,
     warnings,
-    package: errors.length === 0 && manifest.success && lock.success && vocab.success ? { manifest: manifest.data, lock: lock.data, taxonomy: vocab.data, scenarios, fixtures } : null,
+    package: errors.length === 0 && manifest.success && lock.success && vocab.success ? { manifest: manifest.data, lock: lock.data, taxonomy: vocab.data, scenarios, fixtures, ...remediation } : null,
   }
 }
 

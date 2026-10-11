@@ -51,5 +51,12 @@
       "contentVersion": "2.0.1",
       "fingerprint": "51a0d89f1df55b79ad4b5c834c7f3654c0a4c1cad79ed2a2e7d259bd6dedc499"
     }
+  ],
+  "remediation": [
+    {
+      "scenarioId": "respiratory",
+      "remediationVersion": "0.1.0",
+      "fingerprint": "af9fc4643a3aa9fc5b815fe5bae403468dd79d6d7c8aab7bec6dae181637370f"
+    }
   ]
 }

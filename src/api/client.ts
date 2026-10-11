@@ -3,12 +3,19 @@ import type {
   ApiErrorBody,
   ApiErrorCode,
   AttemptEventBody,
+  AttemptRemediation,
   AuthStatus,
   EventResponse,
   HistoryPage,
   PublicAttempt,
   PublicScenario,
+  ReviewEventBody,
+  ReviewMode,
+  ReviewSessionResponse,
+  ReviewSummary,
   StartAttemptResponse,
+  SubmitReviewBody,
+  SubmitReviewResponse,
 } from './contracts'
 
 export const apiBaseUrl: string = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8787'
@@ -50,7 +57,7 @@ export function authHeaders(): Record<string, string> {
   return user ? { 'X-Dev-User': user } : {}
 }
 
-const newKey = () => (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`)
+export const newKey = () => (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`)
 
 async function request<T>(path: string, init: RequestInit & { idempotencyKey?: string; retry?: boolean } = {}): Promise<T> {
   const headers: Record<string, string> = { ...authHeaders() }
@@ -101,6 +108,35 @@ export const api = {
   // Submit is idempotent by attempt state, so retrying it is safe.
   submit: (attemptId: string) =>
     request<PublicAttempt>(`/api/attempts/${encodeURIComponent(attemptId)}/submit`, { method: 'POST', retry: true }),
+  remediation: (attemptId: string) =>
+    request<AttemptRemediation>(`/api/attempts/${encodeURIComponent(attemptId)}/remediation?timeZone=${encodeURIComponent(browserTimeZone())}`, { retry: true }),
+  reviewSummary: () => request<ReviewSummary>(`/api/review/summary?timeZone=${encodeURIComponent(browserTimeZone())}`, { retry: true }),
+  currentReview: () => request<ReviewSessionResponse>(`/api/review/sessions/current?timeZone=${encodeURIComponent(browserTimeZone())}`, { retry: true }),
+  // Starting resumes today's open session, so a retry cannot create a second one.
+  startReview: (mode: ReviewMode, restart = false) =>
+    request<ReviewSessionResponse>('/api/review/sessions', {
+      method: 'POST',
+      body: JSON.stringify({ mode, timeZone: browserTimeZone(), ...(restart ? { restart } : {}) }),
+      retry: true,
+    }),
+  rateReview: (cardId: string, body: SubmitReviewBody, idempotencyKey = newKey()) =>
+    request<SubmitReviewResponse>(`/api/review/cards/${encodeURIComponent(cardId)}/reviews`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+      idempotencyKey,
+      retry: true,
+    }),
+  reviewEvent: (sessionId: string, body: ReviewEventBody) =>
+    request<{ ok: true }>(`/api/review/sessions/${encodeURIComponent(sessionId)}/events`, { method: 'POST', body: JSON.stringify(body), retry: true }),
+}
+
+/** The browser's IANA zone; the server uses it for the 04:00 local study-day boundary. */
+export function browserTimeZone(): string {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+  } catch {
+    return 'UTC'
+  }
 }
 
 /** Old unauthenticated, browser-graded history. Never imported; only offered for deletion. */
