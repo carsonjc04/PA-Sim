@@ -4,7 +4,17 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>pa-sim</title>
+    <title>ClinicSim</title>
+    <script>
+      // Apply saved display settings before first paint (mirrors applyDisplay in src/features/settings/displaySettings.ts).
+      try {
+        var s = JSON.parse(localStorage.getItem('clinicsim-display-v1') || '{}')
+        var r = document.documentElement
+        if (s.theme === 'light' || s.theme === 'dark') r.setAttribute('data-theme', s.theme)
+        if (s.reading === '115' || s.reading === '130' || s.reading === '150') r.setAttribute('data-reading', s.reading)
+        if (s.motion === 'reduce') r.setAttribute('data-motion', 'reduce')
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

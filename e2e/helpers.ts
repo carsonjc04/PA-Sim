@@ -1,4 +1,4 @@
-import AxeBuilder from '@axe-core/playwright'
+import { AxeBuilder } from '@axe-core/playwright'
 import type { Page } from '@playwright/test'
 
 export const WIDTHS = [

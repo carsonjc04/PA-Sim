@@ -54,6 +54,7 @@ import {
 } from "./features/review/ConfidenceToggle";
 import { RemediationPanel } from "./features/review/RemediationPanel";
 import { ReviewDueNote } from "./features/review/ReviewDueNote";
+import { SettingsButton } from "./features/settings/SettingsDialog";
 import { TodayReview } from "./features/review/TodayReview";
 import { CaseFilters } from "./features/study/CaseFilters";
 import { useCaseFilters } from "./features/study/filterState";
@@ -225,7 +226,10 @@ function Header({ showIdentity = true }: { showIdentity?: boolean }) {
           <Link to="/review">Today&rsquo;s review</Link>
           <Link to="/dashboard">Dashboard</Link>
         </nav>
-        {showIdentity && <IdentityControl />}
+        <div className="topbar-tools">
+          <SettingsButton />
+          {showIdentity && <IdentityControl />}
+        </div>
       </header>
     </>
   );
@@ -956,7 +960,7 @@ function EncounterContent() {
             </span>
           </div>
         </div>
-        <div className="steps">
+        <div className="steps" tabIndex={0} role="group" aria-label="Encounter phases">
           {phaseOrder.map((p, i) => (
             <div
               className={`step ${i === phaseIndex ? "active" : ""} ${locked.includes(p) ? "done" : ""}`}
@@ -974,7 +978,7 @@ function EncounterContent() {
             <strong>You — PA Student</strong>
             <span>Clinician perspective</span>
           </aside>
-          <section className="transcript">
+          <section className="transcript" tabIndex={0} aria-label="Encounter transcript">
             <div className="patient-opening">
               <div className="turn-label">
                 <span className="patient-dot">
