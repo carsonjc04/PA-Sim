@@ -1,4 +1,6 @@
 import type { ContentLock } from '../../src/domain/schema'
+import { computeCoverage, type StudyItem } from '../../src/domain/study/coverage'
+import { canonicalTags } from '../../src/domain/study/taxonomy'
 import type { ScenarioDefinition } from '../../src/domain/types'
 import { contentFingerprint } from './hash'
 import type { LoadedContent } from './package'
@@ -10,7 +12,7 @@ const esc = (s: string) => s.replace(/\|/g, '\\|')
 const list = (items: string[]) => (items.length ? items.map(esc).join(', ') : '-')
 
 const DISCLAIMER =
-  'This report lists which tags the authored cases carry. **It is not a measure of coverage of the NCCPA PANCE blueprint or of any end-of-rotation blueprint.** The tags are author-proposed and unreviewed, and five cases cannot represent a blueprint.'
+  'This report lists which tags the authored cases carry. **It is not a measure of coverage of the NCCPA PANCE blueprint or of any end-of-rotation blueprint.** The tags are author-proposed and unreviewed, and a handful of cases cannot represent a blueprint.'
 
 function pivot(title: string, scenarios: ScenarioDefinition[], vocab: { id: string; label: string }[], pick: (s: ScenarioDefinition) => string[]): string {
   const rows = vocab.map((v) => {
@@ -52,6 +54,33 @@ export function coverageMarkdown(pkg: LoadedContent): string {
     pivot('EOR rotation tag', scenarios, v.eorRotations, (s) => s.taxonomy.eorRotations),
     `Vocabulary source: ${v.provenance}`,
     '',
+    blueprintSection(pkg),
+  ].join('\n')
+}
+
+/** Source register and per-blueprint category coverage. Published cases only; no clock, so the file is stable. */
+function blueprintSection(pkg: LoadedContent): string {
+  const published = new Set(pkg.manifest.scenarios.filter((e) => e.published).map((e) => e.id))
+  const items: StudyItem[] = pkg.scenarios
+    .filter((s) => published.has(s.id) && s.lifecycle.status !== 'retired')
+    .map((s) => ({ id: s.id, title: s.summary.title, kind: 'case', tags: canonicalTags(s.taxonomy, pkg.taxonomy), status: s.lifecycle.status, blueprintReviews: s.taxonomy.blueprintReviews ?? [] }))
+  const blueprints = [...pkg.blueprints].sort((a, b) => a.id.localeCompare(b.id))
+  const register = blueprints.map((b) => `| ${b.id} | ${b.issuer} | ${esc(b.versionLabel)} | ${b.effectiveFrom ?? 'not stated'} | ${b.effectiveUntil ?? '-'} | ${b.source.retrievedAt} | \`${b.source.sha256.slice(0, 12)}\` | ${b.transcription.verifiedBy ?? 'no'} |`)
+  const sections = blueprints.map((b) => {
+    const cov = computeCoverage(b, items)
+    const rows = cov.contentCategories.map((c) => `| ${esc(c.label)} | ${c.weightPct}% | ${c.itemIds.length ? c.itemIds.join(', ') : '**none**'} |`)
+    return `### ${b.id}\n\n${cov.summary.contentCategoriesWithItems} of ${cov.summary.contentCategories} content categories and ${cov.summary.cellsWithItems} of ${cov.summary.weightedCells} weighted content x task cells have at least one case${cov.scope === 'rotation-tagged' ? ' (cases tagged for this rotation only)' : ''}.\n\n| Content category | Weight | Cases |\n| --- | ---: | --- |\n${rows.join('\n')}\n`
+  })
+  return [
+    '## Blueprint coverage',
+    '',
+    '> Counts show which categories at least one case touches. They do not measure coverage of a category, no case has been reviewed against any blueprint, and no full-length exam can be assembled. See docs/exam-blueprints.md.',
+    '',
+    '| Blueprint | Issuer | Version | Effective from | Effective until | Retrieved | SHA-256 | Second-person check |',
+    '| --- | --- | --- | --- | --- | --- | --- | --- |',
+    ...register,
+    '',
+    ...sections,
   ].join('\n')
 }
 

@@ -25,7 +25,10 @@ component or grading code changes when you add one.
 | `content/manifest.json` | Package version, grading version, and the list of cases. |
 | `content/scenarios/<id>.json` | One `ScenarioDefinition`. |
 | `content/scenarios/<id>.fixtures.json` | Four reviewable playthroughs with expected scores. |
-| `content/taxonomy.json` | Controlled vocabulary for tags (author-recalled, unreviewed). |
+| `content/taxonomy.json` | Controlled vocabulary for tags. Organ systems and tasks follow the PANCE blueprint; IDs are permanent. |
+| `content/taxonomy-history.json` | Append-only list of every taxonomy ID ever published. |
+| `content/blueprints/<id>.json` | One official exam blueprint version with source, checksum and dates. See [exam-blueprints.md](exam-blueprints.md). |
+| `content/sprints/<id>.json` | A differential sprint assembled from an existing case. |
 | `content/lock.json` | Fingerprint of every released version. Never edit by hand. |
 | `docs/content-coverage.md`, `docs/content-status.md` | Generated. Do not edit. |
 
@@ -112,13 +115,44 @@ Add a `changeLog` entry for each version and mirror the version in the manifest 
 - `nextReviewDue` defaults to 12 months. An overdue review is a warning and does not remove the case.
 - To retire a case, set `status: retired` and `published: false` in the manifest. Past attempts and debriefs keep loading from their pinned snapshot; new attempts get a 410.
 
-## 11. Taxonomy and coverage
+## 11. Taxonomy, blueprints and coverage
 
-Tags come from `content/taxonomy.json` and are `author-proposed-unreviewed` until a reviewer confirms them. The coverage report only lists which tags the cases carry. **It is not coverage of the NCCPA PANCE blueprint or of any end-of-rotation blueprint**, and a handful of cases cannot be.
+Read [exam-blueprints.md](exam-blueprints.md) for the model. In short:
+
+**Tagging a case** (`taxonomy` block). All values come from `content/taxonomy.json` and must be `active`. Deprecated IDs are rejected (`taxonomy-deprecated`).
+
+- `organSystems` (content axis) and `panceTasks` (task axis) are independent. Tag what the learner actually does in this case, not everything the condition touches.
+- `topicTags` only when an EOR category needs it (for example `breast`, `trauma-acute-care`, `psych-anxiety`, `pregnancy-prenatal`). Leave it empty if unsure; an untagged topic shows as a gap, which is honest.
+- `eorRotations`: the rotations the case genuinely suits. Rotation coverage counts only cases tagged for that rotation.
+- `suitability` is required: `modes` (`osce` only today; `clinical-sim` is rejected until that mode exists), `learnerLevel`, `estMinutes`, `voiceReady`.
+- `blueprintReviews`: add `{ blueprintId, reviewerRole, reviewedAt }` only when a qualified reviewer has checked the tags against that exact blueprint version. Never a name. This is the only thing that can make the product say a blueprint is aligned, and only when every in-scope case has one.
+- Tags are part of the content fingerprint: retagging a case is a content change and needs a version bump.
+
+**Changing the vocabulary.**
+
+- Add a term to `content/taxonomy.json` *and* append its ID to `content/taxonomy-history.json` (`taxonomy-history-stale` otherwise).
+- Never delete or rename a term (`taxonomy-id-removed`). Set `status: "deprecated"` and `replacedBy` with active IDs; stored attempts keep resolving through it.
+
+**Adding a blueprint revision.**
+
+1. Download the official PDF; record its URL, landing page, retrieval date and `shasum -a 256`. Do not commit the PDF and never use remembered or third-party numbers.
+2. Add `content/blueprints/<issuer>-<exam>-<rotation>-<version>.json`. Copy the exact source wording about dates into `dateNotes`; leave a date `null` when the source does not state it.
+3. Set `supersedes` on the new file and `supersededBy` plus `effectiveUntil` on the old one. Lifecycle (current, legacy, retired) is derived from the dates.
+4. Crosswalk every content category to canonical tags. Add topic tags if needed (see above).
+5. `npm run content:validate`: row, column and total checks catch most transcription slips. Keep `transcription.verifiedBy: null` until a second person re-checks every number, then record their role and date.
+6. `npm run content:coverage` and commit the regenerated report.
+
+**Differential sprints** (`content/sprints/<id>.json`) contain no clinical text.
+
+- They list `findingActionIds` (2–6 history, exam or diagnostics actions of the source case, whose authored responses become the findings) and `optionIds` (3–5 of the case's diagnosis options, including the correct one).
+- `sourceContentVersion` must equal the case version. Bumping the case makes the sprint stale (`sprint-stale`) until someone re-checks it.
+- A finding that names the answer is rejected (`sprint-spoiler`). Sprints stay `draft`; learners see "Draft, not clinically reviewed".
+
+**Coverage reports.** `docs/content-coverage.md` lists tags and, per blueprint, which categories at least one case touches. **This is not coverage of the NCCPA PANCE blueprint or of any end-of-rotation blueprint.** A full-length exam is never offered until every official cell can be filled with distinct approved items.
 
 ## 12. What learners can and cannot see
 
-Learners see the scenario summary, action labels, references (title, organization, link) and a coarse label: "Requires clinician review". Lifecycle, reviews, notes, waivers, taxonomy, fingerprints and the answer key never reach the browser; the bundle check and the leakage tests enforce this. Maintainers read `docs/content-status.md` or run `npm run content:validate`.
+Learners see the scenario summary, action labels, references (title, organization, link) and a coarse label: "Requires clinician review". Learners also see a case's canonical organ systems, tasks and rotations (for filtering) and its suitability. Lifecycle, reviews, notes, waivers, topic tags, blueprint reviews, fingerprints and the answer key never reach the browser; the bundle check and the leakage tests enforce this. Maintainers read `docs/content-status.md` or run `npm run content:validate`.
 
 ## 13. Review content: knowledge components and prompts
 

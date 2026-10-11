@@ -113,7 +113,7 @@ below the panel still completes the encounter and grades it identically.
 
 ## Architecture
 
-- `content/` holds the versioned content package: `manifest.json`, one JSON `ScenarioDefinition` plus fixtures per case, `taxonomy.json` and `lock.json`. `server/content/` validates and loads it.
+- `content/` holds the versioned content package: `manifest.json`, one JSON `ScenarioDefinition` plus fixtures per case, `taxonomy.json` (with `taxonomy-history.json`), `blueprints/` (official PANCE and EOR blueprint versions), `sprints/` and `lock.json`. `server/content/` validates and loads it.
   Server-only; a lint rule blocks browser imports.
 - `src/domain/types.ts` contains canonical domain types.
 - `src/domain/schema.ts` validates scenarios with Zod.
@@ -125,7 +125,9 @@ below the panel still completes the encounter and grades it identically.
 - `src/App.tsx` owns the route-level screens. It holds no scenario data and
   does no grading.
 
-Routes: `/` (home), `/dashboard`, `/cases`, `/encounter/:scenarioId`, and `/results/:attemptId`.
+Routes: `/` (home), `/dashboard`, `/cases` (accepts `?system=&task=&rotation=`), `/encounter/:scenarioId`, `/results/:attemptId`, `/review`, and the study modes `/study`, `/study/rotation/:rotationId`, `/study/pance`, `/study/mixed` and `/study/sprint` ([docs/exam-blueprints.md](docs/exam-blueprints.md)).
+
+- `src/domain/study/` holds the pure blueprint, coverage and ranking logic; `server/study/` and `server/api/study.ts` serve it under `/api/study`.
 
 ### Backend
 
@@ -186,7 +188,7 @@ Reference metadata points to CDC outpatient antibiotic guidance, ADA Standards o
 
 ## Tests
 
-`src/domain/grading.test.ts` covers all five schema validations, spoiler-safe summaries, partial weighted credit, idempotence, critical-error capping, and data-driven visibility evaluation.
+`server/content/grading.test.ts` and `server/content/validate.test.ts` cover all five schema validations, spoiler-safe summaries, partial weighted credit, idempotence, critical-error capping, and data-driven visibility evaluation.
 
 `server/db/migrate.test.ts` covers fresh, repeat, tampered, failing and concurrent migrations. `server/api/attempts.test.ts` covers cross-user access on every route, malformed payloads, idempotent events and submit (including concurrent retries), refresh/resume, a new device session, pagination, content-version pinning, and hidden-content scans before and after submit.
 
@@ -201,6 +203,8 @@ verifies the credential and the SDK surface but cannot open a session, because
 `live.create` needs a browser-generated SDP offer.
 
 `server/api/review.test.ts` covers the remediation loop: a missed objective becoming due, a review changing the schedule, duplicate review events, no duplicate cards per knowledge component, resume after refresh, leakage before submission, unmapped cases, backfill, algorithm upgrades, and an acceptance check that every graded miss of every fixture has a traceable remediation state. See [docs/remediation.md](docs/remediation.md).
+
+`server/content/blueprints.test.ts`, `server/content/taxonomy-history.test.ts`, `server/content/sprints.test.ts`, `server/study/*.test.ts`, `server/api/study.test.ts` and `src/features/study/study.test.tsx` cover the exam blueprints and study modes: taxonomy completeness, weight totals for every blueprint matrix, retired and legacy versions, historical tag stability for stored snapshots, empty categories, the full-exam and alignment gates, weakness ranking, sprint locking, and the case filters. See [docs/exam-blueprints.md](docs/exam-blueprints.md).
 
 **Running the tests.**
 
