@@ -171,3 +171,93 @@
 /* Below 850px the nav moves to its own scrollable row instead of disappearing, so Review stays reachable on phones. */
 @media(max-width:850px){.topbar{height:auto;min-height:64px;flex-wrap:wrap;padding:10px 18px;row-gap:4px}.topbar nav,.home .topbar nav{display:flex;order:3;width:100%;margin-left:0;gap:20px;overflow-x:auto;white-space:nowrap;font-size:13px;padding:6px 0 4px}.topbar nav a{padding:6px 0}.review-plan-list li{flex-direction:column;align-items:flex-start}.review-state.unmapped{text-align:left}}
 @media(max-width:520px){.review-head h1{font-size:30px}.review-card{padding:18px}.review-card h2{font-size:20px}.review-rating-main,.review-rating-more{grid-template-columns:1fr}.review-start-actions .button{width:100%}.review-start{padding:26px 18px}}
+
+/* Study modes */
+.home-banner-actions{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.home-banner-link{color:#f7ede0;font-size:13px;font-weight:700;text-decoration:underline;text-underline-offset:3px}
+.home-banner-link:focus-visible{outline:2px solid #f7ede0;outline-offset:3px}
+.study-back{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:var(--teal-dark);margin-bottom:14px}
+.study-banner{background:#fff;border:1px solid var(--line);border-left:4px solid var(--amber);border-radius:9px;padding:18px 22px;margin-bottom:24px}
+.study-banner-lead{margin:0 0 10px;font-size:14px;line-height:1.6;color:var(--navy)}
+.study-banner-facts{margin:0;padding-left:18px;font-size:12px;line-height:1.6;color:#44555c}
+.study-banner-facts li+li{margin-top:4px}
+.study-section{margin:0 0 30px}
+.study-section h2{font-size:19px;letter-spacing:-.4px;margin:0 0 12px;color:var(--navy)}
+.study-section h3{font-size:13px;margin:0 0 8px;color:var(--navy)}
+.study-muted{color:var(--muted);font-size:12px;line-height:1.6;margin:8px 0 0}
+.study-missing{display:inline-block;font-size:11px;font-weight:700;color:var(--amber);background:#fbf0df;border-radius:4px;padding:2px 7px}
+.study-case-links{font-size:12px;line-height:1.6}
+.study-case-links a,.study-list a,.study-source a,.study-sprint-list a{color:var(--teal-dark);font-weight:600;text-decoration:underline;text-underline-offset:2px}
+.study-categories{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.study-categories li{background:#fff;border:1px solid var(--line);border-radius:8px;padding:11px 14px}
+.study-categories li.is-missing{background:#fbfaf7;border-style:dashed}
+.study-category-head{display:flex;justify-content:space-between;gap:12px;align-items:baseline;margin-bottom:6px}
+.study-category-label{font-size:13px;font-weight:600;color:var(--navy)}
+.study-weight{font-size:11px;color:var(--muted);white-space:nowrap}
+.study-bar{height:4px;background:#eef3f2;border-radius:2px;margin-bottom:7px;overflow:hidden}
+.study-bar span{display:block;height:100%;background:var(--teal)}
+.study-matrix-wrap{position:relative;overflow-x:auto;border:1px solid var(--line);border-radius:9px;background:#fff;max-width:100%}
+.study-matrix-wrap:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+.study-matrix{border-collapse:collapse;width:100%;min-width:760px;font-size:11px}
+.study-matrix caption{caption-side:top;text-align:left;padding:12px 14px;color:var(--muted);font-size:11px;line-height:1.5}
+.study-matrix th,.study-matrix td{border-top:1px solid #edf1f0;padding:8px;text-align:center;vertical-align:top}
+.study-matrix thead th{font-weight:700;color:var(--navy);background:#f8fbfa}
+.study-matrix th small{display:block;font-weight:500;color:var(--muted);margin-top:2px}
+.study-matrix tbody th{text-align:left;font-weight:600;color:var(--navy);min-width:150px}
+.study-matrix td.is-empty{color:#b9c4c8}
+.study-matrix td.is-missing{background:#fdf7ee}
+.study-matrix td.has-content{background:#eef7f5}
+.study-cell-target,.study-cell-have{display:block}
+.study-cell-target{color:var(--muted)}
+.study-cell-have{font-weight:700;color:var(--navy);margin-top:2px}
+.study-source{border-top:1px solid var(--line);margin-top:30px;padding-top:16px;font-size:11px;line-height:1.6;color:var(--muted)}
+.study-source p{margin:0 0 6px}
+.study-source code{font-size:10px}
+.study-select{display:flex;flex-direction:column;gap:5px;font-size:11px;font-weight:700;color:var(--muted)}
+.study-select select{font:inherit;font-size:13px;font-weight:500;color:var(--navy);padding:9px 10px;border:1px solid var(--line);border-radius:7px;background:#fff;min-width:200px;max-width:100%}
+.study-select select:focus-visible{outline:2px solid var(--teal);outline-offset:1px}
+.study-filters{display:flex;flex-wrap:wrap;gap:14px;align-items:end;margin:0 0 24px}
+.study-filters .button{margin-top:0;width:auto}
+.study-empty{background:#fff;border:1px dashed var(--line);border-radius:9px;padding:20px 22px;margin-bottom:24px}
+.study-empty p{margin:0;font-size:14px;color:var(--navy)}
+.study-picker{background:#fff;border:1px solid var(--line);border-radius:9px;padding:18px 22px}
+.study-picker-row{display:flex;flex-wrap:wrap;gap:14px;align-items:end}
+.study-picker-row .button{margin-top:0;width:auto}
+.study-columns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}
+.study-columns--two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.study-personal{background:#fff;border:1px solid var(--line);border-radius:9px;padding:18px 22px}
+.study-personal .button{width:auto}
+.study-list{margin:0;padding-left:18px;font-size:12px;line-height:1.6;color:#44555c}
+.study-list small{display:block;color:var(--muted);font-size:11px}
+.study-rotation-list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.study-rotation-list a{display:flex;flex-direction:column;gap:4px;background:#fff;border:1px solid var(--line);border-radius:9px;padding:16px 18px;color:var(--navy)}
+.study-rotation-list a:hover{border-color:var(--teal)}
+.study-rotation-list a:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+.study-rotation-list span{font-size:11px;color:var(--muted)}
+.study-notice{margin-top:30px;border-top:1px solid var(--line);padding-top:18px}
+.study-notice h2{font-size:16px;margin:0 0 6px;color:var(--navy)}
+.study-notice p{margin:0;font-size:12px;line-height:1.6;color:var(--muted);max-width:720px}
+.study-queue{margin:0;padding-left:22px;display:grid;gap:10px}
+.study-queue li{background:#fff;border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+.study-queue-head{display:flex;justify-content:space-between;gap:12px;align-items:baseline;font-size:13px;color:var(--navy)}
+.study-queue .study-muted{margin:4px 0 6px}
+.study-sprint-list{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.study-sprint-list li{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:9px;padding:14px 18px}
+.study-sprint-list li>div{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:14px;color:var(--navy)}
+.study-sprint-list .button{margin-top:0;width:auto}
+.study-sprint{background:#fff;border:1px solid var(--line);border-radius:9px;padding:20px 24px;max-width:760px}
+.study-sprint h2{font-size:17px;line-height:1.4}
+.study-findings{margin:0 0 18px;display:grid;gap:8px}
+.study-findings div{border-left:3px solid var(--teal);padding:2px 0 2px 12px}
+.study-findings dt{font-size:11px;font-weight:700;color:var(--muted)}
+.study-findings dd{margin:2px 0 0;font-size:13px;line-height:1.55;color:var(--navy)}
+.study-sprint fieldset{border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin:0;display:grid;gap:6px}
+.study-sprint legend{font-size:12px;font-weight:700;color:var(--navy);padding:0 4px}
+.study-option{display:flex;gap:9px;align-items:center;font-size:13px;color:var(--navy);padding:6px 4px;cursor:pointer}
+.study-option input{accent-color:var(--teal);width:16px;height:16px}
+.study-sprint .button{width:auto}
+.study-result{margin-top:16px;border-radius:8px;padding:14px 16px;font-size:13px;line-height:1.6}
+.study-result p{margin:0 0 8px}
+.study-result.is-correct{background:#e2f2f1;color:var(--teal-dark)}
+.study-result.is-wrong{background:#fbf0df;color:#7a5512}
+@media(max-width:850px){.study-columns,.study-columns--two{grid-template-columns:1fr}.study-select select{min-width:0;width:100%}.study-select{flex:1 1 100%}.study-picker-row .button,.study-filters .button{width:100%}}

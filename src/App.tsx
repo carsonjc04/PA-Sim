@@ -55,6 +55,13 @@ import {
 import { RemediationPanel } from "./features/review/RemediationPanel";
 import { ReviewDueNote } from "./features/review/ReviewDueNote";
 import { TodayReview } from "./features/review/TodayReview";
+import { CaseFilters } from "./features/study/CaseFilters";
+import { useCaseFilters } from "./features/study/filterState";
+import { MixedMode } from "./features/study/MixedMode";
+import { PanceMode } from "./features/study/PanceMode";
+import { RotationMode } from "./features/study/RotationMode";
+import { SprintMode } from "./features/study/SprintMode";
+import { StudyHome } from "./features/study/StudyHome";
 
 const categories: { id: Category; label: string }[] = [
   { id: "history", label: "History taking" },
@@ -193,9 +200,9 @@ function InsecureBanner() {
   if (!status || status === "unreachable" || !status.insecure) return null;
   return (
     <div className="insecure-banner" role="alert">
-      Demo deployment: identities are not verified &mdash; anyone can sign in
-      as any name, but each identity only sees its own practice history. Do
-      not enter personal information.
+      Demo deployment: identities are not verified &mdash; anyone can sign in as
+      any name, but each identity only sees its own practice history. Do not
+      enter personal information.
     </div>
   );
 }
@@ -214,6 +221,7 @@ function Header({ showIdentity = true }: { showIdentity?: boolean }) {
         </Link>
         <nav>
           <Link to="/cases">Case library</Link>
+          <Link to="/study">Study modes</Link>
           <Link to="/review">Today&rsquo;s review</Link>
           <Link to="/dashboard">Dashboard</Link>
         </nav>
@@ -383,9 +391,14 @@ function Home() {
       </main>
       <div className="home-banner">
         <p>Practice the encounter, not just the answer.</p>
-        <Link to="/cases" className="home-banner-button">
-          Browse practice cases <Mic size={15} aria-hidden="true" />
-        </Link>
+        <div className="home-banner-actions">
+          <Link to="/study" className="home-banner-link">
+            Study by exam blueprint
+          </Link>
+          <Link to="/cases" className="home-banner-button">
+            Browse practice cases <Mic size={15} aria-hidden="true" />
+          </Link>
+        </div>
       </div>
       <footer>
         <span>
@@ -573,6 +586,7 @@ function DashboardContent() {
 }
 function Cases() {
   const user = useDevUser();
+  const filter = useCaseFilters();
   const [scenarios, setScenarios] = useState<PublicScenario[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [statusById, setStatusById] = useState<
@@ -611,15 +625,35 @@ function Cases() {
         </div>
         {scenarios && (
           <div className="library-count">
-            <strong>{scenarios.length}</strong>
+            <strong>
+              {filter.active
+                ? `${scenarios.filter(filter.matches).length} of ${scenarios.length}`
+                : scenarios.length}
+            </strong>
             <span>
               authored cases
               <br />
-              ready to practice
+              {filter.active ? "match these filters" : "ready to practice"}
             </span>
           </div>
         )}
       </section>
+      <CaseFilters
+        taxonomy={filter.taxonomy}
+        failed={filter.taxonomyFailed}
+        filters={filter.filters}
+        onChange={filter.set}
+        onClear={filter.clear}
+        active={filter.active}
+      />
+      {scenarios && filter.active && !scenarios.some(filter.matches) && (
+        <div className="study-empty" role="status">
+          <p>{filter.emptyMessage}</p>
+          <p className="study-muted">
+            The library is small and does not cover every blueprint area.
+          </p>
+        </div>
+      )}
       {error && (
         <div className="voice-error" role="alert">
           <p>{error}</p>
@@ -627,7 +661,7 @@ function Cases() {
       )}
       {!scenarios && !error && <div className="loading">Loading cases...</div>}
       <div className="case-grid">
-        {scenarios?.map((s) => {
+        {scenarios?.filter(filter.matches).map((s) => {
           const status = statusById[s.id];
           return (
             <article className="case-card" key={s.id}>
@@ -669,6 +703,38 @@ function Cases() {
           );
         })}
       </div>
+    </Layout>
+  );
+}
+/** Rotation and PANCE coverage are public; mixed mode and sprints use the learner's own attempts. */
+function StudyPage({
+  page,
+}: {
+  page: "rotation" | "pance" | "mixed" | "sprint";
+}) {
+  const user = useDevUser();
+  if (page === "rotation")
+    return (
+      <Layout>
+        <RotationMode user={user} />
+      </Layout>
+    );
+  if (page === "pance")
+    return (
+      <Layout>
+        <PanceMode user={user} />
+      </Layout>
+    );
+  return (
+    <Layout>
+      <RequireUser>
+        {user &&
+          (page === "mixed" ? (
+            <MixedMode user={user} />
+          ) : (
+            <SprintMode user={user} />
+          ))}
+      </RequireUser>
     </Layout>
   );
 }
@@ -1294,6 +1360,22 @@ function App() {
       <Route path="/encounter/:scenarioId" element={<Encounter />} />
       <Route path="/results/:attemptId" element={<Results />} />
       <Route path="/review" element={<Review />} />
+      <Route
+        path="/study"
+        element={
+          <Layout>
+            <StudyHome />
+          </Layout>
+        }
+      />
+      <Route path="/study/rotation" element={<StudyPage page="rotation" />} />
+      <Route
+        path="/study/rotation/:rotationId"
+        element={<StudyPage page="rotation" />}
+      />
+      <Route path="/study/pance" element={<StudyPage page="pance" />} />
+      <Route path="/study/mixed" element={<StudyPage page="mixed" />} />
+      <Route path="/study/sprint" element={<StudyPage page="sprint" />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

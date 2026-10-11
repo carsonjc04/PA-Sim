@@ -58,7 +58,7 @@ describe('an invalid content package cannot ship', () => {
     const run = spawnSync('npx', ['tsx', 'scripts/content/validate.ts', '--strict', '--dir', brokenCopy()], { cwd: root, encoding: 'utf8', timeout: 60_000 })
     expect(run.status).toBe(1)
     expect(run.stdout).toContain('INVALID')
-  })
+  }, 30_000)
 
   it('the build gate passes on the shipped package, and treats an unlocked version as an error', () => {
     const ok = spawnSync('npx', ['tsx', 'scripts/content/validate.ts', '--strict'], { cwd: root, encoding: 'utf8', timeout: 60_000 })
@@ -69,7 +69,8 @@ describe('an invalid content package cannot ship', () => {
     const strict = spawnSync('npx', ['tsx', 'scripts/content/validate.ts', '--strict', '--dir', dir], { cwd: root, encoding: 'utf8', timeout: 60_000 })
     expect(strict.status).toBe(1)
     expect(strict.stdout).toContain('lock-missing')
-  })
+    // Two tsx subprocesses; under a parallel suite this can exceed the 5 s default.
+  }, 30_000)
 
   it('the build script runs the content gate before compiling', () => {
     const scripts = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).scripts as Record<string, string>

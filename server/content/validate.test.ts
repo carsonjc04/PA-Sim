@@ -317,6 +317,9 @@ describe('version lock', () => {
     s.lifecycle.changeLog.push({ version: '2.1.1', date: '2026-10-11', summary: 'Reworded opening.' })
     ;(raw.manifest as Json).scenarios.find((e: Json) => e.id === s.id).contentVersion = '2.1.1'
     raw.fixtures['chest-pressure'] = { ...(raw.fixtures['chest-pressure'] as Json), contentVersion: '2.1.1' }
+    // A sprint built from the case must be re-checked against the new version too.
+    expect(validatePackage(raw).errors.map((e) => e.code)).toEqual(['sprint-stale'])
+    ;(raw.sprints['chest-pressure-differential'] as Json).sourceContentVersion = '2.1.1'
     expect(validatePackage(raw).errors).toEqual([])
     expect(validatePackage(raw, { strict: true }).errors.map((e) => e.code)).toEqual(['lock-missing'])
   })

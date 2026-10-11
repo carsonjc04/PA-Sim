@@ -8,7 +8,14 @@ import type {
   EventResponse,
   HistoryPage,
   PublicAttempt,
+  PublicBlueprintSummary,
+  PublicCoverage,
   PublicScenario,
+  PublicSprint,
+  PublicStudyPlan,
+  PublicTaxonomy,
+  SprintAnswerResult,
+  StudyMode,
   ReviewEventBody,
   ReviewMode,
   ReviewSessionResponse,
@@ -128,6 +135,15 @@ export const api = {
     }),
   reviewEvent: (sessionId: string, body: ReviewEventBody) =>
     request<{ ok: true }>(`/api/review/sessions/${encodeURIComponent(sessionId)}/events`, { method: 'POST', body: JSON.stringify(body), retry: true }),
+  studyTaxonomy: () => request<PublicTaxonomy>('/api/study/taxonomy', { retry: true }),
+  blueprints: () => request<PublicBlueprintSummary[]>('/api/study/blueprints', { retry: true }),
+  coverage: (blueprintId: string) => request<PublicCoverage>(`/api/study/blueprints/${encodeURIComponent(blueprintId)}/coverage`, { retry: true }),
+  studyPlan: (mode: StudyMode, blueprintId: string) =>
+    request<PublicStudyPlan>(`/api/study/plan?mode=${mode}&blueprint=${encodeURIComponent(blueprintId)}&timeZone=${encodeURIComponent(browserTimeZone())}`, { retry: true }),
+  sprints: () => request<PublicSprint[]>('/api/study/sprints', { retry: true }),
+  // Scoring stores nothing, so a retry is harmless.
+  answerSprint: (sprintId: string, optionId: string) =>
+    request<SprintAnswerResult>(`/api/study/sprints/${encodeURIComponent(sprintId)}/answer`, { method: 'POST', body: JSON.stringify({ optionId }), retry: true }),
 }
 
 /** The browser's IANA zone; the server uses it for the 04:00 local study-day boundary. */
