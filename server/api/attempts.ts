@@ -2,6 +2,8 @@ import { Router, type Request } from 'express'
 import type { ZodType } from 'zod'
 import {
   attemptEventBody,
+  saveNotesBody,
+  setAnnotationBody,
   historyQuery,
   idempotencyKeySchema,
   startAttemptBody,
@@ -11,6 +13,7 @@ import { authOf, requireAuth } from '../auth/context'
 import { ApiError } from '../http/errors'
 import * as service from '../attempts/service'
 import { attemptRemediation } from '../review/service'
+import * as notes from '../notes/service'
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -65,4 +68,20 @@ attemptsRouter.get('/:id/remediation', async (req, res) => {
   const id = attemptIdOf(req)
   const timeZone = req.query.timeZone === undefined ? undefined : parse(timeZoneSchema, req.query.timeZone, 'invalid_query')
   res.json(await attemptRemediation(authOf(req), id, timeZone))
+})
+
+// Owner-only learner notes and annotations. Kept off the attempt payload on purpose (see server/notes/service.ts).
+attemptsRouter.get('/:id/notes', async (req, res) => {
+  res.json(await notes.getNotes(authOf(req), attemptIdOf(req)))
+})
+attemptsRouter.put('/:id/notes', async (req, res) => {
+  const id = attemptIdOf(req)
+  res.json(await notes.saveNotes(authOf(req), id, parse(saveNotesBody, req.body ?? {}, 'invalid_body')))
+})
+attemptsRouter.get('/:id/annotations', async (req, res) => {
+  res.json(await notes.listAnnotations(authOf(req), attemptIdOf(req)))
+})
+attemptsRouter.put('/:id/annotations', async (req, res) => {
+  const id = attemptIdOf(req)
+  res.json(await notes.setAnnotation(authOf(req), id, parse(setAnnotationBody, req.body ?? {}, 'invalid_body')))
 })

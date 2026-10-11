@@ -42,7 +42,7 @@ export function createApp() {
   app.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {
     const requestId = (req as Request & { requestId?: string }).requestId
     if (err instanceof ApiError) {
-      res.status(err.status).json({ error: { code: err.code, message: err.message, requestId } })
+      res.status(err.status).json({ error: { code: err.code, message: err.message, requestId }, ...(err.extra ?? {}) })
       return
     }
     // express.json() rejects malformed JSON before any route runs.

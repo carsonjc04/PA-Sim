@@ -93,6 +93,8 @@ export type ApiErrorCode =
   | 'blueprint_retired'
   | 'sprint_not_found'
   | 'sprint_locked'
+  | 'notes_conflict'
+  | 'annotation_target_not_found'
   | 'review_out_of_order'
 
 export interface ApiErrorBody {
@@ -405,3 +407,44 @@ export interface SprintAnswerResult {
   /** The source case's authored reasoning for each option, where it exists. */
   reasoning: { id: string; label: string; text: string | null }[]
 }
+
+// ---- Learner notes and annotations (owner-only; never part of attempt payloads) ----
+
+export const NOTES_MAX_LENGTH = 4000
+export const annotationMarks = ['ruled_out', 'key', 'revisit'] as const
+export type AnnotationMark = (typeof annotationMarks)[number]
+export const annotationTargetKinds = ['action', 'diagnosis', 'plan'] as const
+export type AnnotationTargetKind = (typeof annotationTargetKinds)[number]
+
+export interface PublicNotes {
+  body: string
+  /** 0 when nothing has been saved yet. Send it back with the next save. */
+  version: number
+  updatedAt: string | null
+}
+
+export const saveNotesBody = z
+  .object({ body: z.string().max(NOTES_MAX_LENGTH), version: z.number().int().min(0) })
+  .strict()
+export type SaveNotesBody = z.infer<typeof saveNotesBody>
+
+/** 409 notes_conflict carries the saved copy so the learner can choose. */
+export interface NotesConflictBody {
+  error: { code: 'notes_conflict'; message: string; requestId?: string }
+  current: PublicNotes
+}
+
+export interface PublicAnnotation {
+  targetKind: AnnotationTargetKind
+  targetId: string
+  marks: AnnotationMark[]
+}
+
+export const setAnnotationBody = z
+  .object({
+    targetKind: z.enum(annotationTargetKinds),
+    targetId: z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/).max(120),
+    marks: z.array(z.enum(annotationMarks)).max(3),
+  })
+  .strict()
+export type SetAnnotationBody = z.infer<typeof setAnnotationBody>
