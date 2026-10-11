@@ -90,7 +90,8 @@ describe.each(pkg.scenarios.map((s) => [s.id, s] as const))('playthrough: %s', (
     const a = (await play(scenario, fx.selections, 'alice')).body.debrief!
     const b = (await play(scenario, fx.selections, 'bob')).body.debrief!
     expect({ ...a, gradedAt: '' }).toEqual({ ...b, gradedAt: '' })
-  })
+    // Two full HTTP playthroughs; under the parallel suite this can pass the 5 s default.
+  }, 20_000)
 })
 
 describe('hidden-state leakage', () => {
