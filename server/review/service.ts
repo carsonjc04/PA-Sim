@@ -193,6 +193,17 @@ export async function currentSession(auth: AuthContext, timeZone: string): Promi
   })
 }
 
+/** Today's due cards with their knowledge component, for study modes that filter remediation by blueprint. Same queue as the review session. */
+export async function dueKnowledge(auth: AuthContext, timeZone: string): Promise<{ cardId: string; kcId: string; label: string; due: string }[]> {
+  const zone = zoneOf(timeZone)
+  return withTransaction(getPool(), async (q) => {
+    const at = now()
+    await prepare(q, auth.userId, at)
+    const { queue } = await dueQueue(q, auth.userId, zone, at)
+    return queue.map(({ card }) => ({ cardId: card.id, kcId: card.kcId, label: kcLabel(card.kcId), due: card.review.due }))
+  })
+}
+
 export async function summary(auth: AuthContext, timeZone: string): Promise<ReviewSummary> {
   const zone = zoneOf(timeZone)
   return withTransaction(getPool(), async (q) => {

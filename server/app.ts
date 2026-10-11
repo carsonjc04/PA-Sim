@@ -5,6 +5,7 @@ import { attemptsRouter } from './api/attempts'
 import { liveRouter } from './api/live'
 import { reviewRouter } from './api/review'
 import { router } from './api/routes'
+import { studyRouter } from './api/study'
 import { insecureAuthHeader } from './auth/context'
 import { env } from './config/env'
 import { ApiError } from './http/errors'
@@ -31,6 +32,7 @@ export function createApp() {
   app.use('/api/live', liveRouter)
   app.use('/api/attempts', attemptsRouter)
   app.use('/api/review', reviewRouter)
+  app.use('/api/study', studyRouter)
   app.use('/api', router)
 
   app.use((_req, res) => {

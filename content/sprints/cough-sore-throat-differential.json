@@ -1,0 +1,25 @@
+{
+  "id": "cough-sore-throat-differential",
+  "sourceScenarioId": "respiratory",
+  "sourceContentVersion": "2.1.0",
+  "findingActionIds": [
+    "duration",
+    "fever",
+    "uri",
+    "vitals",
+    "throat",
+    "lungs"
+  ],
+  "optionIds": [
+    "viral-uri",
+    "strep",
+    "pneumonia"
+  ],
+  "status": "draft",
+  "changeLog": [
+    {
+      "date": "2026-10-11",
+      "summary": "Assembled from respiratory@2.1.0: findings are that case's own responses and options are its own diagnosis options. Not clinically reviewed."
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "acute-dyspnea-wheeze-differential",
+  "sourceScenarioId": "asthma",
+  "sourceContentVersion": "1.1.0",
+  "findingActionIds": [
+    "speak",
+    "trigger",
+    "vitals",
+    "lungs",
+    "peak"
+  ],
+  "optionIds": [
+    "asthma-exac",
+    "pneumonia",
+    "pe"
+  ],
+  "status": "draft",
+  "changeLog": [
+    {
+      "date": "2026-10-11",
+      "summary": "Assembled from asthma@1.1.0: findings are that case's own responses and options are its own diagnosis options. Not clinically reviewed."
+    }
+  ]
+}

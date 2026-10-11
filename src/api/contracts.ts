@@ -1,7 +1,10 @@
 // Shared by the server (validation) and the browser (typing). Must never import scenario data or grading.
 import { z } from 'zod'
 import type { ErrorType, MissKind, PromptType } from '../domain/remediation/types'
-import type { Category, PhaseId } from '../domain/types'
+import type { AlignmentClaim, BlueprintCoverage, FullExamGate } from '../domain/study/coverage'
+import type { PairPlan } from '../domain/study/recommend'
+import type { BlueprintLifecycle } from '../domain/study/blueprints'
+import type { Category, PhaseId, Suitability } from '../domain/types'
 
 export const phaseIds = ['history', 'exam', 'diagnostics', 'diagnosis', 'treatment'] as const satisfies readonly PhaseId[]
 export const phaseSchema = z.enum(phaseIds)
@@ -86,6 +89,10 @@ export type ApiErrorCode =
   | 'invalid_time_zone'
   | 'review_card_not_found'
   | 'review_session_not_found'
+  | 'blueprint_not_found'
+  | 'blueprint_retired'
+  | 'sprint_not_found'
+  | 'sprint_locked'
   | 'review_out_of_order'
 
 export interface ApiErrorBody {
@@ -122,6 +129,11 @@ export interface PublicScenario {
   /** Coarse label only: reviewer, dates, notes and lifecycle status are maintainer data. */
   reviewStatus: 'requires-clinician-review' | 'clinician-reviewed'
   clinicalReferences: { title: string; organization: string; url: string; publishedOrUpdated?: string }[]
+  /**
+   * Canonical study tags (deprecated IDs resolved) used for filtering. Organ system and task only; the diagnosis,
+   * rubric and topic-level tags stay server-side.
+   */
+  tags: { organSystems: string[]; panceTasks: string[]; eorRotations: string[]; suitability: Suitability }
 }
 
 export interface PublicEvent {
@@ -302,4 +314,94 @@ export interface AttemptRemediation {
   authored: boolean
   draftContent: boolean
   items: PublicRemediationItem[]
+}
+
+// ---- Study modes ----
+
+export interface PublicTerm { id: string; label: string }
+
+/** Active vocabulary for filters. Deprecated IDs are never offered. */
+export interface PublicTaxonomy {
+  organSystems: PublicTerm[]
+  panceTasks: PublicTerm[]
+  eorRotations: PublicTerm[]
+}
+
+export interface PublicBlueprintSummary {
+  id: string
+  issuer: 'NCCPA' | 'PAEA'
+  exam: 'pance' | 'eor'
+  rotation: string | null
+  title: string
+  versionLabel: string
+  /** Derived from the recorded dates on the server's current day. */
+  lifecycle: BlueprintLifecycle
+  effectiveFrom: string | null
+  effectiveUntil: string | null
+  dateNotes: string
+  source: { documentUrl: string; landingPage: string; retrievedAt: string; sha256: string; retrievedVia: string | null; retrievalNote: string | null }
+  /** False until a second person re-checks every transcribed number against the source. */
+  transcriptionVerified: boolean
+  examItems: number | null
+  notes: string[]
+}
+
+export interface PublicSecondaryTarget {
+  id: string
+  label: string
+  partition: boolean
+  values: { id: string; label: string; minPct: number; maxPct: number; itemIds: string[] }[]
+}
+
+export interface PublicCoverage {
+  blueprint: PublicBlueprintSummary
+  coverage: BlueprintCoverage
+  secondaryTargets: PublicSecondaryTarget[]
+  /** Items referenced by id in the coverage. Titles only. */
+  items: { id: string; title: string }[]
+  fullExam: FullExamGate
+  alignment: AlignmentClaim
+}
+
+export const studyModes = ['rotation', 'pance', 'mixed'] as const
+export type StudyMode = (typeof studyModes)[number]
+export const studyPlanQuery = z
+  .object({ mode: z.enum(studyModes), blueprint: z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/).max(120), timeZone: timeZoneSchema })
+  .strict()
+
+export interface PublicStudyPlan {
+  blueprintId: string
+  mode: StudyMode
+  /** Interleaved, highest weakness x weight first. */
+  pairs: PairPlan[]
+  basis: {
+    submittedAttempts: number
+    /** Plain-language description of the ranking, shown to the learner. */
+    method: string
+  }
+  dueRemediation: { cardId: string; label: string; due: string }[]
+}
+
+export interface PublicSprint {
+  id: string
+  sourceScenarioId: string
+  sourceTitle: string
+  /** Sprints reveal their source case's diagnosis, so they open only after that case is submitted. */
+  locked: boolean
+  draft: boolean
+  stem: string | null
+  findings: { label: string; text: string }[]
+  options: { id: string; label: string }[]
+  tags: { organSystems: string[]; panceTasks: string[]; eorRotations: string[] }
+}
+
+export const sprintAnswerBody = z.object({ optionId: z.string().min(1).max(120) }).strict()
+export type SprintAnswerBody = z.infer<typeof sprintAnswerBody>
+
+export interface SprintAnswerResult {
+  correct: boolean
+  chosen: { id: string; label: string }
+  answer: { id: string; label: string }
+  /** The source case's authored reasoning for each option, where it exists. */
+  reasoning: { id: string; label: string; text: string | null }[]
 }

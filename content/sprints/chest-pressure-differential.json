@@ -1,0 +1,24 @@
+{
+  "id": "chest-pressure-differential",
+  "sourceScenarioId": "chest-pressure",
+  "sourceContentVersion": "2.1.0",
+  "findingActionIds": [
+    "onset",
+    "associated",
+    "risk",
+    "stability",
+    "focused"
+  ],
+  "optionIds": [
+    "acs",
+    "gerd",
+    "musculoskeletal"
+  ],
+  "status": "draft",
+  "changeLog": [
+    {
+      "date": "2026-10-11",
+      "summary": "Assembled from chest-pressure@2.1.0: findings are that case's own responses and options are its own diagnosis options. Not clinically reviewed."
+    }
+  ]
+}

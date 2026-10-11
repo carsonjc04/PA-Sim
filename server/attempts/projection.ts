@@ -5,7 +5,9 @@ import type {
   PublicEvent,
   PublicScenario,
 } from '../../src/api/contracts'
+import { canonicalTags } from '../../src/domain/study/taxonomy'
 import type { GradingResult, ScenarioDefinition } from '../../src/domain/types'
+import { contentPackage } from '../content/scenarios'
 import type { AttemptRow, EventRow, HistoryRow, ResultRow } from './repository'
 
 // Every browser payload is built by allowlist, so a field added to ScenarioDefinition cannot leak by being forgotten.
@@ -36,7 +38,14 @@ export function toPublicScenario(s: ScenarioDefinition): PublicScenario {
       url: r.url,
       ...(r.publishedOrUpdated ? { publishedOrUpdated: r.publishedOrUpdated } : {}),
     })),
+    tags: publicTags(s),
   }
+}
+
+/** Canonical filter tags. Deprecated IDs resolve through the current vocabulary; topic tags, provenance and blueprint reviews stay server-side. */
+function publicTags(s: ScenarioDefinition): PublicScenario['tags'] {
+  const t = canonicalTags(s.taxonomy, contentPackage().taxonomy)
+  return { organSystems: t.organSystems, panceTasks: t.panceTasks, eorRotations: t.eorRotations, suitability: { ...s.taxonomy.suitability, modes: [...s.taxonomy.suitability.modes] } }
 }
 
 function toPublicEvent(e: EventRow): PublicEvent | null {
