@@ -103,6 +103,7 @@ function harness() {
     onError: vi.fn(),
     onUsage: vi.fn(),
     onPatientSpeakingChange: vi.fn(),
+    onToolRejected: vi.fn(),
   }
   return { states, events, client: new LiveVoiceClient(events) }
 }
@@ -257,6 +258,24 @@ describe('voice connection lifecycle', () => {
     expect(url).toBe('http://localhost:8787/api/live/tool')
     expect(init.headers['X-Dev-User']).toBe('alice')
     expect(JSON.parse(init.body)).toMatchObject({ attemptId: 'att-1', callId: 'call_1' })
+  })
+
+  it('reports a refused tool call so the page can show it, and still answers the model', async () => {
+    const { client, events } = harness()
+    const pending = start(client)
+    await vi.waitFor(() => expect(FakePeerConnection.last?.channel).toBeTruthy())
+    const channel = FakePeerConnection.last!.channel!
+    channel.deliver({ type: 'session.started', event_id: 'e1' })
+    await pending
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, json: async () => ({ error: { message: 'That phase is locked.' } }) }))
+    channel.deliver({
+      type: 'response.event',
+      event_id: 'e5',
+      event: { type: 'response.output_item.done', item: { type: 'function_call', call_id: 'call_2', name: 'record_history_topics', arguments: '{"actionIds":["onset"]}' } },
+    })
+    await vi.waitFor(() => expect(channel.sent).toHaveLength(2))
+    expect(events.onToolRejected).toHaveBeenCalledWith('That phase is locked.')
+    expect(JSON.parse((channel.sent[0] as { item: { output: string } }).item.output)).toMatchObject({ ok: false })
   })
 
   it('mutes by disabling the track without closing the billed session', async () => {

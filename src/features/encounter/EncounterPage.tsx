@@ -60,6 +60,8 @@ export function EncounterPage() {
   const [confirm, setConfirm] = useState(false)
   const [help, setHelp] = useState(false)
   const [announcement, setAnnouncement] = useState('')
+  const [voiceNotices, setVoiceNotices] = useState<{ id: number; text: string }[]>([])
+  const onToolRejected = useCallback((reason: string) => setVoiceNotices((n) => [...n.slice(-2), { id: Date.now(), text: reason }]), [])
   const [now, setNow] = useState(() => Date.now())
   const phaseHeading = useRef<HTMLHeadingElement>(null)
   const headingFocusPending = useRef(false)
@@ -293,6 +295,16 @@ export function EncounterPage() {
                 </div>
               </div>
             )}
+            {voiceNotices.map((n) => (
+              <div key={n.id} className="entry entry--system entry--warning system-message" role="alert">
+                <p>
+                  <strong>Voice request not recorded.</strong> {n.text} You can make the same choice below.
+                </p>
+                <button type="button" className="button button-quiet button-small" onClick={() => setVoiceNotices((all) => all.filter((x) => x.id !== n.id))}>
+                  Dismiss
+                </button>
+              </div>
+            ))}
             {markError && (
               <div className="entry entry--system entry--warning system-message" role="alert">
                 <p>{markError}</p>
@@ -385,7 +397,7 @@ export function EncounterPage() {
           )}
           <details className="side-disclosure voice-disclosure">
             <summary>Voice conversation (optional)</summary>
-            <VoicePanel attemptId={attempt.id} onActivity={enc.refresh} />
+            <VoicePanel attemptId={attempt.id} onActivity={enc.refresh} onToolRejected={onToolRejected} />
           </details>
         </aside>
       </div>

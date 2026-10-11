@@ -423,3 +423,14 @@ body{background:var(--bg);color:var(--navy)}*{box-sizing:border-box}body{margin:
 .encounter--downtime .thumb-button{min-height:48px;min-width:48px;display:inline-flex;flex-direction:column;gap:2px;font-size:0.75rem;padding:6px 8px}
 .encounter--downtime .phase-footer-actions .button-primary{min-height:48px;justify-content:center}
 
+
+/* Voice cost and session state */
+.voice-panel h2{margin:0;font-size:1rem;color:var(--navy)}
+.voice-cost{margin:0 0 10px;font-size:0.8125rem;line-height:1.55;color:var(--text-2)}
+.voice-meter{margin:0 0 10px;font-size:0.875rem;font-weight:600;color:var(--navy);background:var(--surface-2);border-radius:6px;padding:7px 10px}
+.voice-status--idle,.voice-status--closed{background:var(--surface-2);color:var(--muted)}
+.voice-controls .voice-end{background:var(--red);color:var(--on-accent)}
+.voice-controls .voice-end:hover{background:var(--red-hover)}
+.voice-hint--warning{color:var(--warning-text)}
+.voice-help{margin:0 0 8px}
+.voice-error:focus{outline:3px solid var(--focus);outline-offset:2px}

@@ -45,6 +45,8 @@ export interface VoiceClientEvents {
   onError: (error: VoiceError) => void
   onUsage: (usage: SessionUsage) => void
   onPatientSpeakingChange: (speaking: boolean) => void
+  /** A voice tool call the clinic server refused or could not answer (shown to the learner as a system message). */
+  onToolRejected?: (reason: string) => void
 }
 
 export interface StartVoiceOptions {

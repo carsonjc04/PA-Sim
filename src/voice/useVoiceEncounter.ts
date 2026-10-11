@@ -15,25 +15,37 @@ export interface VoiceEncounter {
   patientSpeaking: boolean
   muted: boolean
   usage: SessionUsage | null
+  /** When the session became live (billing starts), or null when not connected. */
+  connectedAt: number | null
   connect: () => void
   disconnect: () => void
   toggleMute: () => void
   retry: () => void
 }
 
-export function useVoiceEncounter(attemptId: string | null): VoiceEncounter {
+export function useVoiceEncounter(attemptId: string | null, onToolRejected?: (reason: string) => void): VoiceEncounter {
   const [state, setState] = useState<VoiceConnectionState>('idle')
   const [transcript, setTranscript] = useState<TranscriptSegment[]>([])
   const [error, setError] = useState<VoiceError | null>(null)
   const [patientSpeaking, setPatientSpeaking] = useState(false)
   const [muted, setMuted] = useState(false)
   const [usage, setUsage] = useState<SessionUsage | null>(null)
+  const [connectedAt, setConnectedAt] = useState<number | null>(null)
   const clientRef = useRef<LiveVoiceClient | null>(null)
+  const rejectedRef = useRef(onToolRejected)
+  useEffect(() => {
+    rejectedRef.current = onToolRejected
+  })
 
   const ensureClient = useCallback(() => {
     if (!clientRef.current) {
       clientRef.current = new LiveVoiceClient({
-        onStateChange: setState,
+        onStateChange: (next) => {
+          setState(next)
+          if (next === 'live') setConnectedAt((at) => at ?? Date.now())
+          else if (next !== 'closing') setConnectedAt(null)
+        },
+        onToolRejected: (reason) => rejectedRef.current?.(reason),
         onTranscript: setTranscript,
         onError: setError,
         onUsage: setUsage,
@@ -86,6 +98,7 @@ export function useVoiceEncounter(attemptId: string | null): VoiceEncounter {
     patientSpeaking,
     muted,
     usage,
+    connectedAt,
     connect,
     disconnect,
     toggleMute,

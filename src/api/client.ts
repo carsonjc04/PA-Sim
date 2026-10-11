@@ -1,5 +1,6 @@
 // Browser HTTP client. Holds no scenario data and no grading logic; the server is the source of truth.
 import type {
+  AiStatus,
   ApiErrorBody,
   ApiErrorCode,
   AttemptEventBody,
@@ -100,6 +101,7 @@ async function request<T>(path: string, init: RequestInit & { idempotencyKey?: s
 
 export const api = {
   authStatus: () => request<AuthStatus>('/api/auth/status'),
+  aiStatus: () => request<AiStatus>('/api/ai/status', { retry: true }),
   scenarios: () => request<PublicScenario[]>('/api/scenarios', { retry: true }),
   startAttempt: (scenarioId: string) =>
     request<StartAttemptResponse>('/api/attempts', { method: 'POST', body: JSON.stringify({ scenarioId }), retry: true }),

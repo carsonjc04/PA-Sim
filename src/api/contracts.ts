@@ -448,3 +448,15 @@ export const setAnnotationBody = z
   })
   .strict()
 export type SetAnnotationBody = z.infer<typeof setAnnotationBody>
+
+// ---- Voice capability (GET /api/ai/status) ----
+
+export interface AiStatus {
+  aiEnabled: boolean
+  setupHint: string | null
+  /** Advertised session cap. The client ends the session at this point. */
+  maxSessionMinutes: number
+  /** Estimate shown to learners in plain language; not a bill. */
+  estimatedVoiceRatePerMinuteUsd: number
+  storeTranscripts: boolean
+}

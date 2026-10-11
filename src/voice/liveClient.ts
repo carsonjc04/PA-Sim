@@ -285,6 +285,8 @@ export class LiveVoiceClient {
       })
       const body = (await response.json()) as { output?: unknown; error?: { message?: string } }
       const output = response.ok ? body.output : { ok: false, reason: 'Tool call rejected.' }
+      const rejected = output as { ok?: boolean; reason?: string } | undefined
+      if (!response.ok || rejected?.ok === false) this.events.onToolRejected?.(body.error?.message ?? rejected?.reason ?? 'The clinic system could not record that.')
       this.send({
         type: 'response.item.create',
         event_id: newId(),
@@ -304,6 +306,7 @@ export class LiveVoiceClient {
           output: JSON.stringify({ ok: false, reason: 'The clinic system did not respond.' }),
         },
       })
+      this.events.onToolRejected?.('The clinic system did not respond, so that voice request was not recorded.')
     } finally {
       this.pendingToolCalls -= 1
       // Only ask for a new response once every outstanding output is supplied.
