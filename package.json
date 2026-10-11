@@ -21,6 +21,8 @@
     "db:migrate": "tsx server/db/cli.ts",
     "review:upgrade": "tsx scripts/review/upgrade.ts",
     "test:live": "RUN_OPENAI_LIVE_SMOKE=1 vitest run server/openai/live-smoke.test.ts",
+    "test:e2e": "playwright test",
+    "test:audit": "playwright test e2e/audit.spec.ts",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -38,6 +40,8 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@playwright/test": "~1.58.2",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
     "@testing-library/user-event": "^14.6.7",
@@ -49,6 +53,7 @@
     "@types/react-dom": "^19.2.7",
     "@types/supertest": "^7.2.1",
     "@vitejs/plugin-react": "^6.1.1",
+    "axe-core": "^4.13.0",
     "concurrently": "^10.0.5",
     "jsdom": "^29.1.1",
     "oxlint": "^1.81.0",
