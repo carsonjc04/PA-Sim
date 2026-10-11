@@ -10,7 +10,6 @@ import {
   Navigate,
   Route,
   Routes,
-  useParams,
 } from "react-router-dom";
 import {
   ArrowRight,
@@ -20,11 +19,8 @@ import {
   ClipboardList,
   Clock3,
   Mic,
-  RotateCcw,
-  ShieldAlert,
   Stethoscope,
 } from "lucide-react";
-import type { Category } from "./domain/types";
 import {
   api,
   ApiRequestError,
@@ -37,11 +33,10 @@ import {
   devUserSchema,
   type AttemptSummary,
   type AuthStatus,
-  type PublicAttempt,
   type PublicScenario,
 } from "./api/contracts";
 import { EncounterPage } from "./features/encounter/EncounterPage";
-import { RemediationPanel } from "./features/review/RemediationPanel";
+import { DebriefPage } from "./features/debrief/DebriefPage";
 import { ReviewDueNote } from "./features/review/ReviewDueNote";
 import { SettingsButton } from "./features/settings/SettingsDialog";
 import { TodayReview } from "./features/review/TodayReview";
@@ -53,14 +48,6 @@ import { RotationMode } from "./features/study/RotationMode";
 import { SprintMode } from "./features/study/SprintMode";
 import { StudyHome } from "./features/study/StudyHome";
 
-const categories: { id: Category; label: string }[] = [
-  { id: "history", label: "History taking" },
-  { id: "exam", label: "Physical examination" },
-  { id: "diagnostics", label: "Diagnostics & reasoning" },
-  { id: "diagnosis", label: "Diagnostic accuracy" },
-  { id: "treatment", label: "Treatment & follow-up" },
-  { id: "communication", label: "Communication" },
-];
 const errorMessage = (e: unknown) =>
   e instanceof ApiRequestError ? e.message : "Something went wrong.";
 
@@ -710,145 +697,9 @@ function Results() {
   return (
     <Layout>
       <RequireUser>
-        <ResultsContent />
+        <DebriefPage />
       </RequireUser>
     </Layout>
-  );
-}
-function ResultsContent() {
-  const { attemptId } = useParams();
-  const [attempt, setAttempt] = useState<PublicAttempt | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  useEffect(() => {
-    if (!attemptId) return;
-    api
-      .attempt(attemptId)
-      .then(setAttempt)
-      .catch((e) => setError(errorMessage(e)));
-  }, [attemptId]);
-  if (error || (attempt && !attempt.debrief))
-    return (
-      <div className="empty-state">
-        <h1>Result not found</h1>
-        <p className="lede">
-          {error ?? "This encounter has not been submitted yet."}
-        </p>
-        <Link className="button button-primary" to="/cases">
-          Return to cases
-        </Link>
-      </div>
-    );
-  if (!attempt) return <div className="loading">Loading debrief...</div>;
-  const scenario = attempt.scenario;
-  const result = attempt.debrief!;
-  return (
-    <>
-      <section className="results-head">
-        <div>
-          <p className="eyebrow">
-            ENCOUNTER DEBRIEF · {scenario.summary.title.toUpperCase()}
-          </p>
-          <h1>
-            {result.passed ? "Strong clinical work." : "A useful next review."}
-          </h1>
-          <p className="lede">
-            This feedback reflects the authored rubric for this fictional case
-            and has not been clinically validated.
-          </p>
-          <p className="muted">
-            Graded {new Date(result.gradedAt).toLocaleString()} · rubric{" "}
-            {result.gradingVersionId} · case version {result.contentVersionId}
-          </p>
-        </div>
-        <div className={`score-hero ${result.passed ? "pass" : "fail"}`}>
-          <strong>
-            {result.finalScore}
-            <small>%</small>
-          </strong>
-          <span>{result.passed ? "Passed" : "Not passed"}</span>
-        </div>
-      </section>
-      {result.criticalSafetyError && (
-        <div className="critical-banner">
-          <ShieldAlert size={22} />
-          <div>
-            <strong>Critical safety error</strong>
-            <p>{result.criticalMessages.join(" ")}</p>
-            <small>
-              Raw score: {result.rawScore}%. Displayed score is capped at 59%
-              when a critical safety error occurs.
-            </small>
-          </div>
-        </div>
-      )}
-      <section className="results-grid">
-        <div className="panel">
-          <div className="section-heading">
-            <div>
-              <p className="eyebrow">RUBRIC BREAKDOWN</p>
-              <h2>Category scores</h2>
-            </div>
-            <span className="raw-score">Raw {result.rawScore}%</span>
-          </div>
-          {categories.map((c) => (
-            <div className="bar-row" key={c.id}>
-              <div>
-                <span>{c.label}</span>
-                <strong>{result.categoryScores[c.id]}%</strong>
-              </div>
-              <div className="bar">
-                <i style={{ width: `${result.categoryScores[c.id]}%` }} />
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="panel feedback-panel">
-          <p className="eyebrow">DEBRIEF NOTES</p>
-          <Feedback title="What went well" items={result.strengths} />
-          <Feedback title="Important misses" items={result.missed} />
-          <Feedback
-            title="Unnecessary or unsafe"
-            items={[...result.unnecessary, ...result.unsafe]}
-          />
-        </div>
-      </section>
-      <RemediationPanel attemptId={attempt.id} />
-      <section className="results-grid lower">
-        <div className="panel">
-          <p className="eyebrow">DIAGNOSTIC REASONING</p>
-          <h2>{result.correctDiagnosisLabel}</h2>
-          <p>{result.diagnosisReasoning}</p>
-          <div className="ideal-plan">
-            <strong>Recommended plan</strong>
-            {result.idealPlan.map((x) => (
-              <span key={x}>
-                <Check size={14} />
-                {x}
-              </span>
-            ))}
-          </div>
-        </div>
-        <div className="panel">
-          <p className="eyebrow">NEXT STEP</p>
-          <h2>Keep building clinical fluency</h2>
-          <p>
-            Replay the case to try a different path, or return to the library
-            for another fictional patient.
-          </p>
-          <div className="modal-actions">
-            <Link
-              className="button button-primary"
-              to={`/encounter/${scenario.id}`}
-            >
-              Replay case <RotateCcw size={15} />
-            </Link>
-            <Link className="button button-quiet" to="/cases">
-              Case library
-            </Link>
-          </div>
-        </div>
-      </section>
-    </>
   );
 }
 function Stat({
@@ -875,22 +726,6 @@ function Stat({
         <div className="mini-progress">
           <i style={{ width: `${progress * 100}%` }} />
         </div>
-      )}
-    </div>
-  );
-}
-function Feedback({ title, items }: { title: string; items: string[] }) {
-  return (
-    <div className="feedback-block">
-      <h3>{title}</h3>
-      {items.length ? (
-        <ul>
-          {items.map((x) => (
-            <li key={x}>{x}</li>
-          ))}
-        </ul>
-      ) : (
-        <p className="muted">Nothing recorded for this section.</p>
       )}
     </div>
   );

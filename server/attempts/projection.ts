@@ -8,6 +8,7 @@ import type {
 import { canonicalTags } from '../../src/domain/study/taxonomy'
 import type { GradingResult, ScenarioDefinition } from '../../src/domain/types'
 import { contentPackage } from '../content/scenarios'
+import { buildReasoningDebrief } from './debrief'
 import type { AttemptRow, EventRow, HistoryRow, ResultRow } from './repository'
 
 // Every browser payload is built by allowlist, so a field added to ScenarioDefinition cannot leak by being forgotten.
@@ -62,7 +63,7 @@ function toPublicEvent(e: EventRow): PublicEvent | null {
   }
 }
 
-export function toPublicDebrief(scenario: ScenarioDefinition, stored: ResultRow): PublicDebrief {
+export function toPublicDebrief(scenario: ScenarioDefinition, stored: ResultRow, events: EventRow[] = [], startedAt: string = stored.createdAt): PublicDebrief {
   const r = stored.result as GradingResult
   return {
     gradingVersionId: stored.gradingVersionId,
@@ -81,6 +82,7 @@ export function toPublicDebrief(scenario: ScenarioDefinition, stored: ResultRow)
     correctDiagnosisLabel: scenario.diagnoses.find((d) => d.id === scenario.correctPrimary)?.label ?? '',
     diagnosisReasoning: r.diagnosisReasoning,
     idealPlan: [...r.idealPlan],
+    reasoning: buildReasoningDebrief(scenario, events, startedAt),
   }
 }
 
@@ -101,7 +103,7 @@ export function toPublicAttempt(
     events: events.map(toPublicEvent).filter((e): e is PublicEvent => e !== null),
     createdAt: attempt.createdAt,
     submittedAt: attempt.submittedAt,
-    debrief: attempt.status === 'submitted' && result ? toPublicDebrief(scenario, result) : null,
+    debrief: attempt.status === 'submitted' && result ? toPublicDebrief(scenario, result, events, attempt.createdAt) : null,
   }
 }
 

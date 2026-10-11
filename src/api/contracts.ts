@@ -167,6 +167,53 @@ export interface PublicDebrief {
   correctDiagnosisLabel: string
   diagnosisReasoning: string
   idealPlan: string[]
+  /** Reasoning-first debrief, built only from the case's authored rubric and the attempt's own events. */
+  reasoning: PublicReasoningDebrief
+}
+
+export interface PublicDebriefMiss {
+  rubricItemId: string
+  kind: MissKind
+  phase: PhaseId
+  label: string
+  /** Verbatim authored explanation (omission feedback, unsafe reason, critical rule, or option reasoning). */
+  whyItMattered: string | null
+}
+
+export interface PublicTimelineEntry {
+  seq: number
+  /** Milliseconds since the attempt started. */
+  offsetMs: number
+  phase: PhaseId
+  type: 'finding' | 'phase_locked' | 'diagnosis' | 'plan'
+  actionId: string | null
+  label: string
+  revealed: string | null
+  source: 'guided' | 'voice' | 'system'
+  /** The case rubric scores this choice as positive (a key data point). */
+  key: boolean
+  confidence: 'sure' | 'unsure' | null
+}
+
+export interface PublicDifferentialOption {
+  id: string
+  label: string
+  correct: boolean
+  chosen: boolean
+  /** Authored reasoning for this option, shown only after submission. */
+  reasoning: string | null
+}
+
+export interface PublicReasoningDebrief {
+  misses: PublicDebriefMiss[]
+  timeline: PublicTimelineEntry[]
+  differential: PublicDifferentialOption[]
+  /** Key findings the learner had uncovered before committing to a diagnosis. */
+  keyFindingsBeforeDiagnosis: { actionId: string; label: string; revealed: string | null }[]
+  /** Authored data-gathering items the learner did not collect, with why each mattered. */
+  missedEvidence: { id: string; phase: PhaseId; label: string; feedback: string }[]
+  /** Shown with the debrief so nobody mistakes it for a validated model. */
+  provenance: string
 }
 
 export interface PublicAttempt {
