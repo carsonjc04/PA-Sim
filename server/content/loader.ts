@@ -19,6 +19,12 @@ export interface RawPackage {
   knowledge: unknown
   /** Raw remediation sidecars by file stem (content/remediation/<scenarioId>.json). */
   remediation: Record<string, unknown>
+  /** content/taxonomy-history.json: every taxonomy ID ever published. */
+  taxonomyHistory: unknown
+  /** Raw exam blueprints by file stem (content/blueprints/<id>.json). */
+  blueprints: Record<string, unknown>
+  /** Raw differential sprints by file stem (content/sprints/<id>.json). */
+  sprints: Record<string, unknown>
   loadIssues: Issue[]
 }
 
@@ -72,5 +78,17 @@ export function readPackage(dir: string = DEFAULT_CONTENT_DIR): RawPackage {
   }
   const knowledgePath = join(root, 'knowledge', 'library.json')
   const knowledge = existsSync(knowledgePath) || Object.keys(remediation).length ? readJson(knowledgePath, 'knowledge/library.json', loadIssues) : undefined
-  return { dir: root, manifest, lock, taxonomy, scenarios, fixtures, scenarioFilesOnDisk, knowledge, remediation, loadIssues }
+  const taxonomyHistory = readJson(join(root, 'taxonomy-history.json'), 'taxonomy-history.json', loadIssues)
+  const blueprints = readDir(root, 'blueprints', loadIssues)
+  const sprints = readDir(root, 'sprints', loadIssues)
+  return { dir: root, manifest, lock, taxonomy, scenarios, fixtures, scenarioFilesOnDisk, knowledge, remediation, taxonomyHistory, blueprints, sprints, loadIssues }
+}
+
+/** Every JSON file in an optional content subdirectory, keyed by file stem. */
+function readDir(root: string, name: string, issues: Issue[]): Record<string, unknown> {
+  const dir = join(root, name)
+  const out: Record<string, unknown> = {}
+  if (!existsSync(dir)) return out
+  for (const f of readdirSync(dir).filter((f) => f.endsWith('.json')).sort()) out[f.replace(/\.json$/, '')] = readJson(join(dir, f), `${name}/${f}`, issues)
+  return out
 }

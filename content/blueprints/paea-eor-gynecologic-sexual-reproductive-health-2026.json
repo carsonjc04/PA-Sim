@@ -1,0 +1,716 @@
+{
+  "id": "paea-eor-gynecologic-sexual-reproductive-health-2026",
+  "issuer": "PAEA",
+  "exam": "eor",
+  "rotation": "women-s-health",
+  "title": "Gynecologic, Sexual, and Reproductive Health End of Rotation Exam Blueprint",
+  "versionLabel": "2026",
+  "effectiveFrom": "2026-07-27",
+  "effectiveUntil": null,
+  "dateNotes": "PAEA: \"New versions of the End of Rotation exams published to these blueprint specifications were published July 27, 2026.\" effectiveFrom uses that publication date.",
+  "publishedAt": "2026-07-27",
+  "supersedes": [
+    "paea-eor-womens-health-2018"
+  ],
+  "supersededBy": null,
+  "source": {
+    "documentUrl": "https://paeaonline.org/wp-content/uploads/2026/07/GSR-Blueprint-2026.pdf",
+    "landingPage": "https://paeaonline.org/assessment/end-of-rotation/blueprints-and-topic-lists",
+    "retrievedAt": "2026-10-11",
+    "sha256": "53c8685a906bb83be45c5ee48a30338bc74c5ac69bea12f399403d995940a2fd",
+    "retrievedVia": null,
+    "retrievalNote": null
+  },
+  "examStructure": {
+    "items": 100,
+    "format": "100 multiple-choice questions (per the blueprint header)"
+  },
+  "contentCategories": [
+    {
+      "id": "prenatal-care-pregnancy",
+      "label": "Prenatal Care/Pregnancy",
+      "weightPct": 20,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "reproductive-system"
+            ],
+            "topicTags": [
+              "pregnancy-prenatal"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "uterine-cervix",
+      "label": "Uterine/Cervix",
+      "weightPct": 12,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "reproductive-system"
+            ],
+            "topicTags": [
+              "uterine-cervix"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "fertility-management",
+      "label": "Fertility Management",
+      "weightPct": 10,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "reproductive-system"
+            ],
+            "topicTags": [
+              "fertility-management"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "sexual-health-development",
+      "label": "Sexual Health/Development",
+      "weightPct": 10,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "reproductive-system"
+            ],
+            "topicTags": [
+              "sexual-health-development"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "labor-delivery",
+      "label": "Labor/Delivery",
+      "weightPct": 9,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "reproductive-system"
+            ],
+            "topicTags": [
+              "labor-delivery"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "postpartum-care",
+      "label": "Postpartum Care",
+      "weightPct": 8,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "reproductive-system"
+            ],
+            "topicTags": [
+              "postpartum"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "breast",
+      "label": "Breast",
+      "weightPct": 7,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "reproductive-system"
+            ],
+            "topicTags": [
+              "breast"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "vulva-vaginal-pelvic-floor",
+      "label": "Vulva/Vaginal/Pelvic Floor",
+      "weightPct": 7,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "reproductive-system"
+            ],
+            "topicTags": [
+              "vulva-vagina-pelvic-floor"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "psychiatric-behavioral-health",
+      "label": "Psychiatric/Behavioral Health",
+      "weightPct": 6,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "psychiatry-behavioral-science"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "infections",
+      "label": "Infections",
+      "weightPct": 6,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "reproductive-system"
+            ],
+            "topicTags": [
+              "gyn-infections"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "ovary-adnexa",
+      "label": "Ovary/Adnexa",
+      "weightPct": 5,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "reproductive-system"
+            ],
+            "topicTags": [
+              "ovary-adnexa"
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "taskCategories": [
+    {
+      "id": "hp",
+      "label": "History & Physical",
+      "canonicalTask": "history-taking-physical-examination",
+      "weightPct": 15
+    },
+    {
+      "id": "ds",
+      "label": "Diagnostic Studies",
+      "canonicalTask": "using-diagnostic-laboratory-studies",
+      "weightPct": 11
+    },
+    {
+      "id": "dx",
+      "label": "Diagnosis",
+      "canonicalTask": "formulating-the-most-likely-diagnosis",
+      "weightPct": 20
+    },
+    {
+      "id": "hm",
+      "label": "Health Maintenance",
+      "canonicalTask": "health-maintenance-education-prevention",
+      "weightPct": 11
+    },
+    {
+      "id": "ci",
+      "label": "Clinical Intervention",
+      "canonicalTask": "clinical-intervention",
+      "weightPct": 11
+    },
+    {
+      "id": "ct",
+      "label": "Clinical Therapeutics",
+      "canonicalTask": "pharmaceutical-therapeutics",
+      "weightPct": 16
+    },
+    {
+      "id": "sc",
+      "label": "Scientific Concepts",
+      "canonicalTask": "applying-foundational-scientific-concepts",
+      "weightPct": 8
+    },
+    {
+      "id": "pp",
+      "label": "Professional Practice",
+      "canonicalTask": "professional-practice",
+      "weightPct": 8
+    }
+  ],
+  "cells": [
+    {
+      "content": "prenatal-care-pregnancy",
+      "task": "hp",
+      "items": 1
+    },
+    {
+      "content": "prenatal-care-pregnancy",
+      "task": "ds",
+      "items": 3
+    },
+    {
+      "content": "prenatal-care-pregnancy",
+      "task": "dx",
+      "items": 6
+    },
+    {
+      "content": "prenatal-care-pregnancy",
+      "task": "hm",
+      "items": 2
+    },
+    {
+      "content": "prenatal-care-pregnancy",
+      "task": "ci",
+      "items": 0
+    },
+    {
+      "content": "prenatal-care-pregnancy",
+      "task": "ct",
+      "items": 5
+    },
+    {
+      "content": "prenatal-care-pregnancy",
+      "task": "sc",
+      "items": 1
+    },
+    {
+      "content": "prenatal-care-pregnancy",
+      "task": "pp",
+      "items": 2
+    },
+    {
+      "content": "uterine-cervix",
+      "task": "hp",
+      "items": 3
+    },
+    {
+      "content": "uterine-cervix",
+      "task": "ds",
+      "items": 3
+    },
+    {
+      "content": "uterine-cervix",
+      "task": "dx",
+      "items": 2
+    },
+    {
+      "content": "uterine-cervix",
+      "task": "hm",
+      "items": 2
+    },
+    {
+      "content": "uterine-cervix",
+      "task": "ci",
+      "items": 1
+    },
+    {
+      "content": "uterine-cervix",
+      "task": "ct",
+      "items": 1
+    },
+    {
+      "content": "uterine-cervix",
+      "task": "sc",
+      "items": 0
+    },
+    {
+      "content": "uterine-cervix",
+      "task": "pp",
+      "items": 0
+    },
+    {
+      "content": "fertility-management",
+      "task": "hp",
+      "items": 1
+    },
+    {
+      "content": "fertility-management",
+      "task": "ds",
+      "items": 0
+    },
+    {
+      "content": "fertility-management",
+      "task": "dx",
+      "items": 1
+    },
+    {
+      "content": "fertility-management",
+      "task": "hm",
+      "items": 1
+    },
+    {
+      "content": "fertility-management",
+      "task": "ci",
+      "items": 2
+    },
+    {
+      "content": "fertility-management",
+      "task": "ct",
+      "items": 3
+    },
+    {
+      "content": "fertility-management",
+      "task": "sc",
+      "items": 1
+    },
+    {
+      "content": "fertility-management",
+      "task": "pp",
+      "items": 1
+    },
+    {
+      "content": "sexual-health-development",
+      "task": "hp",
+      "items": 1
+    },
+    {
+      "content": "sexual-health-development",
+      "task": "ds",
+      "items": 1
+    },
+    {
+      "content": "sexual-health-development",
+      "task": "dx",
+      "items": 1
+    },
+    {
+      "content": "sexual-health-development",
+      "task": "hm",
+      "items": 1
+    },
+    {
+      "content": "sexual-health-development",
+      "task": "ci",
+      "items": 1
+    },
+    {
+      "content": "sexual-health-development",
+      "task": "ct",
+      "items": 1
+    },
+    {
+      "content": "sexual-health-development",
+      "task": "sc",
+      "items": 3
+    },
+    {
+      "content": "sexual-health-development",
+      "task": "pp",
+      "items": 1
+    },
+    {
+      "content": "labor-delivery",
+      "task": "hp",
+      "items": 1
+    },
+    {
+      "content": "labor-delivery",
+      "task": "ds",
+      "items": 1
+    },
+    {
+      "content": "labor-delivery",
+      "task": "dx",
+      "items": 2
+    },
+    {
+      "content": "labor-delivery",
+      "task": "hm",
+      "items": 0
+    },
+    {
+      "content": "labor-delivery",
+      "task": "ci",
+      "items": 1
+    },
+    {
+      "content": "labor-delivery",
+      "task": "ct",
+      "items": 2
+    },
+    {
+      "content": "labor-delivery",
+      "task": "sc",
+      "items": 1
+    },
+    {
+      "content": "labor-delivery",
+      "task": "pp",
+      "items": 1
+    },
+    {
+      "content": "postpartum-care",
+      "task": "hp",
+      "items": 1
+    },
+    {
+      "content": "postpartum-care",
+      "task": "ds",
+      "items": 0
+    },
+    {
+      "content": "postpartum-care",
+      "task": "dx",
+      "items": 2
+    },
+    {
+      "content": "postpartum-care",
+      "task": "hm",
+      "items": 1
+    },
+    {
+      "content": "postpartum-care",
+      "task": "ci",
+      "items": 1
+    },
+    {
+      "content": "postpartum-care",
+      "task": "ct",
+      "items": 1
+    },
+    {
+      "content": "postpartum-care",
+      "task": "sc",
+      "items": 1
+    },
+    {
+      "content": "postpartum-care",
+      "task": "pp",
+      "items": 1
+    },
+    {
+      "content": "breast",
+      "task": "hp",
+      "items": 2
+    },
+    {
+      "content": "breast",
+      "task": "ds",
+      "items": 1
+    },
+    {
+      "content": "breast",
+      "task": "dx",
+      "items": 1
+    },
+    {
+      "content": "breast",
+      "task": "hm",
+      "items": 2
+    },
+    {
+      "content": "breast",
+      "task": "ci",
+      "items": 1
+    },
+    {
+      "content": "breast",
+      "task": "ct",
+      "items": 0
+    },
+    {
+      "content": "breast",
+      "task": "sc",
+      "items": 0
+    },
+    {
+      "content": "breast",
+      "task": "pp",
+      "items": 0
+    },
+    {
+      "content": "vulva-vaginal-pelvic-floor",
+      "task": "hp",
+      "items": 2
+    },
+    {
+      "content": "vulva-vaginal-pelvic-floor",
+      "task": "ds",
+      "items": 0
+    },
+    {
+      "content": "vulva-vaginal-pelvic-floor",
+      "task": "dx",
+      "items": 2
+    },
+    {
+      "content": "vulva-vaginal-pelvic-floor",
+      "task": "hm",
+      "items": 0
+    },
+    {
+      "content": "vulva-vaginal-pelvic-floor",
+      "task": "ci",
+      "items": 2
+    },
+    {
+      "content": "vulva-vaginal-pelvic-floor",
+      "task": "ct",
+      "items": 1
+    },
+    {
+      "content": "vulva-vaginal-pelvic-floor",
+      "task": "sc",
+      "items": 0
+    },
+    {
+      "content": "vulva-vaginal-pelvic-floor",
+      "task": "pp",
+      "items": 0
+    },
+    {
+      "content": "psychiatric-behavioral-health",
+      "task": "hp",
+      "items": 1
+    },
+    {
+      "content": "psychiatric-behavioral-health",
+      "task": "ds",
+      "items": 0
+    },
+    {
+      "content": "psychiatric-behavioral-health",
+      "task": "dx",
+      "items": 1
+    },
+    {
+      "content": "psychiatric-behavioral-health",
+      "task": "hm",
+      "items": 1
+    },
+    {
+      "content": "psychiatric-behavioral-health",
+      "task": "ci",
+      "items": 1
+    },
+    {
+      "content": "psychiatric-behavioral-health",
+      "task": "ct",
+      "items": 1
+    },
+    {
+      "content": "psychiatric-behavioral-health",
+      "task": "sc",
+      "items": 0
+    },
+    {
+      "content": "psychiatric-behavioral-health",
+      "task": "pp",
+      "items": 1
+    },
+    {
+      "content": "infections",
+      "task": "hp",
+      "items": 1
+    },
+    {
+      "content": "infections",
+      "task": "ds",
+      "items": 1
+    },
+    {
+      "content": "infections",
+      "task": "dx",
+      "items": 1
+    },
+    {
+      "content": "infections",
+      "task": "hm",
+      "items": 1
+    },
+    {
+      "content": "infections",
+      "task": "ci",
+      "items": 0
+    },
+    {
+      "content": "infections",
+      "task": "ct",
+      "items": 1
+    },
+    {
+      "content": "infections",
+      "task": "sc",
+      "items": 0
+    },
+    {
+      "content": "infections",
+      "task": "pp",
+      "items": 1
+    },
+    {
+      "content": "ovary-adnexa",
+      "task": "hp",
+      "items": 1
+    },
+    {
+      "content": "ovary-adnexa",
+      "task": "ds",
+      "items": 1
+    },
+    {
+      "content": "ovary-adnexa",
+      "task": "dx",
+      "items": 1
+    },
+    {
+      "content": "ovary-adnexa",
+      "task": "hm",
+      "items": 0
+    },
+    {
+      "content": "ovary-adnexa",
+      "task": "ci",
+      "items": 1
+    },
+    {
+      "content": "ovary-adnexa",
+      "task": "ct",
+      "items": 0
+    },
+    {
+      "content": "ovary-adnexa",
+      "task": "sc",
+      "items": 1
+    },
+    {
+      "content": "ovary-adnexa",
+      "task": "pp",
+      "items": 0
+    }
+  ],
+  "transcription": {
+    "method": "Manual transcription from the official PDF; row and column totals checked by tests.",
+    "transcribedAt": "2026-10-11",
+    "transcribedBy": "coding-agent",
+    "verifiedBy": null,
+    "verifiedAt": null
+  },
+  "notes": [
+    "PAEA lists this exam as \"Gynecologic, Sexual, and Reproductive Health (formerly Women's Health)\". PA-Sim keeps the stable rotation ID women-s-health."
+  ]
+}

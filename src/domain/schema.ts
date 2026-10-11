@@ -70,14 +70,32 @@ const reference = z.strictObject({
   notes: text.optional(),
 })
 
+export const practiceModes = ['osce', 'clinical-sim', 'sprint'] as const
+
 const taxonomy = z.strictObject({
   provenance: z.enum(['author-proposed-unreviewed', 'reviewed']),
+  /** Content axis: organ system / content category. Independent of panceTasks. */
   organSystems: z.array(text).min(1),
+  /** Task axis: what the learner does. Independent of organSystems. */
   panceTasks: z.array(text).min(1),
+  /** Finer tags that let EOR categories without a PANCE equivalent be crosswalked (content/taxonomy.json topicTags). */
+  topicTags: z.array(text).optional(),
   careSetting: text,
   acuity: z.enum(['routine', 'urgent', 'emergent']),
   ageGroup: text,
   eorRotations: z.array(text).min(1),
+  /** Which learner modes and levels the case is built for. */
+  suitability: z.strictObject({
+    modes: z.array(z.enum(practiceModes)).min(1),
+    learnerLevel: z.enum(['didactic', 'clinical', 'both']),
+    estMinutes: z.number().int().positive(),
+    voiceReady: z.boolean(),
+  }),
+  /**
+   * A qualified reviewer confirmed the tags against this exact blueprint version. Only when every shipped item
+   * has one may the product say it is aligned to that blueprint. Roles and dates only, never names.
+   */
+  blueprintReviews: z.array(z.strictObject({ blueprintId: text, reviewerRole: text, reviewedAt: isoDate })).optional(),
 })
 
 const clinicalImage = z.strictObject({
@@ -173,14 +191,26 @@ export const lockSchema = z.strictObject({
 })
 export type ContentLock = z.infer<typeof lockSchema>
 
-export const taxonomyVocabularySchema = z.strictObject({
-  provenance: text,
-  organSystems: z.array(z.strictObject({ id, label: text })),
-  panceTasks: z.array(z.strictObject({ id, label: text })),
-  careSettings: z.array(z.strictObject({ id, label: text })),
-  ageGroups: z.array(z.strictObject({ id, label: text })),
-  eorRotations: z.array(z.strictObject({ id, label: text })),
+/** A vocabulary term. IDs are permanent: a retired term stays with status "deprecated" and points at its replacement. */
+const term = z.strictObject({
+  id,
+  label: text,
+  status: z.enum(['active', 'deprecated']),
+  replacedBy: z.array(id).min(1).optional(),
+  source: text.optional(),
 })
+
+export const taxonomyVocabularySchema = z.strictObject({
+  taxonomyVersion: z.literal(2),
+  provenance: text,
+  organSystems: z.array(term),
+  panceTasks: z.array(term),
+  topicTags: z.array(term),
+  careSettings: z.array(term),
+  ageGroups: z.array(term),
+  eorRotations: z.array(term),
+})
+export type TaxonomyTerm = z.infer<typeof term>
 export type TaxonomyVocabulary = z.infer<typeof taxonomyVocabularySchema>
 
 export function validateScenario(input: unknown): ScenarioDefinition {

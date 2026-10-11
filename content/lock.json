@@ -12,6 +12,11 @@
       "fingerprint": "7b262b39f92875610bf9c12fb48d71b7365201e83817a7580dc703fd0a313753"
     },
     {
+      "id": "asthma",
+      "contentVersion": "1.1.0",
+      "fingerprint": "350cec3f6e5f4143fe1c49636af96ada7f1ba2ee45244eb1547a81d1d647ddbb"
+    },
+    {
       "id": "chest-pressure",
       "contentVersion": "2.0.0",
       "fingerprint": "a9f651b47c14cd771f2d28271a156cc59f9cfbbec4acb0f59a85b194d4019fa3"
@@ -20,6 +25,11 @@
       "id": "chest-pressure",
       "contentVersion": "2.0.1",
       "fingerprint": "cee505aa9dd82b99c226ed610019cbbb51fb6c868112ad9563e63ad5e33ea9c1"
+    },
+    {
+      "id": "chest-pressure",
+      "contentVersion": "2.1.0",
+      "fingerprint": "d2cf4b85051633ff3b7ae1631120ba7f949a8b764f6d8f468ffcd359882fa32f"
     },
     {
       "id": "dysuria",
@@ -32,6 +42,11 @@
       "fingerprint": "1ceff928609287f2cf53a3d2a131d09b9853860a8d0af2b415896907c34f12f6"
     },
     {
+      "id": "dysuria",
+      "contentVersion": "2.1.0",
+      "fingerprint": "0453c3d01324570e03433cf7264d980414795169d4ac25eb17c769f9c599034c"
+    },
+    {
       "id": "metabolic",
       "contentVersion": "1.0.0",
       "fingerprint": "b9eac8af709a035c9d9cc9bee9fa899f82c77a989b3286e5a40cf36675099ada"
@@ -42,6 +57,11 @@
       "fingerprint": "27b3348ca1fd6899990b4672307c9baabb8aa4e3425c04270116bfe189405d5d"
     },
     {
+      "id": "metabolic",
+      "contentVersion": "1.1.0",
+      "fingerprint": "afd75809d18837025e1a3d7a12f93469bea13a1c45529c40a5a0e97c67e34fd4"
+    },
+    {
       "id": "respiratory",
       "contentVersion": "2.0.0",
       "fingerprint": "0ee7af86e969b84722f5a9296bb39294b1ba31d58be9a65e62069939aa90de34"
@@ -50,6 +70,11 @@
       "id": "respiratory",
       "contentVersion": "2.0.1",
       "fingerprint": "51a0d89f1df55b79ad4b5c834c7f3654c0a4c1cad79ed2a2e7d259bd6dedc499"
+    },
+    {
+      "id": "respiratory",
+      "contentVersion": "2.1.0",
+      "fingerprint": "8c62cb61984972211de42fd0b08f727f75d1204d60f786822cb37684aef7794a"
     }
   ],
   "remediation": [
@@ -57,6 +82,11 @@
       "scenarioId": "respiratory",
       "remediationVersion": "0.1.0",
       "fingerprint": "af9fc4643a3aa9fc5b815fe5bae403468dd79d6d7c8aab7bec6dae181637370f"
+    },
+    {
+      "scenarioId": "respiratory",
+      "remediationVersion": "0.1.1",
+      "fingerprint": "83e409bb7fcf6ffcbc53e60aeceba36f7c122b722f3215ef4bd1605f870d3041"
     }
   ]
 }

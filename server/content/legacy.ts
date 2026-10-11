@@ -1,4 +1,7 @@
-import type { ScenarioDefinition } from '../../src/domain/types'
+import type { ScenarioDefinition, Suitability } from '../../src/domain/types'
+
+/** Placeholder for snapshots that predate suitability. Read-only history; never shown as a recommendation. */
+const LEGACY_SUITABILITY: Suitability = { modes: ['osce'], learnerLevel: 'both', estMinutes: 1, voiceReady: false }
 
 /**
  * Snapshots stored before schema 2.0 have no lifecycle, taxonomy or waivers. This adapter fills
@@ -7,7 +10,11 @@ import type { ScenarioDefinition } from '../../src/domain/types'
  */
 export function upgradeStoredDefinition(stored: unknown): ScenarioDefinition {
   const d = stored as Partial<ScenarioDefinition> & { reviewStatus?: string }
-  if (d.lifecycle && d.taxonomy) return d as ScenarioDefinition
+  if (d.lifecycle && d.taxonomy) {
+    // Snapshots stored before suitability existed. Tag IDs are left as stored; study code resolves deprecated IDs when it reads them.
+    if (!d.taxonomy.suitability) return { ...(d as ScenarioDefinition), taxonomy: { ...d.taxonomy, suitability: LEGACY_SUITABILITY } }
+    return d as ScenarioDefinition
+  }
   const references = (d.clinicalReferences ?? []).map((r) => {
     const legacy = r as { title: string; organization: string; url: string; reviewed?: string }
     return { title: legacy.title, organization: legacy.organization, url: legacy.url, accessedAt: legacy.reviewed ?? '1970-01-01', specificity: 'general' as const, verified: false }
@@ -17,7 +24,7 @@ export function upgradeStoredDefinition(stored: unknown): ScenarioDefinition {
     clinicalReferences: references,
     criticalWaivers: d.criticalWaivers ?? [],
     spoilerTerms: d.spoilerTerms ?? [],
-    taxonomy: { provenance: 'author-proposed-unreviewed', organSystems: [], panceTasks: [], careSetting: 'unknown', acuity: 'routine', ageGroup: 'unknown', eorRotations: [] },
+    taxonomy: { provenance: 'author-proposed-unreviewed', organSystems: [], panceTasks: [], careSetting: 'unknown', acuity: 'routine', ageGroup: 'unknown', eorRotations: [], suitability: LEGACY_SUITABILITY },
     lifecycle: {
       status: 'draft',
       contentVersion: '0.0.0',

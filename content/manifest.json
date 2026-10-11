@@ -6,35 +6,35 @@
     {
       "id": "respiratory",
       "file": "scenarios/respiratory.json",
-      "contentVersion": "2.0.1",
+      "contentVersion": "2.1.0",
       "status": "draft",
       "published": true
     },
     {
       "id": "dysuria",
       "file": "scenarios/dysuria.json",
-      "contentVersion": "2.0.1",
+      "contentVersion": "2.1.0",
       "status": "draft",
       "published": true
     },
     {
       "id": "metabolic",
       "file": "scenarios/metabolic.json",
-      "contentVersion": "1.0.1",
+      "contentVersion": "1.1.0",
       "status": "draft",
       "published": true
     },
     {
       "id": "asthma",
       "file": "scenarios/asthma.json",
-      "contentVersion": "1.0.1",
+      "contentVersion": "1.1.0",
       "status": "draft",
       "published": true
     },
     {
       "id": "chest-pressure",
       "file": "scenarios/chest-pressure.json",
-      "contentVersion": "2.0.1",
+      "contentVersion": "2.1.0",
       "status": "draft",
       "published": true
     }

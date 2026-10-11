@@ -1,0 +1,350 @@
+{
+  "id": "nccpa-pance-2025",
+  "issuer": "NCCPA",
+  "exam": "pance",
+  "rotation": null,
+  "title": "Content Blueprint for the Physician Assistant National Certifying Examination (PANCE)",
+  "versionLabel": "Effective January 2025",
+  "effectiveFrom": "2025-01-01",
+  "effectiveUntil": null,
+  "publishedAt": null,
+  "supersedes": [],
+  "supersededBy": null,
+  "dateNotes": "Source: \"effective beginning January 2025 for all PANCE administrations\". The archived NCCPA blueprint page (captured 2026-09-09) still listed this version; no successor was found on retrieval.",
+  "source": {
+    "documentUrl": "https://www.nccpa.net/wp-content/uploads/PANCE-Blueprint.pdf",
+    "landingPage": "https://www.nccpa.net/become-certified/pance-blueprint/",
+    "retrievedAt": "2026-10-11",
+    "sha256": "79033af4b693fc7c521049dc73477564cfbb5ba18007cc11489390961fd4cc31",
+    "retrievedVia": "https://web.archive.org/web/20250805050724/http://www.nccpa.net/wp-content/uploads/PANCE-Blueprint.pdf",
+    "retrievalNote": "nccpa.net returned a Cloudflare challenge (HTTP 403) to automated download, so the PDF was taken from the Internet Archive capture of the official URL (2025-08-05). Weights were cross-checked against the archived official landing page (capture 2026-09-09). Confirm the sha256 against a direct download."
+  },
+  "examStructure": {
+    "items": null,
+    "format": "Exam length is not stated in the blueprint. Percentages only; no content-by-task matrix is published."
+  },
+  "contentCategories": [
+    {
+      "id": "cardiovascular-system",
+      "label": "Cardiovascular System",
+      "weightPct": 11,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "cardiovascular-system"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "dermatologic-system",
+      "label": "Dermatologic System",
+      "weightPct": 4,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "dermatologic-system"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "endocrine-system",
+      "label": "Endocrine System",
+      "weightPct": 6,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "endocrine-system"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "eyes-ears-nose-throat",
+      "label": "Eyes, Ears, Nose, and Throat",
+      "weightPct": 6,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "eyes-ears-nose-throat"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "gi-system-nutrition",
+      "label": "Gastrointestinal System/Nutrition",
+      "weightPct": 8,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "gi-system-nutrition"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "genitourinary-system",
+      "label": "Genitourinary System",
+      "weightPct": 4,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "genitourinary-system"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "hematologic-system",
+      "label": "Hematologic System",
+      "weightPct": 5,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "hematologic-system"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "infectious-diseases",
+      "label": "Infectious Diseases",
+      "weightPct": 7,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "infectious-diseases"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "musculoskeletal-system",
+      "label": "Musculoskeletal System",
+      "weightPct": 8,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "musculoskeletal-system"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "neurologic-system",
+      "label": "Neurologic System",
+      "weightPct": 7,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "neurologic-system"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "psychiatry-behavioral-science",
+      "label": "Psychiatry/Behavioral Science",
+      "weightPct": 7,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "psychiatry-behavioral-science"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "pulmonary-system",
+      "label": "Pulmonary System",
+      "weightPct": 9,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "pulmonary-system"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "renal-system",
+      "label": "Renal System",
+      "weightPct": 5,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "renal-system"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "reproductive-system",
+      "label": "Reproductive System",
+      "weightPct": 7,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "reproductive-system"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "professional-practice",
+      "label": "Professional Practice",
+      "weightPct": 6,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "professional-practice"
+            ]
+          },
+          {
+            "panceTasks": [
+              "professional-practice"
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "taskCategories": [
+    {
+      "id": "history-taking-physical-examination",
+      "label": "History Taking and Performing Physical Examination",
+      "weightPct": 16,
+      "canonicalTask": "history-taking-physical-examination"
+    },
+    {
+      "id": "using-diagnostic-laboratory-studies",
+      "label": "Using Diagnostic and Laboratory Studies",
+      "weightPct": 10,
+      "canonicalTask": "using-diagnostic-laboratory-studies"
+    },
+    {
+      "id": "formulating-the-most-likely-diagnosis",
+      "label": "Formulating the Most Likely Diagnosis",
+      "weightPct": 18,
+      "canonicalTask": "formulating-the-most-likely-diagnosis"
+    },
+    {
+      "id": "health-maintenance-education-prevention",
+      "label": "Health Maintenance, Patient Education, and Preventive Measures",
+      "weightPct": 11,
+      "canonicalTask": "health-maintenance-education-prevention"
+    },
+    {
+      "id": "clinical-intervention",
+      "label": "Clinical Intervention",
+      "weightPct": 16,
+      "canonicalTask": "clinical-intervention"
+    },
+    {
+      "id": "pharmaceutical-therapeutics",
+      "label": "Pharmaceutical Therapeutics",
+      "weightPct": 15,
+      "canonicalTask": "pharmaceutical-therapeutics"
+    },
+    {
+      "id": "applying-foundational-scientific-concepts",
+      "label": "Applying Foundational Scientific Concepts",
+      "weightPct": 8,
+      "canonicalTask": "applying-foundational-scientific-concepts"
+    },
+    {
+      "id": "professional-practice",
+      "label": "Professional Practice",
+      "weightPct": 6,
+      "canonicalTask": "professional-practice"
+    }
+  ],
+  "taskCodingExclusions": [
+    {
+      "content": "professional-practice",
+      "task": "professional-practice"
+    }
+  ],
+  "secondaryTargets": [
+    {
+      "id": "cross-cutting",
+      "label": "Cross-cutting targets",
+      "partition": false,
+      "values": [
+        {
+          "id": "surgical-topics",
+          "label": "Surgical topics",
+          "minPct": 8,
+          "maxPct": 10,
+          "crosswalk": {
+            "anyOf": [
+              {
+                "topicTags": [
+                  "surgical"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "pediatric-patients",
+          "label": "Conditions in pediatric patients",
+          "minPct": 12,
+          "maxPct": 15,
+          "crosswalk": {
+            "anyOf": [
+              {
+                "ageGroups": [
+                  "pediatric"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "transcription": {
+    "method": "Manual transcription from the official PDF; row and column totals checked by tests.",
+    "transcribedAt": "2026-10-11",
+    "transcribedBy": "coding-agent",
+    "verifiedBy": null,
+    "verifiedAt": null
+  },
+  "notes": [
+    "Source footnote: \"Medical content comprises 94% of the exam. All medical content questions are also coded to one of the task areas, with the exception of the Professional Practice category. Questions related to professional practice issues comprise 6% of the exam.\"",
+    "Source: \"The specific percentage allocations may vary slightly on exams.\"",
+    "The source groups Health Maintenance, Clinical Intervention and Pharmaceutical Therapeutics under the heading \"Managing Patients\"."
+  ]
+}

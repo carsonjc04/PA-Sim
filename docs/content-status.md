@@ -8,11 +8,11 @@ Package version 1.0.0, grading grading-2026-10-09.1.
 
 | Scenario | Status | Version | Published | Reviews | Next review due | References | Critical waivers |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| respiratory | draft | 2.0.1 | yes | none | 2027-10-10 | 1 (0 unverified, has case-specific) | 1 |
-| dysuria | draft | 2.0.1 | yes | none | 2027-10-10 | 1 (0 unverified, has case-specific) | 1 |
-| metabolic | draft | 1.0.1 | yes | none | 2027-10-10 | 1 (1 unverified, has case-specific) | 1 |
-| asthma | draft | 1.0.1 | yes | none | 2027-10-10 | 1 (1 unverified, general only) | 0 |
-| chest-pressure | draft | 2.0.1 | yes | none | 2027-10-10 | 1 (1 unverified, general only) | 0 |
+| respiratory | draft | 2.1.0 | yes | none | 2027-10-10 | 1 (0 unverified, has case-specific) | 1 |
+| dysuria | draft | 2.1.0 | yes | none | 2027-10-10 | 1 (0 unverified, has case-specific) | 1 |
+| metabolic | draft | 1.1.0 | yes | none | 2027-10-10 | 1 (1 unverified, has case-specific) | 1 |
+| asthma | draft | 1.1.0 | yes | none | 2027-10-10 | 1 (1 unverified, general only) | 0 |
+| chest-pressure | draft | 2.1.0 | yes | none | 2027-10-10 | 1 (1 unverified, general only) | 0 |
 
 ## Open items
 
@@ -31,8 +31,8 @@ Package version 1.0.0, grading grading-2026-10-09.1.
 
 Locked in `content/lock.json`. A changed fingerprint at an unchanged version fails validation.
 
-- respiratory@2.0.1: `51a0d89f1df55b79`
-- dysuria@2.0.1: `1ceff928609287f2`
-- metabolic@1.0.1: `27b3348ca1fd6899`
-- asthma@1.0.1: `7b262b39f9287561`
-- chest-pressure@2.0.1: `cee505aa9dd82b99`
+- respiratory@2.1.0: `8c62cb6198497221`
+- dysuria@2.1.0: `0453c3d01324570e`
+- metabolic@1.1.0: `afd75809d1883702`
+- asthma@1.1.0: `350cec3f6e5f4143`
+- chest-pressure@2.1.0: `d2cf4b85051633ff`

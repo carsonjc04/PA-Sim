@@ -1,0 +1,793 @@
+{
+  "id": "paea-eor-emergency-medicine-2026",
+  "issuer": "PAEA",
+  "exam": "eor",
+  "rotation": "emergency-medicine",
+  "title": "Emergency Medicine End of Rotation Exam Blueprint",
+  "versionLabel": "2026",
+  "effectiveFrom": "2026-07-27",
+  "effectiveUntil": null,
+  "dateNotes": "PAEA: \"New versions of the End of Rotation exams published to these blueprint specifications were published July 27, 2026.\" effectiveFrom uses that publication date.",
+  "publishedAt": "2026-07-27",
+  "supersedes": [
+    "paea-eor-emergency-medicine-2018"
+  ],
+  "supersededBy": null,
+  "source": {
+    "documentUrl": "https://paeaonline.org/wp-content/uploads/2026/07/Emergency-Medicine-Blueprint-2026.pdf",
+    "landingPage": "https://paeaonline.org/assessment/end-of-rotation/blueprints-and-topic-lists",
+    "retrievedAt": "2026-10-11",
+    "sha256": "7894aa3917b984ab79d00b678019837cf3a45991b2223c430dafa2bb043c7b24",
+    "retrievedVia": null,
+    "retrievalNote": null
+  },
+  "examStructure": {
+    "items": 100,
+    "format": "100 multiple-choice questions (per the blueprint header)"
+  },
+  "contentCategories": [
+    {
+      "id": "cardiovascular",
+      "label": "Cardiovascular",
+      "weightPct": 18,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "cardiovascular-system"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "rheumatologic-musculoskeletal",
+      "label": "Rheumatologic/Musculoskeletal",
+      "weightPct": 12,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "musculoskeletal-system"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "gastrointestinal",
+      "label": "Gastrointestinal",
+      "weightPct": 10,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "gi-system-nutrition"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "pulmonary",
+      "label": "Pulmonary",
+      "weightPct": 10,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "pulmonary-system"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "neurologic",
+      "label": "Neurologic",
+      "weightPct": 8,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "neurologic-system"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "eyes-ears-nose-oral-cavity-and-throat-eenot",
+      "label": "Eyes, Ears, Nose, Oral Cavity, and Throat (EENOT)",
+      "weightPct": 7,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "eyes-ears-nose-throat"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "psychiatric-behavioral-health",
+      "label": "Psychiatric/Behavioral Health",
+      "weightPct": 7,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "psychiatry-behavioral-science"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "renal-genitourinary",
+      "label": "Renal/Genitourinary",
+      "weightPct": 6,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "renal-system",
+              "genitourinary-system"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "dermatologic",
+      "label": "Dermatologic",
+      "weightPct": 5,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "dermatologic-system"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "gynecologic-reproductive-health",
+      "label": "Gynecologic/Reproductive Health",
+      "weightPct": 5,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "reproductive-system"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "endocrine",
+      "label": "Endocrine",
+      "weightPct": 4,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "endocrine-system"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "hematologic",
+      "label": "Hematologic",
+      "weightPct": 4,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "hematologic-system"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "infectious-diseases",
+      "label": "Infectious Diseases",
+      "weightPct": 4,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "infectious-diseases"
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "taskCategories": [
+    {
+      "id": "hp",
+      "label": "History & Physical",
+      "canonicalTask": "history-taking-physical-examination",
+      "weightPct": 15
+    },
+    {
+      "id": "ds",
+      "label": "Diagnostic Studies",
+      "canonicalTask": "using-diagnostic-laboratory-studies",
+      "weightPct": 15
+    },
+    {
+      "id": "dx",
+      "label": "Diagnosis",
+      "canonicalTask": "formulating-the-most-likely-diagnosis",
+      "weightPct": 25
+    },
+    {
+      "id": "hm",
+      "label": "Health Maintenance",
+      "canonicalTask": "health-maintenance-education-prevention",
+      "weightPct": 5
+    },
+    {
+      "id": "ci",
+      "label": "Clinical Intervention",
+      "canonicalTask": "clinical-intervention",
+      "weightPct": 12
+    },
+    {
+      "id": "ct",
+      "label": "Clinical Therapeutics",
+      "canonicalTask": "pharmaceutical-therapeutics",
+      "weightPct": 18
+    },
+    {
+      "id": "sc",
+      "label": "Scientific Concepts",
+      "canonicalTask": "applying-foundational-scientific-concepts",
+      "weightPct": 5
+    },
+    {
+      "id": "pp",
+      "label": "Professional Practice",
+      "canonicalTask": "professional-practice",
+      "weightPct": 5
+    }
+  ],
+  "cells": [
+    {
+      "content": "cardiovascular",
+      "task": "hp",
+      "items": 3
+    },
+    {
+      "content": "cardiovascular",
+      "task": "ds",
+      "items": 2
+    },
+    {
+      "content": "cardiovascular",
+      "task": "dx",
+      "items": 5
+    },
+    {
+      "content": "cardiovascular",
+      "task": "hm",
+      "items": 1
+    },
+    {
+      "content": "cardiovascular",
+      "task": "ci",
+      "items": 2
+    },
+    {
+      "content": "cardiovascular",
+      "task": "ct",
+      "items": 3
+    },
+    {
+      "content": "cardiovascular",
+      "task": "sc",
+      "items": 1
+    },
+    {
+      "content": "cardiovascular",
+      "task": "pp",
+      "items": 1
+    },
+    {
+      "content": "rheumatologic-musculoskeletal",
+      "task": "hp",
+      "items": 2
+    },
+    {
+      "content": "rheumatologic-musculoskeletal",
+      "task": "ds",
+      "items": 2
+    },
+    {
+      "content": "rheumatologic-musculoskeletal",
+      "task": "dx",
+      "items": 3
+    },
+    {
+      "content": "rheumatologic-musculoskeletal",
+      "task": "hm",
+      "items": 1
+    },
+    {
+      "content": "rheumatologic-musculoskeletal",
+      "task": "ci",
+      "items": 2
+    },
+    {
+      "content": "rheumatologic-musculoskeletal",
+      "task": "ct",
+      "items": 2
+    },
+    {
+      "content": "rheumatologic-musculoskeletal",
+      "task": "sc",
+      "items": 0
+    },
+    {
+      "content": "rheumatologic-musculoskeletal",
+      "task": "pp",
+      "items": 0
+    },
+    {
+      "content": "gastrointestinal",
+      "task": "hp",
+      "items": 1
+    },
+    {
+      "content": "gastrointestinal",
+      "task": "ds",
+      "items": 2
+    },
+    {
+      "content": "gastrointestinal",
+      "task": "dx",
+      "items": 2
+    },
+    {
+      "content": "gastrointestinal",
+      "task": "hm",
+      "items": 1
+    },
+    {
+      "content": "gastrointestinal",
+      "task": "ci",
+      "items": 1
+    },
+    {
+      "content": "gastrointestinal",
+      "task": "ct",
+      "items": 2
+    },
+    {
+      "content": "gastrointestinal",
+      "task": "sc",
+      "items": 1
+    },
+    {
+      "content": "gastrointestinal",
+      "task": "pp",
+      "items": 0
+    },
+    {
+      "content": "pulmonary",
+      "task": "hp",
+      "items": 2
+    },
+    {
+      "content": "pulmonary",
+      "task": "ds",
+      "items": 1
+    },
+    {
+      "content": "pulmonary",
+      "task": "dx",
+      "items": 2
+    },
+    {
+      "content": "pulmonary",
+      "task": "hm",
+      "items": 1
+    },
+    {
+      "content": "pulmonary",
+      "task": "ci",
+      "items": 1
+    },
+    {
+      "content": "pulmonary",
+      "task": "ct",
+      "items": 2
+    },
+    {
+      "content": "pulmonary",
+      "task": "sc",
+      "items": 1
+    },
+    {
+      "content": "pulmonary",
+      "task": "pp",
+      "items": 0
+    },
+    {
+      "content": "neurologic",
+      "task": "hp",
+      "items": 1
+    },
+    {
+      "content": "neurologic",
+      "task": "ds",
+      "items": 1
+    },
+    {
+      "content": "neurologic",
+      "task": "dx",
+      "items": 2
+    },
+    {
+      "content": "neurologic",
+      "task": "hm",
+      "items": 0
+    },
+    {
+      "content": "neurologic",
+      "task": "ci",
+      "items": 1
+    },
+    {
+      "content": "neurologic",
+      "task": "ct",
+      "items": 2
+    },
+    {
+      "content": "neurologic",
+      "task": "sc",
+      "items": 0
+    },
+    {
+      "content": "neurologic",
+      "task": "pp",
+      "items": 1
+    },
+    {
+      "content": "eyes-ears-nose-oral-cavity-and-throat-eenot",
+      "task": "hp",
+      "items": 1
+    },
+    {
+      "content": "eyes-ears-nose-oral-cavity-and-throat-eenot",
+      "task": "ds",
+      "items": 1
+    },
+    {
+      "content": "eyes-ears-nose-oral-cavity-and-throat-eenot",
+      "task": "dx",
+      "items": 2
+    },
+    {
+      "content": "eyes-ears-nose-oral-cavity-and-throat-eenot",
+      "task": "hm",
+      "items": 1
+    },
+    {
+      "content": "eyes-ears-nose-oral-cavity-and-throat-eenot",
+      "task": "ci",
+      "items": 1
+    },
+    {
+      "content": "eyes-ears-nose-oral-cavity-and-throat-eenot",
+      "task": "ct",
+      "items": 1
+    },
+    {
+      "content": "eyes-ears-nose-oral-cavity-and-throat-eenot",
+      "task": "sc",
+      "items": 0
+    },
+    {
+      "content": "eyes-ears-nose-oral-cavity-and-throat-eenot",
+      "task": "pp",
+      "items": 0
+    },
+    {
+      "content": "psychiatric-behavioral-health",
+      "task": "hp",
+      "items": 1
+    },
+    {
+      "content": "psychiatric-behavioral-health",
+      "task": "ds",
+      "items": 1
+    },
+    {
+      "content": "psychiatric-behavioral-health",
+      "task": "dx",
+      "items": 2
+    },
+    {
+      "content": "psychiatric-behavioral-health",
+      "task": "hm",
+      "items": 0
+    },
+    {
+      "content": "psychiatric-behavioral-health",
+      "task": "ci",
+      "items": 1
+    },
+    {
+      "content": "psychiatric-behavioral-health",
+      "task": "ct",
+      "items": 1
+    },
+    {
+      "content": "psychiatric-behavioral-health",
+      "task": "sc",
+      "items": 0
+    },
+    {
+      "content": "psychiatric-behavioral-health",
+      "task": "pp",
+      "items": 1
+    },
+    {
+      "content": "renal-genitourinary",
+      "task": "hp",
+      "items": 1
+    },
+    {
+      "content": "renal-genitourinary",
+      "task": "ds",
+      "items": 1
+    },
+    {
+      "content": "renal-genitourinary",
+      "task": "dx",
+      "items": 1
+    },
+    {
+      "content": "renal-genitourinary",
+      "task": "hm",
+      "items": 0
+    },
+    {
+      "content": "renal-genitourinary",
+      "task": "ci",
+      "items": 1
+    },
+    {
+      "content": "renal-genitourinary",
+      "task": "ct",
+      "items": 1
+    },
+    {
+      "content": "renal-genitourinary",
+      "task": "sc",
+      "items": 1
+    },
+    {
+      "content": "renal-genitourinary",
+      "task": "pp",
+      "items": 0
+    },
+    {
+      "content": "dermatologic",
+      "task": "hp",
+      "items": 1
+    },
+    {
+      "content": "dermatologic",
+      "task": "ds",
+      "items": 0
+    },
+    {
+      "content": "dermatologic",
+      "task": "dx",
+      "items": 2
+    },
+    {
+      "content": "dermatologic",
+      "task": "hm",
+      "items": 0
+    },
+    {
+      "content": "dermatologic",
+      "task": "ci",
+      "items": 1
+    },
+    {
+      "content": "dermatologic",
+      "task": "ct",
+      "items": 1
+    },
+    {
+      "content": "dermatologic",
+      "task": "sc",
+      "items": 0
+    },
+    {
+      "content": "dermatologic",
+      "task": "pp",
+      "items": 0
+    },
+    {
+      "content": "gynecologic-reproductive-health",
+      "task": "hp",
+      "items": 1
+    },
+    {
+      "content": "gynecologic-reproductive-health",
+      "task": "ds",
+      "items": 1
+    },
+    {
+      "content": "gynecologic-reproductive-health",
+      "task": "dx",
+      "items": 1
+    },
+    {
+      "content": "gynecologic-reproductive-health",
+      "task": "hm",
+      "items": 0
+    },
+    {
+      "content": "gynecologic-reproductive-health",
+      "task": "ci",
+      "items": 1
+    },
+    {
+      "content": "gynecologic-reproductive-health",
+      "task": "ct",
+      "items": 0
+    },
+    {
+      "content": "gynecologic-reproductive-health",
+      "task": "sc",
+      "items": 0
+    },
+    {
+      "content": "gynecologic-reproductive-health",
+      "task": "pp",
+      "items": 1
+    },
+    {
+      "content": "endocrine",
+      "task": "hp",
+      "items": 1
+    },
+    {
+      "content": "endocrine",
+      "task": "ds",
+      "items": 1
+    },
+    {
+      "content": "endocrine",
+      "task": "dx",
+      "items": 1
+    },
+    {
+      "content": "endocrine",
+      "task": "hm",
+      "items": 0
+    },
+    {
+      "content": "endocrine",
+      "task": "ci",
+      "items": 0
+    },
+    {
+      "content": "endocrine",
+      "task": "ct",
+      "items": 1
+    },
+    {
+      "content": "endocrine",
+      "task": "sc",
+      "items": 0
+    },
+    {
+      "content": "endocrine",
+      "task": "pp",
+      "items": 0
+    },
+    {
+      "content": "hematologic",
+      "task": "hp",
+      "items": 0
+    },
+    {
+      "content": "hematologic",
+      "task": "ds",
+      "items": 1
+    },
+    {
+      "content": "hematologic",
+      "task": "dx",
+      "items": 1
+    },
+    {
+      "content": "hematologic",
+      "task": "hm",
+      "items": 0
+    },
+    {
+      "content": "hematologic",
+      "task": "ci",
+      "items": 0
+    },
+    {
+      "content": "hematologic",
+      "task": "ct",
+      "items": 1
+    },
+    {
+      "content": "hematologic",
+      "task": "sc",
+      "items": 0
+    },
+    {
+      "content": "hematologic",
+      "task": "pp",
+      "items": 1
+    },
+    {
+      "content": "infectious-diseases",
+      "task": "hp",
+      "items": 0
+    },
+    {
+      "content": "infectious-diseases",
+      "task": "ds",
+      "items": 1
+    },
+    {
+      "content": "infectious-diseases",
+      "task": "dx",
+      "items": 1
+    },
+    {
+      "content": "infectious-diseases",
+      "task": "hm",
+      "items": 0
+    },
+    {
+      "content": "infectious-diseases",
+      "task": "ci",
+      "items": 0
+    },
+    {
+      "content": "infectious-diseases",
+      "task": "ct",
+      "items": 1
+    },
+    {
+      "content": "infectious-diseases",
+      "task": "sc",
+      "items": 1
+    },
+    {
+      "content": "infectious-diseases",
+      "task": "pp",
+      "items": 0
+    }
+  ],
+  "transcription": {
+    "method": "Manual transcription from the official PDF; row and column totals checked by tests.",
+    "transcribedAt": "2026-10-11",
+    "transcribedBy": "coding-agent",
+    "verifiedBy": null,
+    "verifiedAt": null
+  },
+  "notes": []
+}

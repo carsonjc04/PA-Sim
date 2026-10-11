@@ -105,8 +105,8 @@ describe('historical attempts keep their exact content and grading version', () 
     const { rows } = await db.pool.query('SELECT content_hash, content_semver, manifest_version, lifecycle_status, definition FROM content_versions WHERE id = $1', [pinned])
     const expected = contentVersionOf(contentPackage().scenarios.find((s) => s.id === 'asthma')!)
     expect(pinned).toBe(expected.id)
-    expect(rows[0]).toMatchObject({ content_hash: expected.hash, content_semver: '1.0.1', manifest_version: contentPackage().manifest.manifestVersion, lifecycle_status: 'draft' })
-    expect(rows[0].definition.lifecycle.contentVersion).toBe('1.0.1')
+    expect(rows[0]).toMatchObject({ content_hash: expected.hash, content_semver: '1.1.0', manifest_version: contentPackage().manifest.manifestVersion, lifecycle_status: 'draft' })
+    expect(rows[0].definition.lifecycle.contentVersion).toBe('1.1.0')
   })
 
   it('an edited case gets a new snapshot; the old attempt still shows and grades the old one', async () => {

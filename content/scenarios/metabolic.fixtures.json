@@ -1,6 +1,6 @@
 {
   "scenarioId": "metabolic",
-  "contentVersion": "1.0.1",
+  "contentVersion": "1.1.0",
   "fixtures": [
     {
       "id": "happy",

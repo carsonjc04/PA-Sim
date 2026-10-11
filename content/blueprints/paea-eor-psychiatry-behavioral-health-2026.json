@@ -1,0 +1,610 @@
+{
+  "id": "paea-eor-psychiatry-behavioral-health-2026",
+  "issuer": "PAEA",
+  "exam": "eor",
+  "rotation": "psychiatry-behavioral-health",
+  "title": "Psychiatric & Behavioral Health End of Rotation Exam Blueprint",
+  "versionLabel": "2026",
+  "effectiveFrom": "2026-07-27",
+  "effectiveUntil": null,
+  "dateNotes": "PAEA: \"New versions of the End of Rotation exams published to these blueprint specifications were published July 27, 2026.\" effectiveFrom uses that publication date.",
+  "publishedAt": "2026-07-27",
+  "supersedes": [
+    "paea-eor-psychiatry-behavioral-health-2018"
+  ],
+  "supersededBy": null,
+  "source": {
+    "documentUrl": "https://paeaonline.org/wp-content/uploads/2026/07/Psychiatric-Behavioral-Health-Blueprint-2026.pdf",
+    "landingPage": "https://paeaonline.org/assessment/end-of-rotation/blueprints-and-topic-lists",
+    "retrievedAt": "2026-10-11",
+    "sha256": "fb4f319efeacb5942ffb1261eee68af87d2b69163cccd0fa9eeb2495b8f59a67",
+    "retrievedVia": null,
+    "retrievalNote": null
+  },
+  "examStructure": {
+    "items": 100,
+    "format": "100 multiple-choice questions (per the blueprint header)"
+  },
+  "contentCategories": [
+    {
+      "id": "depressive-disorders-bipolar-and-related-disorders",
+      "label": "Depressive Disorders; Bipolar and Related Disorders",
+      "weightPct": 17,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "psychiatry-behavioral-science"
+            ],
+            "topicTags": [
+              "psych-depressive-bipolar"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "substance-related-disorders-addictive-disorders",
+      "label": "Substance-Related Disorders; Addictive Disorders",
+      "weightPct": 15,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "psychiatry-behavioral-science"
+            ],
+            "topicTags": [
+              "psych-substance-addictive"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "trauma-and-stress-related-disorders-abuse-and-neglect",
+      "label": "Trauma and Stress-Related Disorders; Abuse and Neglect",
+      "weightPct": 13,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "psychiatry-behavioral-science"
+            ],
+            "topicTags": [
+              "psych-trauma-stressor",
+              "abuse-neglect"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "anxiety-somatic-symptom-related-disorders",
+      "label": "Anxiety; Somatic Symptom-Related Disorders",
+      "weightPct": 11,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "psychiatry-behavioral-science"
+            ],
+            "topicTags": [
+              "psych-anxiety",
+              "psych-somatic"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "schizophrenia-spectrum-and-other-psychotic-disorders",
+      "label": "Schizophrenia Spectrum and Other Psychotic Disorders",
+      "weightPct": 11,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "psychiatry-behavioral-science"
+            ],
+            "topicTags": [
+              "psych-psychotic"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "feeding-or-eating-disorders",
+      "label": "Feeding or Eating Disorders",
+      "weightPct": 8,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "psychiatry-behavioral-science"
+            ],
+            "topicTags": [
+              "psych-feeding-eating"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "neurodevelopmental-disorders-dissociative-disorders",
+      "label": "Neurodevelopmental Disorders; Dissociative Disorders",
+      "weightPct": 8,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "psychiatry-behavioral-science"
+            ],
+            "topicTags": [
+              "psych-neurodevelopmental",
+              "psych-dissociative"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "sleep-wake-disorders",
+      "label": "Sleep-Wake Disorders",
+      "weightPct": 7,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "psychiatry-behavioral-science"
+            ],
+            "topicTags": [
+              "psych-sleep-wake"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "human-sexuality",
+      "label": "Human Sexuality",
+      "weightPct": 5,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "psychiatry-behavioral-science"
+            ],
+            "topicTags": [
+              "psych-human-sexuality"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "personality-disorders-obsessive-compulsive-and-related-disorders",
+      "label": "Personality Disorders; Obsessive-Compulsive and Related Disorders",
+      "weightPct": 5,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "psychiatry-behavioral-science"
+            ],
+            "topicTags": [
+              "psych-personality",
+              "psych-obsessive-compulsive"
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "taskCategories": [
+    {
+      "id": "hp",
+      "label": "History & Physical",
+      "canonicalTask": "history-taking-physical-examination",
+      "weightPct": 16
+    },
+    {
+      "id": "ds",
+      "label": "Diagnostic Studies",
+      "canonicalTask": "using-diagnostic-laboratory-studies",
+      "weightPct": 11
+    },
+    {
+      "id": "dx",
+      "label": "Diagnosis",
+      "canonicalTask": "formulating-the-most-likely-diagnosis",
+      "weightPct": 20
+    },
+    {
+      "id": "ci",
+      "label": "Clinical Intervention",
+      "canonicalTask": "clinical-intervention",
+      "weightPct": 20
+    },
+    {
+      "id": "ct",
+      "label": "Clinical Therapeutics",
+      "canonicalTask": "pharmaceutical-therapeutics",
+      "weightPct": 20
+    },
+    {
+      "id": "sc",
+      "label": "Scientific Concepts",
+      "canonicalTask": "applying-foundational-scientific-concepts",
+      "weightPct": 7
+    },
+    {
+      "id": "pp",
+      "label": "Professional Practice",
+      "canonicalTask": "professional-practice",
+      "weightPct": 6
+    }
+  ],
+  "cells": [
+    {
+      "content": "depressive-disorders-bipolar-and-related-disorders",
+      "task": "hp",
+      "items": 3
+    },
+    {
+      "content": "depressive-disorders-bipolar-and-related-disorders",
+      "task": "ds",
+      "items": 1
+    },
+    {
+      "content": "depressive-disorders-bipolar-and-related-disorders",
+      "task": "dx",
+      "items": 3
+    },
+    {
+      "content": "depressive-disorders-bipolar-and-related-disorders",
+      "task": "ci",
+      "items": 3
+    },
+    {
+      "content": "depressive-disorders-bipolar-and-related-disorders",
+      "task": "ct",
+      "items": 4
+    },
+    {
+      "content": "depressive-disorders-bipolar-and-related-disorders",
+      "task": "sc",
+      "items": 2
+    },
+    {
+      "content": "depressive-disorders-bipolar-and-related-disorders",
+      "task": "pp",
+      "items": 1
+    },
+    {
+      "content": "substance-related-disorders-addictive-disorders",
+      "task": "hp",
+      "items": 2
+    },
+    {
+      "content": "substance-related-disorders-addictive-disorders",
+      "task": "ds",
+      "items": 2
+    },
+    {
+      "content": "substance-related-disorders-addictive-disorders",
+      "task": "dx",
+      "items": 3
+    },
+    {
+      "content": "substance-related-disorders-addictive-disorders",
+      "task": "ci",
+      "items": 3
+    },
+    {
+      "content": "substance-related-disorders-addictive-disorders",
+      "task": "ct",
+      "items": 3
+    },
+    {
+      "content": "substance-related-disorders-addictive-disorders",
+      "task": "sc",
+      "items": 1
+    },
+    {
+      "content": "substance-related-disorders-addictive-disorders",
+      "task": "pp",
+      "items": 1
+    },
+    {
+      "content": "trauma-and-stress-related-disorders-abuse-and-neglect",
+      "task": "hp",
+      "items": 3
+    },
+    {
+      "content": "trauma-and-stress-related-disorders-abuse-and-neglect",
+      "task": "ds",
+      "items": 1
+    },
+    {
+      "content": "trauma-and-stress-related-disorders-abuse-and-neglect",
+      "task": "dx",
+      "items": 3
+    },
+    {
+      "content": "trauma-and-stress-related-disorders-abuse-and-neglect",
+      "task": "ci",
+      "items": 2
+    },
+    {
+      "content": "trauma-and-stress-related-disorders-abuse-and-neglect",
+      "task": "ct",
+      "items": 2
+    },
+    {
+      "content": "trauma-and-stress-related-disorders-abuse-and-neglect",
+      "task": "sc",
+      "items": 0
+    },
+    {
+      "content": "trauma-and-stress-related-disorders-abuse-and-neglect",
+      "task": "pp",
+      "items": 2
+    },
+    {
+      "content": "anxiety-somatic-symptom-related-disorders",
+      "task": "hp",
+      "items": 2
+    },
+    {
+      "content": "anxiety-somatic-symptom-related-disorders",
+      "task": "ds",
+      "items": 1
+    },
+    {
+      "content": "anxiety-somatic-symptom-related-disorders",
+      "task": "dx",
+      "items": 3
+    },
+    {
+      "content": "anxiety-somatic-symptom-related-disorders",
+      "task": "ci",
+      "items": 2
+    },
+    {
+      "content": "anxiety-somatic-symptom-related-disorders",
+      "task": "ct",
+      "items": 2
+    },
+    {
+      "content": "anxiety-somatic-symptom-related-disorders",
+      "task": "sc",
+      "items": 1
+    },
+    {
+      "content": "anxiety-somatic-symptom-related-disorders",
+      "task": "pp",
+      "items": 0
+    },
+    {
+      "content": "schizophrenia-spectrum-and-other-psychotic-disorders",
+      "task": "hp",
+      "items": 1
+    },
+    {
+      "content": "schizophrenia-spectrum-and-other-psychotic-disorders",
+      "task": "ds",
+      "items": 2
+    },
+    {
+      "content": "schizophrenia-spectrum-and-other-psychotic-disorders",
+      "task": "dx",
+      "items": 2
+    },
+    {
+      "content": "schizophrenia-spectrum-and-other-psychotic-disorders",
+      "task": "ci",
+      "items": 2
+    },
+    {
+      "content": "schizophrenia-spectrum-and-other-psychotic-disorders",
+      "task": "ct",
+      "items": 2
+    },
+    {
+      "content": "schizophrenia-spectrum-and-other-psychotic-disorders",
+      "task": "sc",
+      "items": 1
+    },
+    {
+      "content": "schizophrenia-spectrum-and-other-psychotic-disorders",
+      "task": "pp",
+      "items": 1
+    },
+    {
+      "content": "feeding-or-eating-disorders",
+      "task": "hp",
+      "items": 1
+    },
+    {
+      "content": "feeding-or-eating-disorders",
+      "task": "ds",
+      "items": 1
+    },
+    {
+      "content": "feeding-or-eating-disorders",
+      "task": "dx",
+      "items": 1
+    },
+    {
+      "content": "feeding-or-eating-disorders",
+      "task": "ci",
+      "items": 2
+    },
+    {
+      "content": "feeding-or-eating-disorders",
+      "task": "ct",
+      "items": 2
+    },
+    {
+      "content": "feeding-or-eating-disorders",
+      "task": "sc",
+      "items": 1
+    },
+    {
+      "content": "feeding-or-eating-disorders",
+      "task": "pp",
+      "items": 0
+    },
+    {
+      "content": "neurodevelopmental-disorders-dissociative-disorders",
+      "task": "hp",
+      "items": 1
+    },
+    {
+      "content": "neurodevelopmental-disorders-dissociative-disorders",
+      "task": "ds",
+      "items": 1
+    },
+    {
+      "content": "neurodevelopmental-disorders-dissociative-disorders",
+      "task": "dx",
+      "items": 1
+    },
+    {
+      "content": "neurodevelopmental-disorders-dissociative-disorders",
+      "task": "ci",
+      "items": 2
+    },
+    {
+      "content": "neurodevelopmental-disorders-dissociative-disorders",
+      "task": "ct",
+      "items": 2
+    },
+    {
+      "content": "neurodevelopmental-disorders-dissociative-disorders",
+      "task": "sc",
+      "items": 1
+    },
+    {
+      "content": "neurodevelopmental-disorders-dissociative-disorders",
+      "task": "pp",
+      "items": 0
+    },
+    {
+      "content": "sleep-wake-disorders",
+      "task": "hp",
+      "items": 1
+    },
+    {
+      "content": "sleep-wake-disorders",
+      "task": "ds",
+      "items": 1
+    },
+    {
+      "content": "sleep-wake-disorders",
+      "task": "dx",
+      "items": 2
+    },
+    {
+      "content": "sleep-wake-disorders",
+      "task": "ci",
+      "items": 1
+    },
+    {
+      "content": "sleep-wake-disorders",
+      "task": "ct",
+      "items": 2
+    },
+    {
+      "content": "sleep-wake-disorders",
+      "task": "sc",
+      "items": 0
+    },
+    {
+      "content": "sleep-wake-disorders",
+      "task": "pp",
+      "items": 0
+    },
+    {
+      "content": "human-sexuality",
+      "task": "hp",
+      "items": 1
+    },
+    {
+      "content": "human-sexuality",
+      "task": "ds",
+      "items": 1
+    },
+    {
+      "content": "human-sexuality",
+      "task": "dx",
+      "items": 1
+    },
+    {
+      "content": "human-sexuality",
+      "task": "ci",
+      "items": 1
+    },
+    {
+      "content": "human-sexuality",
+      "task": "ct",
+      "items": 0
+    },
+    {
+      "content": "human-sexuality",
+      "task": "sc",
+      "items": 0
+    },
+    {
+      "content": "human-sexuality",
+      "task": "pp",
+      "items": 1
+    },
+    {
+      "content": "personality-disorders-obsessive-compulsive-and-related-disorders",
+      "task": "hp",
+      "items": 1
+    },
+    {
+      "content": "personality-disorders-obsessive-compulsive-and-related-disorders",
+      "task": "ds",
+      "items": 0
+    },
+    {
+      "content": "personality-disorders-obsessive-compulsive-and-related-disorders",
+      "task": "dx",
+      "items": 1
+    },
+    {
+      "content": "personality-disorders-obsessive-compulsive-and-related-disorders",
+      "task": "ci",
+      "items": 2
+    },
+    {
+      "content": "personality-disorders-obsessive-compulsive-and-related-disorders",
+      "task": "ct",
+      "items": 1
+    },
+    {
+      "content": "personality-disorders-obsessive-compulsive-and-related-disorders",
+      "task": "sc",
+      "items": 0
+    },
+    {
+      "content": "personality-disorders-obsessive-compulsive-and-related-disorders",
+      "task": "pp",
+      "items": 0
+    }
+  ],
+  "transcription": {
+    "method": "Manual transcription from the official PDF; row and column totals checked by tests.",
+    "transcribedAt": "2026-10-11",
+    "transcribedBy": "coding-agent",
+    "verifiedBy": null,
+    "verifiedAt": null
+  },
+  "notes": [
+    "This blueprint has no Health Maintenance task column."
+  ]
+}

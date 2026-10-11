@@ -1,6 +1,6 @@
 {
   "scenarioId": "respiratory",
-  "remediationVersion": "0.1.0",
+  "remediationVersion": "0.1.1",
   "provenance": "author-proposed-unreviewed",
   "mappings": {
     "omit-redflags": { "kcIds": ["sore-throat-red-flag-screen"] },

@@ -297,7 +297,17 @@
     "ageGroup": "young-adult",
     "eorRotations": [
       "family-medicine"
-    ]
+    ],
+    "topicTags": [],
+    "suitability": {
+      "modes": [
+        "osce"
+      ],
+      "learnerLevel": "didactic",
+      "estMinutes": 10,
+      "voiceReady": true
+    },
+    "blueprintReviews": []
   },
   "lifecycle": {
     "status": "draft",

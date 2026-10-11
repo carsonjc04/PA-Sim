@@ -62,12 +62,13 @@ export function validateRemediation(
     for (const o of c.objectiveIds) if (!objectiveIds.has(o)) add('error', 'remediation-ref', `${path}.objectiveIds`, `"${o}" is not a learning objective.`)
   })
   if (vocab) {
-    const pance = new Set(vocab.panceTasks.map((t) => t.id))
-    const organ = new Set(vocab.organSystems.map((t) => t.id))
-    library.objectives.forEach((o, i) => o.panceTasks.forEach((t) => !pance.has(t) && add('error', 'taxonomy-term', `knowledge.objectives.${i}.panceTasks`, `"${t}" is not in content/taxonomy.json.`)))
+    // Deprecated IDs resolve for stored data only; authored library content must use active terms.
+    const pance = new Set(vocab.panceTasks.filter((t) => t.status === 'active').map((t) => t.id))
+    const organ = new Set(vocab.organSystems.filter((t) => t.status === 'active').map((t) => t.id))
+    library.objectives.forEach((o, i) => o.panceTasks.forEach((t) => !pance.has(t) && add('error', 'taxonomy-term', `knowledge.objectives.${i}.panceTasks`, `"${t}" is not an active term in content/taxonomy.json.`)))
     library.components.forEach((c, i) => {
-      c.panceTasks.forEach((t) => !pance.has(t) && add('error', 'taxonomy-term', `knowledge.components.${i}.panceTasks`, `"${t}" is not in content/taxonomy.json.`))
-      c.organSystems.forEach((t) => !organ.has(t) && add('error', 'taxonomy-term', `knowledge.components.${i}.organSystems`, `"${t}" is not in content/taxonomy.json.`))
+      c.panceTasks.forEach((t) => !pance.has(t) && add('error', 'taxonomy-term', `knowledge.components.${i}.panceTasks`, `"${t}" is not an active term in content/taxonomy.json.`))
+      c.organSystems.forEach((t) => !organ.has(t) && add('error', 'taxonomy-term', `knowledge.components.${i}.organSystems`, `"${t}" is not an active term in content/taxonomy.json.`))
     })
   }
   out.knowledge = library

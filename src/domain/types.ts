@@ -19,7 +19,10 @@ export interface ReviewRecord { reviewerRole: ReviewerRole; reviewedAt: string; 
 export interface ChangeLogEntry { version: string; date: string; summary: string }
 export interface Lifecycle { status: ContentStatus; contentVersion: string; reviews: ReviewRecord[]; nextReviewDue: string; openItems: string[]; changeLog: ChangeLogEntry[] }
 export interface ClinicalReference { title: string; organization: string; url: string; accessedAt: string; publishedOrUpdated?: string; specificity: 'case-specific' | 'general'; verified: boolean; notes?: string }
-export interface Taxonomy { provenance: 'author-proposed-unreviewed' | 'reviewed'; organSystems: string[]; panceTasks: string[]; careSetting: string; acuity: Acuity; ageGroup: string; eorRotations: string[] }
+export type PracticeMode = 'osce' | 'clinical-sim' | 'sprint'
+export interface Suitability { modes: PracticeMode[]; learnerLevel: 'didactic' | 'clinical' | 'both'; estMinutes: number; voiceReady: boolean }
+export interface BlueprintReview { blueprintId: string; reviewerRole: string; reviewedAt: string }
+export interface Taxonomy { provenance: 'author-proposed-unreviewed' | 'reviewed'; organSystems: string[]; panceTasks: string[]; topicTags?: string[]; careSetting: string; acuity: Acuity; ageGroup: string; eorRotations: string[]; suitability: Suitability; blueprintReviews?: BlueprintReview[] }
 export interface ClinicalImage { id: string; src: string; kind: 'ecg' | 'xray' | 'photo' | 'diagram' | 'other'; alt: string; longDescription?: string; decorative: boolean; revealedBy: string; licenseSource: string }
 export interface CriticalWaiver { optionId: string; reason: string }
 

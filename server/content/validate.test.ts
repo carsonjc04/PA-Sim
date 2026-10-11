@@ -313,10 +313,10 @@ describe('version lock', () => {
     const raw = fresh()
     const s = scenario(raw)
     s.opening = 'A different opening line.'
-    s.lifecycle.contentVersion = '2.0.2'
-    s.lifecycle.changeLog.push({ version: '2.0.2', date: '2026-10-11', summary: 'Reworded opening.' })
-    ;(raw.manifest as Json).scenarios.find((e: Json) => e.id === s.id).contentVersion = '2.0.2'
-    raw.fixtures['chest-pressure'] = { ...(raw.fixtures['chest-pressure'] as Json), contentVersion: '2.0.2' }
+    s.lifecycle.contentVersion = '2.1.1'
+    s.lifecycle.changeLog.push({ version: '2.1.1', date: '2026-10-11', summary: 'Reworded opening.' })
+    ;(raw.manifest as Json).scenarios.find((e: Json) => e.id === s.id).contentVersion = '2.1.1'
+    raw.fixtures['chest-pressure'] = { ...(raw.fixtures['chest-pressure'] as Json), contentVersion: '2.1.1' }
     expect(validatePackage(raw).errors).toEqual([])
     expect(validatePackage(raw, { strict: true }).errors.map((e) => e.code)).toEqual(['lock-missing'])
   })
@@ -391,7 +391,7 @@ describe('remediation sidecars', () => {
     const raw = fresh()
     rem(raw).prompts[0].answer = 'A different answer.'
     expect(remCodes(raw)).toContain('lock-mismatch')
-    rem(raw).remediationVersion = '0.1.1'
+    rem(raw).remediationVersion = '0.1.2'
     expect(validatePackage(raw).errors.map((e) => e.code)).not.toContain('lock-mismatch')
     expect(validatePackage(raw, { strict: true }).errors.map((e) => e.code)).toContain('lock-missing')
   })

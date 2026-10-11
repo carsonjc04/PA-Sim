@@ -372,11 +372,19 @@
       "emergency-medicine",
       "internal-medicine",
       "family-medicine"
-    ]
+    ],
+    "suitability": {
+      "modes": [
+        "osce"
+      ],
+      "learnerLevel": "didactic",
+      "estMinutes": 15,
+      "voiceReady": true
+    }
   },
   "lifecycle": {
     "status": "draft",
-    "contentVersion": "1.0.1",
+    "contentVersion": "1.1.0",
     "reviews": [],
     "nextReviewDue": "2027-10-10",
     "openItems": [
@@ -393,6 +401,11 @@
         "version": "1.0.1",
         "date": "2026-10-10",
         "summary": "Taxonomy tags remapped to the NCCPA PANCE blueprint category names (unreviewed)."
+      },
+      {
+        "version": "1.1.0",
+        "date": "2026-10-11",
+        "summary": "Added suitability metadata (OSCE, didactic, estimated minutes from the authored duration); task tags use the official merged PANCE category for health maintenance, patient education and preventive measures."
       }
     ]
   }

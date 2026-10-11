@@ -1,0 +1,606 @@
+{
+  "id": "paea-eor-womens-health-2018",
+  "issuer": "PAEA",
+  "exam": "eor",
+  "rotation": "women-s-health",
+  "title": "Women's Health End of Rotation Exam Blueprint",
+  "versionLabel": "2018 (legacy)",
+  "effectiveFrom": null,
+  "effectiveUntil": "2027-07-31",
+  "dateNotes": "PAEA: \"End of Rotation exam Legacy blueprints will remain available for administration through July 2027.\" effectiveUntil is read as the last day of July 2027. The original start date is not stated; publishedAt is taken from the document file name (2018-05-24); © 2018 PAEA.",
+  "publishedAt": "2018-05-24",
+  "supersedes": [],
+  "supersededBy": "paea-eor-gynecologic-sexual-reproductive-health-2026",
+  "source": {
+    "documentUrl": "https://paeaonline.org/wp-content/uploads/imported-files/womens-health-blueprint-20180524.pdf",
+    "landingPage": "https://paeaonline.org/assessment/end-of-rotation/blueprints-and-topic-lists",
+    "retrievedAt": "2026-10-11",
+    "sha256": "b5eefed068da18cd3f81adb9d73ef739cd65b10a0689dd7fa894b29552ebc88d",
+    "retrievedVia": null,
+    "retrievalNote": null
+  },
+  "examStructure": {
+    "items": 100,
+    "format": "100 multiple-choice questions (per the blueprint header)"
+  },
+  "contentCategories": [
+    {
+      "id": "menstruation",
+      "label": "Menstruation",
+      "weightPct": 15,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "reproductive-system"
+            ],
+            "topicTags": [
+              "gyn-menstruation"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "infections",
+      "label": "Infections",
+      "weightPct": 12,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "reproductive-system"
+            ],
+            "topicTags": [
+              "gyn-infections"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "neoplasms",
+      "label": "Neoplasms",
+      "weightPct": 10,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "reproductive-system"
+            ],
+            "topicTags": [
+              "gyn-neoplasms"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "disorders-of-the-breast",
+      "label": "Disorders of the breast",
+      "weightPct": 8,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "reproductive-system"
+            ],
+            "topicTags": [
+              "breast"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "structural-abnormalities",
+      "label": "Structural abnormalities",
+      "weightPct": 5,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "reproductive-system"
+            ],
+            "topicTags": [
+              "gyn-structural"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "other",
+      "label": "Other",
+      "weightPct": 5,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "reproductive-system"
+            ],
+            "topicTags": [
+              "gyn-other"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "prenatal-care-normal-pregnancy",
+      "label": "Prenatal care/normal pregnancy",
+      "weightPct": 16,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "reproductive-system"
+            ],
+            "topicTags": [
+              "pregnancy-prenatal"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "pregnancy-complications",
+      "label": "Pregnancy complications",
+      "weightPct": 15,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "reproductive-system"
+            ],
+            "topicTags": [
+              "pregnancy-complications"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "labor-and-delivery-complications",
+      "label": "Labor & delivery complications",
+      "weightPct": 8,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "reproductive-system"
+            ],
+            "topicTags": [
+              "labor-delivery"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "postpartum-care",
+      "label": "Postpartum care",
+      "weightPct": 6,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "reproductive-system"
+            ],
+            "topicTags": [
+              "postpartum"
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "taskCategories": [
+    {
+      "id": "hp",
+      "label": "History & Physical",
+      "canonicalTask": "history-taking-physical-examination",
+      "weightPct": 15
+    },
+    {
+      "id": "ds",
+      "label": "Diagnostic Studies",
+      "canonicalTask": "using-diagnostic-laboratory-studies",
+      "weightPct": 10
+    },
+    {
+      "id": "dx",
+      "label": "Diagnosis",
+      "canonicalTask": "formulating-the-most-likely-diagnosis",
+      "weightPct": 25
+    },
+    {
+      "id": "hm",
+      "label": "Health Maintenance",
+      "canonicalTask": "health-maintenance-education-prevention",
+      "weightPct": 10
+    },
+    {
+      "id": "ci",
+      "label": "Clinical Intervention",
+      "canonicalTask": "clinical-intervention",
+      "weightPct": 10
+    },
+    {
+      "id": "ct",
+      "label": "Clinical Therapeutics",
+      "canonicalTask": "pharmaceutical-therapeutics",
+      "weightPct": 20
+    },
+    {
+      "id": "sc",
+      "label": "Scientific Concepts",
+      "canonicalTask": "applying-foundational-scientific-concepts",
+      "weightPct": 10
+    }
+  ],
+  "cells": [
+    {
+      "content": "menstruation",
+      "task": "hp",
+      "items": 2
+    },
+    {
+      "content": "menstruation",
+      "task": "ds",
+      "items": 2
+    },
+    {
+      "content": "menstruation",
+      "task": "dx",
+      "items": 4
+    },
+    {
+      "content": "menstruation",
+      "task": "hm",
+      "items": 1
+    },
+    {
+      "content": "menstruation",
+      "task": "ci",
+      "items": 1
+    },
+    {
+      "content": "menstruation",
+      "task": "ct",
+      "items": 3
+    },
+    {
+      "content": "menstruation",
+      "task": "sc",
+      "items": 2
+    },
+    {
+      "content": "infections",
+      "task": "hp",
+      "items": 2
+    },
+    {
+      "content": "infections",
+      "task": "ds",
+      "items": 1
+    },
+    {
+      "content": "infections",
+      "task": "dx",
+      "items": 3
+    },
+    {
+      "content": "infections",
+      "task": "hm",
+      "items": 1
+    },
+    {
+      "content": "infections",
+      "task": "ci",
+      "items": 1
+    },
+    {
+      "content": "infections",
+      "task": "ct",
+      "items": 3
+    },
+    {
+      "content": "infections",
+      "task": "sc",
+      "items": 1
+    },
+    {
+      "content": "neoplasms",
+      "task": "hp",
+      "items": 1
+    },
+    {
+      "content": "neoplasms",
+      "task": "ds",
+      "items": 1
+    },
+    {
+      "content": "neoplasms",
+      "task": "dx",
+      "items": 3
+    },
+    {
+      "content": "neoplasms",
+      "task": "hm",
+      "items": 1
+    },
+    {
+      "content": "neoplasms",
+      "task": "ci",
+      "items": 1
+    },
+    {
+      "content": "neoplasms",
+      "task": "ct",
+      "items": 2
+    },
+    {
+      "content": "neoplasms",
+      "task": "sc",
+      "items": 1
+    },
+    {
+      "content": "disorders-of-the-breast",
+      "task": "hp",
+      "items": 1
+    },
+    {
+      "content": "disorders-of-the-breast",
+      "task": "ds",
+      "items": 1
+    },
+    {
+      "content": "disorders-of-the-breast",
+      "task": "dx",
+      "items": 2
+    },
+    {
+      "content": "disorders-of-the-breast",
+      "task": "hm",
+      "items": 1
+    },
+    {
+      "content": "disorders-of-the-breast",
+      "task": "ci",
+      "items": 1
+    },
+    {
+      "content": "disorders-of-the-breast",
+      "task": "ct",
+      "items": 1
+    },
+    {
+      "content": "disorders-of-the-breast",
+      "task": "sc",
+      "items": 1
+    },
+    {
+      "content": "structural-abnormalities",
+      "task": "hp",
+      "items": 1
+    },
+    {
+      "content": "structural-abnormalities",
+      "task": "ds",
+      "items": 0
+    },
+    {
+      "content": "structural-abnormalities",
+      "task": "dx",
+      "items": 1
+    },
+    {
+      "content": "structural-abnormalities",
+      "task": "hm",
+      "items": 1
+    },
+    {
+      "content": "structural-abnormalities",
+      "task": "ci",
+      "items": 1
+    },
+    {
+      "content": "structural-abnormalities",
+      "task": "ct",
+      "items": 1
+    },
+    {
+      "content": "structural-abnormalities",
+      "task": "sc",
+      "items": 0
+    },
+    {
+      "content": "other",
+      "task": "hp",
+      "items": 1
+    },
+    {
+      "content": "other",
+      "task": "ds",
+      "items": 0
+    },
+    {
+      "content": "other",
+      "task": "dx",
+      "items": 1
+    },
+    {
+      "content": "other",
+      "task": "hm",
+      "items": 0
+    },
+    {
+      "content": "other",
+      "task": "ci",
+      "items": 1
+    },
+    {
+      "content": "other",
+      "task": "ct",
+      "items": 1
+    },
+    {
+      "content": "other",
+      "task": "sc",
+      "items": 1
+    },
+    {
+      "content": "prenatal-care-normal-pregnancy",
+      "task": "hp",
+      "items": 2
+    },
+    {
+      "content": "prenatal-care-normal-pregnancy",
+      "task": "ds",
+      "items": 2
+    },
+    {
+      "content": "prenatal-care-normal-pregnancy",
+      "task": "dx",
+      "items": 4
+    },
+    {
+      "content": "prenatal-care-normal-pregnancy",
+      "task": "hm",
+      "items": 2
+    },
+    {
+      "content": "prenatal-care-normal-pregnancy",
+      "task": "ci",
+      "items": 2
+    },
+    {
+      "content": "prenatal-care-normal-pregnancy",
+      "task": "ct",
+      "items": 3
+    },
+    {
+      "content": "prenatal-care-normal-pregnancy",
+      "task": "sc",
+      "items": 1
+    },
+    {
+      "content": "pregnancy-complications",
+      "task": "hp",
+      "items": 3
+    },
+    {
+      "content": "pregnancy-complications",
+      "task": "ds",
+      "items": 2
+    },
+    {
+      "content": "pregnancy-complications",
+      "task": "dx",
+      "items": 4
+    },
+    {
+      "content": "pregnancy-complications",
+      "task": "hm",
+      "items": 1
+    },
+    {
+      "content": "pregnancy-complications",
+      "task": "ci",
+      "items": 1
+    },
+    {
+      "content": "pregnancy-complications",
+      "task": "ct",
+      "items": 3
+    },
+    {
+      "content": "pregnancy-complications",
+      "task": "sc",
+      "items": 1
+    },
+    {
+      "content": "labor-and-delivery-complications",
+      "task": "hp",
+      "items": 1
+    },
+    {
+      "content": "labor-and-delivery-complications",
+      "task": "ds",
+      "items": 0
+    },
+    {
+      "content": "labor-and-delivery-complications",
+      "task": "dx",
+      "items": 2
+    },
+    {
+      "content": "labor-and-delivery-complications",
+      "task": "hm",
+      "items": 1
+    },
+    {
+      "content": "labor-and-delivery-complications",
+      "task": "ci",
+      "items": 1
+    },
+    {
+      "content": "labor-and-delivery-complications",
+      "task": "ct",
+      "items": 2
+    },
+    {
+      "content": "labor-and-delivery-complications",
+      "task": "sc",
+      "items": 1
+    },
+    {
+      "content": "postpartum-care",
+      "task": "hp",
+      "items": 1
+    },
+    {
+      "content": "postpartum-care",
+      "task": "ds",
+      "items": 1
+    },
+    {
+      "content": "postpartum-care",
+      "task": "dx",
+      "items": 1
+    },
+    {
+      "content": "postpartum-care",
+      "task": "hm",
+      "items": 1
+    },
+    {
+      "content": "postpartum-care",
+      "task": "ci",
+      "items": 0
+    },
+    {
+      "content": "postpartum-care",
+      "task": "ct",
+      "items": 1
+    },
+    {
+      "content": "postpartum-care",
+      "task": "sc",
+      "items": 1
+    }
+  ],
+  "transcription": {
+    "method": "Manual transcription from the official PDF; row and column totals checked by tests.",
+    "transcribedAt": "2026-10-11",
+    "transcribedBy": "coding-agent",
+    "verifiedBy": null,
+    "verifiedAt": null
+  },
+  "notes": [
+    "Document footnote: \"Updates include style and spacing changes and organization in content area size order. No distribution changes were made.\"",
+    "This legacy blueprint has no Professional Practice task column.",
+    "Content areas are grouped under GYNECOLOGY (first six rows) and OBSTETRICS (last four rows) in the source."
+  ]
+}

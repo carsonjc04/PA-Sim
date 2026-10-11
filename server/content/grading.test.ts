@@ -87,7 +87,7 @@ describe('grading version pin', () => {
           "history": 76,
           "treatment": 50,
         },
-        "contentVersion": "2.0.1",
+        "contentVersion": "2.1.0",
         "critical": true,
         "final": 59,
         "passed": false,

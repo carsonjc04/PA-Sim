@@ -15,6 +15,7 @@ import { type Attempt, type ScenarioDefinition, QUALIFIED_REVIEWER_ROLES } from 
 import { contentFingerprint } from './hash'
 import type { RawPackage } from './loader'
 import { validateRemediation, type ValidatedRemediation } from './remediation'
+import { validateStudyContent, type ValidatedStudyContent } from './study-validate'
 
 export interface Issue {
   severity: 'error' | 'warning'
@@ -24,7 +25,7 @@ export interface Issue {
   message: string
 }
 
-export interface ValidatedPackage extends ValidatedRemediation {
+export interface ValidatedPackage extends ValidatedRemediation, ValidatedStudyContent {
   manifest: ContentManifest
   lock: ContentLock
   taxonomy: TaxonomyVocabulary
@@ -344,16 +345,24 @@ function checkTeachingText(s: ScenarioDefinition, c: Collector) {
 
 function checkTaxonomy(s: ScenarioDefinition, vocab: TaxonomyVocabulary, c: Collector) {
   const t = s.taxonomy
-  const check = (path: string, values: string[], allowed: { id: string }[]) => {
-    const ids = new Set(allowed.map((a) => a.id))
-    for (const v of values) if (!ids.has(v)) c.add('error', 'taxonomy-term', path, `"${v}" is not in content/taxonomy.json.`)
+  const check = (path: string, values: string[], allowed: TaxonomyVocabulary['organSystems']) => {
+    for (const v of values) {
+      const term = allowed.find((a) => a.id === v)
+      if (!term) c.add('error', 'taxonomy-term', path, `"${v}" is not in content/taxonomy.json.`)
+      // Stored snapshots may keep deprecated IDs (they resolve at read time); current content must not.
+      else if (term.status === 'deprecated') c.add('error', 'taxonomy-deprecated', path, `"${v}" is deprecated; use ${term.replacedBy?.join(', ')}.`)
+    }
+    if (new Set(values).size !== values.length) c.add('error', 'taxonomy-duplicate', path, 'A tag is listed twice.')
   }
   check('taxonomy.organSystems', t.organSystems, vocab.organSystems)
   check('taxonomy.panceTasks', t.panceTasks, vocab.panceTasks)
+  check('taxonomy.topicTags', t.topicTags ?? [], vocab.topicTags)
   check('taxonomy.careSetting', [t.careSetting], vocab.careSettings)
   check('taxonomy.ageGroup', [t.ageGroup], vocab.ageGroups)
   check('taxonomy.eorRotations', t.eorRotations, vocab.eorRotations)
   if (s.summary.urgent && t.acuity === 'routine') c.add('warning', 'taxonomy-acuity', 'taxonomy.acuity', 'summary.urgent is true but acuity is routine.')
+  if (t.suitability.modes.includes('clinical-sim')) c.add('error', 'suitability-mode', 'taxonomy.suitability.modes', 'Clinical Sim is not built yet; no case can claim it.')
+  if (t.suitability.modes.includes('sprint')) c.add('error', 'suitability-mode', 'taxonomy.suitability.modes', 'Sprints are separate files in content/sprints/ that reference a case; list only encounter modes here.')
 }
 
 function checkLifecycle(s: ScenarioDefinition, now: string, published: boolean, c: Collector) {
@@ -454,6 +463,7 @@ export function validatePackage(raw: RawPackage, options: ValidateOptions = {}):
   const scenarios: ScenarioDefinition[] = []
   const fixtures: Record<string, ScenarioFixtureFile> = {}
   let remediation: ValidatedRemediation = { knowledge: null, remediation: {} }
+  let study: ValidatedStudyContent = { blueprints: [], sprints: [], taxonomyHistory: null }
 
   if (manifest.success) {
     const m = manifest.data
@@ -518,6 +528,7 @@ export function validatePackage(raw: RawPackage, options: ValidateOptions = {}):
       }
     }
     remediation = validateRemediation(raw, scenarios, vocab.success ? vocab.data : null, lock.success ? lock.data : null, options, issues)
+    study = validateStudyContent(raw, scenarios, vocab.success ? vocab.data : null, m, now, issues)
     if (manifest.data.scenarios.some((e) => !e.published && e.status !== 'retired')) {
       pkgC.add('warning', 'unpublished', 'manifest.scenarios', 'A case that is not retired is unpublished and invisible to learners.')
     }
@@ -529,7 +540,7 @@ export function validatePackage(raw: RawPackage, options: ValidateOptions = {}):
     issues,
     errors,
     warnings,
-    package: errors.length === 0 && manifest.success && lock.success && vocab.success ? { manifest: manifest.data, lock: lock.data, taxonomy: vocab.data, scenarios, fixtures, ...remediation } : null,
+    package: errors.length === 0 && manifest.success && lock.success && vocab.success ? { manifest: manifest.data, lock: lock.data, taxonomy: vocab.data, scenarios, fixtures, ...remediation, ...study } : null,
   }
 }
 

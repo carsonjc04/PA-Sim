@@ -20,7 +20,7 @@
     {
       "id": "uncomplicated-uri-management",
       "statement": "Manage an uncomplicated viral respiratory illness with supportive care, antibiotic stewardship, an appropriate setting of care and clear return precautions.",
-      "panceTasks": ["clinical-intervention", "pharmaceutical-therapeutics", "patient-education"]
+      "panceTasks": ["clinical-intervention", "pharmaceutical-therapeutics", "health-maintenance-education-prevention"]
     }
   ],
   "components": [
@@ -70,7 +70,7 @@
       "id": "antibiotic-expectation-conversation",
       "label": "Responding to a patient who expects antibiotics",
       "objectiveIds": ["uncomplicated-uri-management"],
-      "panceTasks": ["patient-education"],
+      "panceTasks": ["health-maintenance-education-prevention"],
       "organSystems": ["infectious-diseases"]
     },
     {

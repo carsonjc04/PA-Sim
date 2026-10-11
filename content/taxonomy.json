@@ -1,173 +1,464 @@
 {
-  "provenance": "Organ-system, task-category and EOR-rotation names supplied by the project owner from web research of the NCCPA PANCE content blueprint (effective January 2025); not independently re-checked against the NCCPA source, and care-setting and age-group values are author-proposed. Unreviewed until a qualified clinician reviews them. Using a name here is not a claim of blueprint coverage.",
+  "taxonomyVersion": 2,
+  "provenance": "Organ-system and task-category IDs and labels follow the NCCPA PANCE content blueprint effective January 2025 (content/blueprints/nccpa-pance-2025.json, transcribed from the official PDF on 2026-10-11). Topic tags exist only so PAEA End of Rotation categories that have no PANCE equivalent can be crosswalked; each names its source category. Care-setting and age-group values are author-proposed. IDs are never deleted: retired IDs stay with status \"deprecated\" and replacedBy, so stored attempt snapshots keep resolving. Using a tag is not a claim of blueprint coverage.",
   "organSystems": [
     {
       "id": "cardiovascular-system",
-      "label": "Cardiovascular System"
-    },
-    {
-      "id": "pulmonary-system",
-      "label": "Pulmonary System"
-    },
-    {
-      "id": "gi-system-nutrition",
-      "label": "GI System / Nutrition"
-    },
-    {
-      "id": "musculoskeletal-system",
-      "label": "Musculoskeletal System"
-    },
-    {
-      "id": "infectious-diseases",
-      "label": "Infectious Diseases"
-    },
-    {
-      "id": "neurologic-system",
-      "label": "Neurologic System"
-    },
-    {
-      "id": "psychiatry-behavioral-science",
-      "label": "Psychiatry / Behavioral Science"
-    },
-    {
-      "id": "reproductive-system",
-      "label": "Reproductive System"
-    },
-    {
-      "id": "endocrine-system",
-      "label": "Endocrine System"
-    },
-    {
-      "id": "eyes-ears-nose-throat",
-      "label": "Eyes, Ears, Nose, Throat"
-    },
-    {
-      "id": "hematologic-system",
-      "label": "Hematologic System"
-    },
-    {
-      "id": "renal-system",
-      "label": "Renal System"
+      "label": "Cardiovascular System",
+      "status": "active"
     },
     {
       "id": "dermatologic-system",
-      "label": "Dermatologic System"
+      "label": "Dermatologic System",
+      "status": "active"
+    },
+    {
+      "id": "endocrine-system",
+      "label": "Endocrine System",
+      "status": "active"
+    },
+    {
+      "id": "eyes-ears-nose-throat",
+      "label": "Eyes, Ears, Nose, and Throat",
+      "status": "active"
+    },
+    {
+      "id": "gi-system-nutrition",
+      "label": "Gastrointestinal System/Nutrition",
+      "status": "active"
     },
     {
       "id": "genitourinary-system",
-      "label": "Genitourinary System"
+      "label": "Genitourinary System",
+      "status": "active"
+    },
+    {
+      "id": "hematologic-system",
+      "label": "Hematologic System",
+      "status": "active"
+    },
+    {
+      "id": "infectious-diseases",
+      "label": "Infectious Diseases",
+      "status": "active"
+    },
+    {
+      "id": "musculoskeletal-system",
+      "label": "Musculoskeletal System",
+      "status": "active"
+    },
+    {
+      "id": "neurologic-system",
+      "label": "Neurologic System",
+      "status": "active"
+    },
+    {
+      "id": "psychiatry-behavioral-science",
+      "label": "Psychiatry/Behavioral Science",
+      "status": "active"
+    },
+    {
+      "id": "pulmonary-system",
+      "label": "Pulmonary System",
+      "status": "active"
+    },
+    {
+      "id": "renal-system",
+      "label": "Renal System",
+      "status": "active"
+    },
+    {
+      "id": "reproductive-system",
+      "label": "Reproductive System",
+      "status": "active"
     },
     {
       "id": "professional-practice",
-      "label": "Professional Practice"
+      "label": "Professional Practice",
+      "status": "active"
     }
   ],
   "panceTasks": [
     {
       "id": "history-taking-physical-examination",
-      "label": "History Taking & Physical Examination"
+      "label": "History Taking and Performing Physical Examination",
+      "status": "active"
     },
     {
       "id": "using-diagnostic-laboratory-studies",
-      "label": "Using Diagnostic & Laboratory Studies"
+      "label": "Using Diagnostic and Laboratory Studies",
+      "status": "active"
     },
     {
       "id": "formulating-the-most-likely-diagnosis",
-      "label": "Formulating the Most Likely Diagnosis"
+      "label": "Formulating the Most Likely Diagnosis",
+      "status": "active"
     },
     {
-      "id": "health-maintenance",
-      "label": "Health Maintenance"
-    },
-    {
-      "id": "patient-education",
-      "label": "Patient Education"
-    },
-    {
-      "id": "preventive-measures",
-      "label": "Preventive Measures"
+      "id": "health-maintenance-education-prevention",
+      "label": "Health Maintenance, Patient Education, and Preventive Measures",
+      "status": "active"
     },
     {
       "id": "clinical-intervention",
-      "label": "Clinical Intervention"
+      "label": "Clinical Intervention",
+      "status": "active"
     },
     {
       "id": "pharmaceutical-therapeutics",
-      "label": "Pharmaceutical Therapeutics"
+      "label": "Pharmaceutical Therapeutics",
+      "status": "active"
     },
     {
       "id": "applying-foundational-scientific-concepts",
-      "label": "Applying Foundational Scientific Concepts"
+      "label": "Applying Foundational Scientific Concepts",
+      "status": "active"
     },
     {
       "id": "professional-practice",
-      "label": "Professional Practice"
+      "label": "Professional Practice",
+      "status": "active"
+    },
+    {
+      "id": "health-maintenance",
+      "label": "Health Maintenance (deprecated)",
+      "status": "deprecated",
+      "replacedBy": [
+        "health-maintenance-education-prevention"
+      ]
+    },
+    {
+      "id": "patient-education",
+      "label": "Patient Education (deprecated)",
+      "status": "deprecated",
+      "replacedBy": [
+        "health-maintenance-education-prevention"
+      ]
+    },
+    {
+      "id": "preventive-measures",
+      "label": "Preventive Measures (deprecated)",
+      "status": "deprecated",
+      "replacedBy": [
+        "health-maintenance-education-prevention"
+      ]
+    }
+  ],
+  "topicTags": [
+    {
+      "id": "growth-development",
+      "label": "Growth and development",
+      "status": "active",
+      "source": "PAEA Pediatrics EOR 2026 \"Growth and Development\"; 2018 \"Neurology/developmental\""
+    },
+    {
+      "id": "psych-depressive-bipolar",
+      "label": "Depressive and bipolar disorders",
+      "status": "active",
+      "source": "PAEA Psychiatry EOR categories"
+    },
+    {
+      "id": "psych-substance-addictive",
+      "label": "Substance-related and addictive disorders",
+      "status": "active",
+      "source": "PAEA Psychiatry EOR categories"
+    },
+    {
+      "id": "psych-trauma-stressor",
+      "label": "Trauma- and stressor-related disorders",
+      "status": "active",
+      "source": "PAEA Psychiatry EOR categories"
+    },
+    {
+      "id": "abuse-neglect",
+      "label": "Abuse and neglect",
+      "status": "active",
+      "source": "PAEA Psychiatry EOR 2026"
+    },
+    {
+      "id": "psych-anxiety",
+      "label": "Anxiety disorders",
+      "status": "active",
+      "source": "PAEA Psychiatry EOR categories"
+    },
+    {
+      "id": "psych-somatic",
+      "label": "Somatic symptom and related disorders",
+      "status": "active",
+      "source": "PAEA Psychiatry EOR categories"
+    },
+    {
+      "id": "psych-psychotic",
+      "label": "Schizophrenia spectrum and other psychotic disorders",
+      "status": "active",
+      "source": "PAEA Psychiatry EOR categories"
+    },
+    {
+      "id": "psych-feeding-eating",
+      "label": "Feeding and eating disorders",
+      "status": "active",
+      "source": "PAEA Psychiatry EOR categories"
+    },
+    {
+      "id": "psych-neurodevelopmental",
+      "label": "Neurodevelopmental disorders",
+      "status": "active",
+      "source": "PAEA Psychiatry EOR categories"
+    },
+    {
+      "id": "psych-dissociative",
+      "label": "Dissociative disorders",
+      "status": "active",
+      "source": "PAEA Psychiatry EOR 2026"
+    },
+    {
+      "id": "psych-sleep-wake",
+      "label": "Sleep-wake disorders",
+      "status": "active",
+      "source": "PAEA Psychiatry EOR 2026"
+    },
+    {
+      "id": "psych-human-sexuality",
+      "label": "Human sexuality and sexual dysfunction",
+      "status": "active",
+      "source": "PAEA Psychiatry EOR 2026 \"Human Sexuality\"; 2018 \"Paraphilic disorders; Sexual dysfunctions\""
+    },
+    {
+      "id": "psych-personality",
+      "label": "Personality disorders",
+      "status": "active",
+      "source": "PAEA Psychiatry EOR categories"
+    },
+    {
+      "id": "psych-obsessive-compulsive",
+      "label": "Obsessive-compulsive and related disorders",
+      "status": "active",
+      "source": "PAEA Psychiatry EOR categories"
+    },
+    {
+      "id": "psych-disruptive-conduct",
+      "label": "Disruptive, impulse-control and conduct disorders",
+      "status": "active",
+      "source": "PAEA Psychiatry EOR 2018"
+    },
+    {
+      "id": "nonadherence",
+      "label": "Nonadherence to medical treatment",
+      "status": "active",
+      "source": "PAEA Psychiatry EOR 2018"
+    },
+    {
+      "id": "pregnancy-prenatal",
+      "label": "Prenatal care and pregnancy",
+      "status": "active",
+      "source": "PAEA GSRH 2026 / Women's Health 2018"
+    },
+    {
+      "id": "pregnancy-complications",
+      "label": "Pregnancy complications",
+      "status": "active",
+      "source": "PAEA Women's Health 2018"
+    },
+    {
+      "id": "labor-delivery",
+      "label": "Labor and delivery",
+      "status": "active",
+      "source": "PAEA GSRH 2026 / Women's Health 2018"
+    },
+    {
+      "id": "postpartum",
+      "label": "Postpartum care",
+      "status": "active",
+      "source": "PAEA GSRH 2026 / Women's Health 2018"
+    },
+    {
+      "id": "uterine-cervix",
+      "label": "Uterine and cervical conditions",
+      "status": "active",
+      "source": "PAEA GSRH 2026"
+    },
+    {
+      "id": "fertility-management",
+      "label": "Fertility management",
+      "status": "active",
+      "source": "PAEA GSRH 2026"
+    },
+    {
+      "id": "sexual-health-development",
+      "label": "Sexual health and development",
+      "status": "active",
+      "source": "PAEA GSRH 2026"
+    },
+    {
+      "id": "vulva-vagina-pelvic-floor",
+      "label": "Vulvar, vaginal and pelvic floor conditions",
+      "status": "active",
+      "source": "PAEA GSRH 2026"
+    },
+    {
+      "id": "ovary-adnexa",
+      "label": "Ovarian and adnexal conditions",
+      "status": "active",
+      "source": "PAEA GSRH 2026"
+    },
+    {
+      "id": "gyn-infections",
+      "label": "Gynecologic and reproductive tract infections",
+      "status": "active",
+      "source": "PAEA GSRH 2026 / Women's Health 2018 \"Infections\""
+    },
+    {
+      "id": "gyn-menstruation",
+      "label": "Menstruation",
+      "status": "active",
+      "source": "PAEA Women's Health 2018"
+    },
+    {
+      "id": "gyn-neoplasms",
+      "label": "Gynecologic neoplasms",
+      "status": "active",
+      "source": "PAEA Women's Health 2018"
+    },
+    {
+      "id": "gyn-structural",
+      "label": "Gynecologic structural abnormalities",
+      "status": "active",
+      "source": "PAEA Women's Health 2018"
+    },
+    {
+      "id": "gyn-other",
+      "label": "Other gynecologic conditions",
+      "status": "active",
+      "source": "PAEA Women's Health 2018 \"Other\""
+    },
+    {
+      "id": "breast",
+      "label": "Breast conditions",
+      "status": "active",
+      "source": "PAEA GSRH 2026, Surgery 2023, Women's Health 2018"
+    },
+    {
+      "id": "trauma-acute-care",
+      "label": "Trauma and acute care surgery",
+      "status": "active",
+      "source": "PAEA Surgery 2023"
+    },
+    {
+      "id": "pain-anesthesia",
+      "label": "Pain medicine and anesthesia",
+      "status": "active",
+      "source": "PAEA Surgery 2023"
+    },
+    {
+      "id": "critical-care",
+      "label": "Critical care",
+      "status": "active",
+      "source": "PAEA Internal Medicine 2018"
+    },
+    {
+      "id": "surgical",
+      "label": "Surgical topic",
+      "status": "active",
+      "source": "NCCPA PANCE 2025 cross-cutting target (8% to 10%)"
+    },
+    {
+      "id": "periop-preoperative",
+      "label": "Preoperative setting",
+      "status": "active",
+      "source": "PAEA Surgery 2023 perioperative target"
+    },
+    {
+      "id": "periop-intraoperative",
+      "label": "Intraoperative setting",
+      "status": "active",
+      "source": "PAEA Surgery 2023 perioperative target"
+    },
+    {
+      "id": "periop-postoperative",
+      "label": "Postoperative setting",
+      "status": "active",
+      "source": "PAEA Surgery 2023 perioperative target"
     }
   ],
   "careSettings": [
     {
       "id": "primary-care",
-      "label": "Primary care (office)"
+      "label": "Primary care (office)",
+      "status": "active"
     },
     {
       "id": "same-day-care",
-      "label": "Same-day or urgent care"
+      "label": "Same-day or urgent care",
+      "status": "active"
     },
     {
       "id": "emergency-department",
-      "label": "Emergency department"
+      "label": "Emergency department",
+      "status": "active"
     },
     {
       "id": "inpatient",
-      "label": "Inpatient"
+      "label": "Inpatient",
+      "status": "active"
     }
   ],
   "ageGroups": [
     {
       "id": "pediatric",
-      "label": "Pediatric (under 18)"
+      "label": "Pediatric (under 18)",
+      "status": "active"
     },
     {
       "id": "young-adult",
-      "label": "Young adult (18-39)"
+      "label": "Young adult (18-39)",
+      "status": "active"
     },
     {
       "id": "middle-aged-adult",
-      "label": "Middle-aged adult (40-64)"
+      "label": "Middle-aged adult (40-64)",
+      "status": "active"
     },
     {
       "id": "older-adult",
-      "label": "Older adult (65 and over)"
+      "label": "Older adult (65 and over)",
+      "status": "active"
     }
   ],
   "eorRotations": [
     {
       "id": "emergency-medicine",
-      "label": "Emergency Medicine"
+      "label": "Emergency Medicine",
+      "status": "active"
     },
     {
       "id": "family-medicine",
-      "label": "Family Medicine"
+      "label": "Family Medicine",
+      "status": "active"
     },
     {
       "id": "internal-medicine",
-      "label": "Internal Medicine"
+      "label": "Internal Medicine",
+      "status": "active"
     },
     {
       "id": "pediatrics",
-      "label": "Pediatrics"
+      "label": "Pediatrics",
+      "status": "active"
     },
     {
       "id": "surgery",
-      "label": "Surgery"
+      "label": "Surgery",
+      "status": "active"
     },
     {
       "id": "psychiatry-behavioral-health",
-      "label": "Psychiatry/Behavioral Health"
+      "label": "Psychiatry & Behavioral Health",
+      "status": "active"
     },
     {
       "id": "women-s-health",
-      "label": "Women's Health"
+      "label": "Gynecologic, Sexual & Reproductive Health (formerly Women's Health)",
+      "status": "active"
     }
   ]
 }

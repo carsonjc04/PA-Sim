@@ -1,0 +1,633 @@
+{
+  "id": "paea-eor-surgery-2023",
+  "issuer": "PAEA",
+  "exam": "eor",
+  "rotation": "surgery",
+  "title": "Surgery End of Rotation Exam Blueprint",
+  "versionLabel": "2023",
+  "effectiveFrom": null,
+  "effectiveUntil": null,
+  "dateNotes": "Listed by PAEA as the current Surgery blueprint alongside the 2026 updates; no update was published for Surgery in July 2026. The document is © 2023 PAEA; its start date is not stated, so effectiveFrom is unknown.",
+  "publishedAt": null,
+  "supersedes": [],
+  "supersededBy": null,
+  "source": {
+    "documentUrl": "https://paeaonline.org/wp-content/uploads/2025/08/Surgery-Blueprint-2023-2.pdf",
+    "landingPage": "https://paeaonline.org/assessment/end-of-rotation/blueprints-and-topic-lists",
+    "retrievedAt": "2026-10-11",
+    "sha256": "16c6ed33fb76647c5b73779ea84e59e4bae263e1faa53bfe4c79fff881a785db",
+    "retrievedVia": null,
+    "retrievalNote": null
+  },
+  "examStructure": {
+    "items": 100,
+    "format": "100 multiple-choice questions (per the blueprint header)"
+  },
+  "contentCategories": [
+    {
+      "id": "gastrointestinal",
+      "label": "Gastrointestinal",
+      "weightPct": 17,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "gi-system-nutrition"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "cardiovascular",
+      "label": "Cardiovascular",
+      "weightPct": 15,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "cardiovascular-system"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "pulmonary-thoracic-surgery",
+      "label": "Pulmonary/thoracic surgery",
+      "weightPct": 13,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "pulmonary-system"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "breast-surgery",
+      "label": "Breast surgery",
+      "weightPct": 10,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "reproductive-system"
+            ],
+            "topicTags": [
+              "breast"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "dermatologic",
+      "label": "Dermatologic",
+      "weightPct": 10,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "dermatologic-system"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "renal-genitourinary",
+      "label": "Renal/genitourinary",
+      "weightPct": 8,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "renal-system",
+              "genitourinary-system"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "trauma-acute-care",
+      "label": "Trauma/acute care",
+      "weightPct": 8,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "topicTags": [
+              "trauma-acute-care"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "neurologic-neurosurgery",
+      "label": "Neurologic/neurosurgery",
+      "weightPct": 7,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "neurologic-system"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "pain-medicine-anesthesia",
+      "label": "Pain medicine/anesthesia",
+      "weightPct": 7,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "topicTags": [
+              "pain-anesthesia"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "endocrine",
+      "label": "Endocrine",
+      "weightPct": 5,
+      "crosswalk": {
+        "anyOf": [
+          {
+            "organSystems": [
+              "endocrine-system"
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "taskCategories": [
+    {
+      "id": "hp",
+      "label": "History & Physical",
+      "canonicalTask": "history-taking-physical-examination",
+      "weightPct": 17
+    },
+    {
+      "id": "ds",
+      "label": "Diagnostic Studies",
+      "canonicalTask": "using-diagnostic-laboratory-studies",
+      "weightPct": 17
+    },
+    {
+      "id": "dx",
+      "label": "Diagnosis",
+      "canonicalTask": "formulating-the-most-likely-diagnosis",
+      "weightPct": 20
+    },
+    {
+      "id": "ci",
+      "label": "Clinical Intervention",
+      "canonicalTask": "clinical-intervention",
+      "weightPct": 20
+    },
+    {
+      "id": "ct",
+      "label": "Clinical Therapeutics",
+      "canonicalTask": "pharmaceutical-therapeutics",
+      "weightPct": 11
+    },
+    {
+      "id": "sc",
+      "label": "Scientific Concepts",
+      "canonicalTask": "applying-foundational-scientific-concepts",
+      "weightPct": 7
+    },
+    {
+      "id": "pp",
+      "label": "Professional Practice",
+      "canonicalTask": "professional-practice",
+      "weightPct": 8
+    }
+  ],
+  "cells": [
+    {
+      "content": "gastrointestinal",
+      "task": "hp",
+      "items": 3
+    },
+    {
+      "content": "gastrointestinal",
+      "task": "ds",
+      "items": 3
+    },
+    {
+      "content": "gastrointestinal",
+      "task": "dx",
+      "items": 3
+    },
+    {
+      "content": "gastrointestinal",
+      "task": "ci",
+      "items": 4
+    },
+    {
+      "content": "gastrointestinal",
+      "task": "ct",
+      "items": 2
+    },
+    {
+      "content": "gastrointestinal",
+      "task": "sc",
+      "items": 1
+    },
+    {
+      "content": "gastrointestinal",
+      "task": "pp",
+      "items": 1
+    },
+    {
+      "content": "cardiovascular",
+      "task": "hp",
+      "items": 2
+    },
+    {
+      "content": "cardiovascular",
+      "task": "ds",
+      "items": 3
+    },
+    {
+      "content": "cardiovascular",
+      "task": "dx",
+      "items": 4
+    },
+    {
+      "content": "cardiovascular",
+      "task": "ci",
+      "items": 3
+    },
+    {
+      "content": "cardiovascular",
+      "task": "ct",
+      "items": 1
+    },
+    {
+      "content": "cardiovascular",
+      "task": "sc",
+      "items": 1
+    },
+    {
+      "content": "cardiovascular",
+      "task": "pp",
+      "items": 1
+    },
+    {
+      "content": "pulmonary-thoracic-surgery",
+      "task": "hp",
+      "items": 2
+    },
+    {
+      "content": "pulmonary-thoracic-surgery",
+      "task": "ds",
+      "items": 2
+    },
+    {
+      "content": "pulmonary-thoracic-surgery",
+      "task": "dx",
+      "items": 3
+    },
+    {
+      "content": "pulmonary-thoracic-surgery",
+      "task": "ci",
+      "items": 2
+    },
+    {
+      "content": "pulmonary-thoracic-surgery",
+      "task": "ct",
+      "items": 1
+    },
+    {
+      "content": "pulmonary-thoracic-surgery",
+      "task": "sc",
+      "items": 1
+    },
+    {
+      "content": "pulmonary-thoracic-surgery",
+      "task": "pp",
+      "items": 2
+    },
+    {
+      "content": "breast-surgery",
+      "task": "hp",
+      "items": 2
+    },
+    {
+      "content": "breast-surgery",
+      "task": "ds",
+      "items": 2
+    },
+    {
+      "content": "breast-surgery",
+      "task": "dx",
+      "items": 2
+    },
+    {
+      "content": "breast-surgery",
+      "task": "ci",
+      "items": 2
+    },
+    {
+      "content": "breast-surgery",
+      "task": "ct",
+      "items": 1
+    },
+    {
+      "content": "breast-surgery",
+      "task": "sc",
+      "items": 1
+    },
+    {
+      "content": "breast-surgery",
+      "task": "pp",
+      "items": 0
+    },
+    {
+      "content": "dermatologic",
+      "task": "hp",
+      "items": 2
+    },
+    {
+      "content": "dermatologic",
+      "task": "ds",
+      "items": 2
+    },
+    {
+      "content": "dermatologic",
+      "task": "dx",
+      "items": 2
+    },
+    {
+      "content": "dermatologic",
+      "task": "ci",
+      "items": 2
+    },
+    {
+      "content": "dermatologic",
+      "task": "ct",
+      "items": 1
+    },
+    {
+      "content": "dermatologic",
+      "task": "sc",
+      "items": 1
+    },
+    {
+      "content": "dermatologic",
+      "task": "pp",
+      "items": 0
+    },
+    {
+      "content": "renal-genitourinary",
+      "task": "hp",
+      "items": 1
+    },
+    {
+      "content": "renal-genitourinary",
+      "task": "ds",
+      "items": 1
+    },
+    {
+      "content": "renal-genitourinary",
+      "task": "dx",
+      "items": 2
+    },
+    {
+      "content": "renal-genitourinary",
+      "task": "ci",
+      "items": 2
+    },
+    {
+      "content": "renal-genitourinary",
+      "task": "ct",
+      "items": 1
+    },
+    {
+      "content": "renal-genitourinary",
+      "task": "sc",
+      "items": 1
+    },
+    {
+      "content": "renal-genitourinary",
+      "task": "pp",
+      "items": 0
+    },
+    {
+      "content": "trauma-acute-care",
+      "task": "hp",
+      "items": 1
+    },
+    {
+      "content": "trauma-acute-care",
+      "task": "ds",
+      "items": 2
+    },
+    {
+      "content": "trauma-acute-care",
+      "task": "dx",
+      "items": 1
+    },
+    {
+      "content": "trauma-acute-care",
+      "task": "ci",
+      "items": 1
+    },
+    {
+      "content": "trauma-acute-care",
+      "task": "ct",
+      "items": 1
+    },
+    {
+      "content": "trauma-acute-care",
+      "task": "sc",
+      "items": 1
+    },
+    {
+      "content": "trauma-acute-care",
+      "task": "pp",
+      "items": 1
+    },
+    {
+      "content": "neurologic-neurosurgery",
+      "task": "hp",
+      "items": 1
+    },
+    {
+      "content": "neurologic-neurosurgery",
+      "task": "ds",
+      "items": 1
+    },
+    {
+      "content": "neurologic-neurosurgery",
+      "task": "dx",
+      "items": 1
+    },
+    {
+      "content": "neurologic-neurosurgery",
+      "task": "ci",
+      "items": 2
+    },
+    {
+      "content": "neurologic-neurosurgery",
+      "task": "ct",
+      "items": 1
+    },
+    {
+      "content": "neurologic-neurosurgery",
+      "task": "sc",
+      "items": 0
+    },
+    {
+      "content": "neurologic-neurosurgery",
+      "task": "pp",
+      "items": 1
+    },
+    {
+      "content": "pain-medicine-anesthesia",
+      "task": "hp",
+      "items": 2
+    },
+    {
+      "content": "pain-medicine-anesthesia",
+      "task": "ds",
+      "items": 0
+    },
+    {
+      "content": "pain-medicine-anesthesia",
+      "task": "dx",
+      "items": 1
+    },
+    {
+      "content": "pain-medicine-anesthesia",
+      "task": "ci",
+      "items": 1
+    },
+    {
+      "content": "pain-medicine-anesthesia",
+      "task": "ct",
+      "items": 1
+    },
+    {
+      "content": "pain-medicine-anesthesia",
+      "task": "sc",
+      "items": 0
+    },
+    {
+      "content": "pain-medicine-anesthesia",
+      "task": "pp",
+      "items": 2
+    },
+    {
+      "content": "endocrine",
+      "task": "hp",
+      "items": 1
+    },
+    {
+      "content": "endocrine",
+      "task": "ds",
+      "items": 1
+    },
+    {
+      "content": "endocrine",
+      "task": "dx",
+      "items": 1
+    },
+    {
+      "content": "endocrine",
+      "task": "ci",
+      "items": 1
+    },
+    {
+      "content": "endocrine",
+      "task": "ct",
+      "items": 1
+    },
+    {
+      "content": "endocrine",
+      "task": "sc",
+      "items": 0
+    },
+    {
+      "content": "endocrine",
+      "task": "pp",
+      "items": 0
+    }
+  ],
+  "secondaryTargets": [
+    {
+      "id": "perioperative-setting",
+      "label": "Perioperative setting",
+      "partition": true,
+      "values": [
+        {
+          "id": "preoperative",
+          "label": "Preoperative",
+          "minPct": 35,
+          "maxPct": 35,
+          "crosswalk": {
+            "anyOf": [
+              {
+                "topicTags": [
+                  "periop-preoperative"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "intraoperative",
+          "label": "Intraoperative",
+          "minPct": 25,
+          "maxPct": 25,
+          "crosswalk": {
+            "anyOf": [
+              {
+                "topicTags": [
+                  "periop-intraoperative"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "postoperative",
+          "label": "Postoperative",
+          "minPct": 40,
+          "maxPct": 40,
+          "crosswalk": {
+            "anyOf": [
+              {
+                "topicTags": [
+                  "periop-postoperative"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "transcription": {
+    "method": "Manual transcription from the official PDF; row and column totals checked by tests.",
+    "transcribedAt": "2026-10-11",
+    "transcribedBy": "coding-agent",
+    "verifiedBy": null,
+    "verifiedAt": null
+  },
+  "notes": [
+    "This blueprint has no Health Maintenance task column.",
+    "Perioperative setting targets apply across the entire exam."
+  ]
+}
