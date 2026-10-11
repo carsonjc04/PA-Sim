@@ -7,7 +7,11 @@ import type {
   AuthStatus,
   EventResponse,
   HistoryPage,
+  PublicAnnotation,
   PublicAttempt,
+  PublicNotes,
+  SaveNotesBody,
+  SetAnnotationBody,
   PublicBlueprintSummary,
   PublicCoverage,
   PublicScenario,
@@ -32,11 +36,14 @@ const RETRIES = 2
 export class ApiRequestError extends Error {
   status: number
   code: ApiErrorCode | 'network'
+  /** Extra top-level fields of the error body (for example the saved copy on a notes conflict). */
+  details?: Record<string, unknown>
 
-  constructor(message: string, status: number, code: ApiErrorCode | 'network') {
+  constructor(message: string, status: number, code: ApiErrorCode | 'network', details?: Record<string, unknown>) {
     super(message)
     this.status = status
     this.code = code
+    this.details = details
   }
 }
 
@@ -84,8 +91,8 @@ async function request<T>(path: string, init: RequestInit & { idempotencyKey?: s
     }
     const body = (await response.json().catch(() => null)) as T | ApiErrorBody | null
     if (response.ok) return body as T
-    const error = (body as ApiErrorBody | null)?.error
-    lastError = new ApiRequestError(error?.message ?? 'The request failed.', response.status, error?.code ?? 'internal_error')
+    const { error, ...details } = (body as (ApiErrorBody & Record<string, unknown>) | null) ?? ({} as ApiErrorBody & Record<string, unknown>)
+    lastError = new ApiRequestError(error?.message ?? 'The request failed.', response.status, error?.code ?? 'internal_error', details)
     if (response.status < 500) break
   }
   throw lastError!
@@ -135,6 +142,14 @@ export const api = {
     }),
   reviewEvent: (sessionId: string, body: ReviewEventBody) =>
     request<{ ok: true }>(`/api/review/sessions/${encodeURIComponent(sessionId)}/events`, { method: 'POST', body: JSON.stringify(body), retry: true }),
+  // Owner-only notes and annotations. Notes saves carry the version they edited; a conflict returns the saved copy.
+  notes: (attemptId: string) => request<PublicNotes>(`/api/attempts/${encodeURIComponent(attemptId)}/notes`, { retry: true }),
+  saveNotes: (attemptId: string, body: SaveNotesBody) =>
+    request<PublicNotes>(`/api/attempts/${encodeURIComponent(attemptId)}/notes`, { method: 'PUT', body: JSON.stringify(body) }),
+  annotations: (attemptId: string) => request<PublicAnnotation[]>(`/api/attempts/${encodeURIComponent(attemptId)}/annotations`, { retry: true }),
+  // Replacing the marks on one target is idempotent, so retrying is safe.
+  setAnnotation: (attemptId: string, body: SetAnnotationBody) =>
+    request<PublicAnnotation[]>(`/api/attempts/${encodeURIComponent(attemptId)}/annotations`, { method: 'PUT', body: JSON.stringify(body), retry: true }),
   studyTaxonomy: () => request<PublicTaxonomy>('/api/study/taxonomy', { retry: true }),
   blueprints: () => request<PublicBlueprintSummary[]>('/api/study/blueprints', { retry: true }),
   coverage: (blueprintId: string) => request<PublicCoverage>(`/api/study/blueprints/${encodeURIComponent(blueprintId)}/coverage`, { retry: true }),

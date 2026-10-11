@@ -56,7 +56,7 @@ export function VoicePanel({
   if (!status.aiEnabled) {
     return (
       <section className="voice-panel voice-panel--setup">
-        <h3>Voice mode is not configured</h3>
+        <h2>Voice mode is not configured</h2>
         <p>{status.setupHint}</p>
         <p className="voice-fallback">
           Guided mode below works without an OpenAI key or a microphone.
@@ -73,7 +73,7 @@ export function VoicePanel({
   return (
     <section className="voice-panel">
       <header className="voice-header">
-        <h3>AI voice encounter</h3>
+        <h2>AI voice encounter</h2>
         <span className={`voice-status voice-status--${state}`} role="status">
           {/* Never render as live before session.started arrives. */}
           {state === "live" && voice.patientSpeaking

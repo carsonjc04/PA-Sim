@@ -1,5 +1,4 @@
 import {
-  useCallback,
   useEffect,
   useState,
   useSyncExternalStore,
@@ -11,7 +10,6 @@ import {
   Navigate,
   Route,
   Routes,
-  useNavigate,
   useParams,
 } from "react-router-dom";
 import {
@@ -19,18 +17,14 @@ import {
   ArrowUpRight,
   BarChart3,
   Check,
-  ChevronLeft,
   ClipboardList,
   Clock3,
-  Lock,
   Mic,
   RotateCcw,
   ShieldAlert,
   Stethoscope,
-  X,
 } from "lucide-react";
 import type { Category } from "./domain/types";
-import { phaseOrder } from "./domain/types";
 import {
   api,
   ApiRequestError,
@@ -45,13 +39,8 @@ import {
   type AuthStatus,
   type PublicAttempt,
   type PublicScenario,
-  type ToolName,
 } from "./api/contracts";
-import { VoicePanel } from "./features/encounter/VoicePanel";
-import {
-  ConfidenceToggle,
-  type Confidence,
-} from "./features/review/ConfidenceToggle";
+import { EncounterPage } from "./features/encounter/EncounterPage";
 import { RemediationPanel } from "./features/review/RemediationPanel";
 import { ReviewDueNote } from "./features/review/ReviewDueNote";
 import { SettingsButton } from "./features/settings/SettingsDialog";
@@ -72,18 +61,6 @@ const categories: { id: Category; label: string }[] = [
   { id: "treatment", label: "Treatment & follow-up" },
   { id: "communication", label: "Communication" },
 ];
-const phaseTool: Record<"history" | "exam" | "diagnostics", ToolName> = {
-  history: "record_history_topics",
-  exam: "request_physical_exam",
-  diagnostics: "order_diagnostic_test",
-};
-const planTool: Record<string, ToolName> = {
-  treatment: "propose_treatment_plan",
-  counseling: "propose_treatment_plan",
-  disposition: "record_disposition",
-  "follow-up": "record_follow_up",
-  return: "record_follow_up",
-};
 const errorMessage = (e: unknown) =>
   e instanceof ApiRequestError ? e.message : "Something went wrong.";
 
@@ -112,28 +89,6 @@ function useAuthStatus(): AuthStatus | null | "unreachable" {
     };
   }, [user]);
   return status;
-}
-function Portrait({
-  config,
-  small = false,
-}: {
-  config: { src?: string; alt: string; fallback: string };
-  small?: boolean;
-}) {
-  const [failed, setFailed] = useState(false);
-  return (
-    <div className={`portrait ${small ? "portrait-small" : ""}`}>
-      {config.src && !failed ? (
-        <img
-          src={config.src}
-          alt={config.alt}
-          onError={() => setFailed(true)}
-        />
-      ) : (
-        <span aria-label={config.alt}>{config.fallback}</span>
-      )}
-    </div>
-  );
 }
 function IdentityControl() {
   const status = useAuthStatus();
@@ -746,384 +701,9 @@ function Encounter() {
   return (
     <Layout>
       <RequireUser>
-        <EncounterContent />
+        <EncounterPage />
       </RequireUser>
     </Layout>
-  );
-}
-function EncounterContent() {
-  const { scenarioId } = useParams();
-  const navigate = useNavigate();
-  const [attempt, setAttempt] = useState<PublicAttempt | null>(null);
-  const [resumed, setResumed] = useState(false);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-  // Diagnosis and plan choices are drafts until the student locks the phase.
-  const [draft, setDraft] = useState<{
-    diagnosis: string[];
-    treatment: string[];
-  }>({ diagnosis: [], treatment: [] });
-  const [confirm, setConfirm] = useState(false);
-  // Optional and unrecorded unless the student taps one.
-  const [confidence, setConfidence] = useState<Confidence | null>(null);
-
-  useEffect(() => {
-    if (!scenarioId) return;
-    let cancelled = false;
-    api
-      .startAttempt(scenarioId)
-      .then((res) => {
-        if (cancelled) return;
-        setAttempt(res.attempt);
-        setResumed(res.resumed);
-      })
-      .catch((e) => {
-        if (cancelled) return;
-        if (e instanceof ApiRequestError && e.code === "scenario_not_found")
-          navigate("/cases");
-        else setLoadError(errorMessage(e));
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [scenarioId, navigate]);
-
-  const attemptId = attempt?.id;
-  // Keyed on the ID only: depending on `attempt` would re-fire the voice panel's effect after every refresh.
-  const refresh = useCallback(() => {
-    if (!attemptId) return;
-    api
-      .attempt(attemptId)
-      .then(setAttempt)
-      .catch(() => undefined);
-  }, [attemptId]);
-
-  if (loadError)
-    return (
-      <div className="empty-state">
-        <h1>Could not open this encounter</h1>
-        <p className="lede">{loadError}</p>
-        <Link className="button button-primary" to="/cases">
-          Return to cases
-        </Link>
-      </div>
-    );
-  if (!attempt) return <div className="loading">Loading encounter...</div>;
-
-  const scenario = attempt.scenario;
-  const phase = attempt.currentPhase;
-  const phaseIndex = phaseOrder.indexOf(phase);
-  const phaseDef = scenario.phases.find((p) => p.id === phase)!;
-  const locked = attempt.lockedPhases;
-  const recorded = attempt.events
-    .filter((e) => e.phase === phase)
-    .map((e) => e.actionId);
-  const activeIds =
-    phase === "diagnosis" || phase === "treatment" ? draft[phase] : recorded;
-
-  const run = async (fn: () => Promise<PublicAttempt>) => {
-    setBusy(true);
-    setActionError(null);
-    try {
-      setAttempt(await fn());
-      return true;
-    } catch (e) {
-      setActionError(errorMessage(e));
-      return false;
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const choose = (id: string) => {
-    if (busy || locked.includes(phase)) return;
-    if (phase === "diagnosis") {
-      setDraft((d) => ({ ...d, diagnosis: [id] }));
-      return;
-    }
-    if (phase === "treatment") {
-      setDraft((d) => ({
-        ...d,
-        treatment: d.treatment.includes(id)
-          ? d.treatment.filter((v) => v !== id)
-          : [...d.treatment, id],
-      }));
-      return;
-    }
-    if (recorded.includes(id)) return;
-    void run(async () => {
-      const res = await api.event(attempt.id, {
-        type: "action",
-        tool: phaseTool[phase],
-        actionIds: [id],
-      });
-      return res.attempt;
-    });
-  };
-
-  const commitDrafts = async (): Promise<PublicAttempt> => {
-    let latest = attempt;
-    if (phase === "diagnosis" && draft.diagnosis.length) {
-      latest = (
-        await api.event(attempt.id, {
-          type: "action",
-          tool: "propose_diagnosis",
-          actionIds: draft.diagnosis,
-          confirmed: true,
-          ...(confidence ? { confidence } : {}),
-        })
-      ).attempt;
-    }
-    if (phase === "treatment") {
-      const byTool = new Map<ToolName, string[]>();
-      for (const id of draft.treatment) {
-        const group = scenario.planOptions.find((p) => p.id === id)?.group;
-        const tool = group ? planTool[group] : undefined;
-        if (tool) byTool.set(tool, [...(byTool.get(tool) ?? []), id]);
-      }
-      for (const [tool, actionIds] of byTool) {
-        latest = (
-          await api.event(attempt.id, {
-            type: "action",
-            tool,
-            actionIds,
-            confirmed: true,
-          })
-        ).attempt;
-      }
-    }
-    return latest;
-  };
-
-  const advance = async () => {
-    const ok = await run(async () => {
-      await commitDrafts();
-      return (await api.event(attempt.id, { type: "lock_phase", phase }))
-        .attempt;
-    });
-    if (ok) setConfirm(false);
-  };
-
-  const submit = async () => {
-    const ok = await run(async () => {
-      await commitDrafts();
-      return api.submit(attempt.id);
-    });
-    if (ok) navigate(`/results/${attempt.id}`);
-  };
-
-  const options =
-    phase === "diagnosis"
-      ? scenario.diagnoses.map((d) => ({
-          id: d.id,
-          label: d.label,
-          paText: "Select primary diagnosis",
-        }))
-      : phase === "treatment"
-        ? scenario.planOptions.map((p) => ({
-            id: p.id,
-            label: p.label,
-            paText: "Add to care plan",
-          }))
-        : phaseDef.actions;
-  const revealed = attempt.events.filter(
-    (e) => e.revealed && e.phase !== "diagnosis" && e.phase !== "treatment",
-  );
-
-  if (attempt.status === "submitted")
-    return <Navigate to={`/results/${attempt.id}`} replace />;
-
-  return (
-    <>
-      <div className="encounter-shell">
-        <div className="encounter-header">
-          <div>
-            <Link to="/cases" className="back-link">
-              <ChevronLeft size={15} /> Exit encounter
-            </Link>
-            <p className="eyebrow">
-              ACTIVE ENCOUNTER · {scenario.summary.setting.toUpperCase()}
-              {resumed && (attempt.events.length > 0 || locked.length > 0)
-                ? " · RESUMED"
-                : ""}
-            </p>
-            <h1>{scenario.summary.title}</h1>
-          </div>
-          <div className="patient-quick">
-            <Portrait config={scenario.patient.portrait} small />
-            <span>
-              <strong>{scenario.patient.name}</strong>
-              <small>
-                {scenario.patient.demographics} · {scenario.summary.pronouns}
-              </small>
-            </span>
-          </div>
-        </div>
-        <div className="steps" tabIndex={0} role="group" aria-label="Encounter phases">
-          {phaseOrder.map((p, i) => (
-            <div
-              className={`step ${i === phaseIndex ? "active" : ""} ${locked.includes(p) ? "done" : ""}`}
-              key={p}
-            >
-              <span>{locked.includes(p) ? <Check size={14} /> : i + 1}</span>
-              <label>{scenario.phases.find((x) => x.id === p)?.label}</label>
-            </div>
-          ))}
-        </div>
-        <VoicePanel attemptId={attempt.id} onActivity={refresh} />
-        <div className="encounter-grid">
-          <aside className="speaker-side clinician-side">
-            <Portrait config={scenario.clinician} />
-            <strong>You — PA Student</strong>
-            <span>Clinician perspective</span>
-          </aside>
-          <section className="transcript" tabIndex={0} aria-label="Encounter transcript">
-            <div className="patient-opening">
-              <div className="turn-label">
-                <span className="patient-dot">
-                  {scenario.patient.portrait.fallback}
-                </span>
-                <strong>{scenario.patient.name}</strong>
-                <small>Patient</small>
-              </div>
-              <p>“{scenario.opening}”</p>
-            </div>
-            <div className="known-info">
-              <strong>Initial information</strong>
-              {scenario.initialInfo.map((x) => (
-                <span key={x}>{x}</span>
-              ))}
-            </div>
-            {revealed.map((r) => (
-              <div className="turn" key={r.seq}>
-                <div className="turn-label">
-                  <span className="pa-dot">PA</span>
-                  <strong>
-                    {scenario.phases.find((p) => p.id === r.phase)?.label}
-                  </strong>
-                  <small>
-                    {r.source === "voice"
-                      ? "Recorded from voice"
-                      : "Finding revealed"}
-                  </small>
-                </div>
-                <p>{r.revealed}</p>
-              </div>
-            ))}
-            <div aria-live="polite" className="sr-only">
-              {revealed.length} findings revealed
-            </div>
-          </section>
-          <aside className="speaker-side patient-side">
-            <Portrait config={scenario.patient.portrait} />
-            <strong>{scenario.patient.name}</strong>
-            <span>Fictional patient</span>
-          </aside>
-        </div>
-        <section className="action-panel">
-          <div className="action-heading">
-            <div>
-              <p className="eyebrow">PHASE {phaseIndex + 1} OF 5</p>
-              <h2>{phaseDef.label}</h2>
-              <p>{phaseDef.description}</p>
-            </div>
-            <span className="selection-count">{activeIds.length} selected</span>
-          </div>
-          {actionError && (
-            <div className="voice-error" role="alert">
-              <p>{actionError}</p>
-            </div>
-          )}
-          {options.map((a) => (
-            <button
-              type="button"
-              className={`action-option ${activeIds.includes(a.id) ? "selected" : ""}`}
-              key={a.id}
-              aria-pressed={activeIds.includes(a.id)}
-              disabled={busy}
-              onClick={() => choose(a.id)}
-            >
-              <span className="action-check">
-                {activeIds.includes(a.id) ? <Check size={14} /> : ""}
-              </span>
-              <span>
-                <strong>{a.label}</strong>
-                <small>{a.paText}</small>
-              </span>
-            </button>
-          ))}
-          {phase === "diagnosis" &&
-            draft.diagnosis.length > 0 &&
-            !locked.includes(phase) && (
-              <ConfidenceToggle
-                value={confidence}
-                onChange={setConfidence}
-                disabled={busy}
-              />
-            )}
-          <div className="action-footer">
-            <span>
-              {locked.includes(phase) ? (
-                <>
-                  <Lock size={14} /> Phase locked
-                </>
-              ) : phase === "diagnosis" ? (
-                "Choose one primary diagnosis. It is saved when you lock the phase."
-              ) : phase === "treatment" ? (
-                "Choose all plan elements. They are saved when you submit."
-              ) : (
-                "Each choice is saved as you make it."
-              )}
-            </span>
-            <button
-              className="button button-primary"
-              disabled={busy}
-              onClick={() => setConfirm(true)}
-            >
-              {phaseIndex < 4 ? "Advance phase" : "Review and submit"}{" "}
-              <ArrowRight size={16} />
-            </button>
-          </div>
-        </section>
-      </div>
-      {confirm && (
-        <Modal
-          title={phaseIndex < 4 ? "Lock this phase?" : "Ready to submit?"}
-          onClose={() => setConfirm(false)}
-        >
-          <p>
-            {phaseIndex < 4
-              ? "You will be able to review this phase later, but its selections cannot be edited after advancing."
-              : "Your choices will be graded by the server only after submission."}
-          </p>
-          {actionError && (
-            <p className="voice-error" role="alert">
-              {actionError}
-            </p>
-          )}
-          <div className="modal-actions">
-            <button
-              className="button button-quiet"
-              onClick={() => setConfirm(false)}
-            >
-              Keep working
-            </button>
-            <button
-              className="button button-primary"
-              disabled={busy}
-              onClick={() => void (phaseIndex < 4 ? advance() : submit())}
-            >
-              {busy
-                ? "Saving..."
-                : phaseIndex < 4
-                  ? "Lock and advance"
-                  : "Submit encounter"}
-            </button>
-          </div>
-        </Modal>
-      )}
-    </>
   );
 }
 function Results() {
@@ -1296,37 +876,6 @@ function Stat({
           <i style={{ width: `${progress * 100}%` }} />
         </div>
       )}
-    </div>
-  );
-}
-function Modal({
-  title,
-  children,
-  onClose,
-}: {
-  title: string;
-  children: ReactNode;
-  onClose: () => void;
-}) {
-  return (
-    <div
-      className="modal-backdrop"
-      role="dialog"
-      aria-modal="true"
-      aria-label={title}
-    >
-      <div className="modal">
-        <button
-          className="modal-close"
-          onClick={onClose}
-          aria-label="Close dialog"
-        >
-          <X size={18} />
-        </button>
-        <p className="eyebrow">CONFIRMATION</p>
-        <h2>{title}</h2>
-        {children}
-      </div>
     </div>
   );
 }
