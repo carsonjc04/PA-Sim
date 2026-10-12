@@ -21,9 +21,11 @@ Each token has the same name in both themes, and component CSS references tokens
 | `--grid-strong` | `#8F8B80` | `#6E7178` | Sheet outer edge, section separators, input borders, dashed borders on ruled-out and disabled boxes | Text |
 | `--ink` | `#161616` | `#EDEBE4` | Body text, headings, values, unchecked box borders, the focus ring, the secondary button border | Fills larger than 18×18px |
 | `--label` | `#5B5A55` | `#A3A29C` | Field labels, helper text, metadata, placeholder text, ruled-out text, upcoming phase tabs | Body copy longer than 1 sentence; anything the student must act on |
-| `--stamp` | `#B3261E` | `#F0614F` | The current phase tab fill, the primary button fill, flagged choices, critical misses, errors, the "Finding revealed" label | Decoration, icons without text, success or correct states, more than 1 filled element per viewport besides the phase tab |
+| `--stamp` | `#B3261E` | `#F0614F` | Brand and forward motion: the current phase tab fill, the primary button fill, flagged choices, the "Finding revealed" label, plain-button hover text | Errors, critical misses, incorrect answers, destructive actions (those use `--alert`); decoration; icons without text; success states; more than 1 filled element per viewport besides the phase tab |
 | `--stamp-hover` | `#931F18` | `#F4806F` | Hover and pressed fill of the primary button | Anything else |
 | `--on-stamp` | `#FFFFFF` | `#121314` | Text and icons on `--stamp` or `--stamp-hover` | Text on any other fill |
+| `--alert` | `#A3123F` | `#FF7FA0` | Something is wrong or must not be repeated: input errors, voice errors, offline notices, critical misses, `INCORRECT` answers, destructive button text and border | Brand, primary actions, the phase bar, flags, decoration. Never used as a large fill; it appears as text, 1.5px box borders and 1px button borders only |
+| `--alert-wash` | `#F8E4EA` | `#3A1B26` | Row background of a critical miss or incorrect answer, and the fill of an error or offline notice | Any element that is not an alert row or notice |
 | `--carbon` | `#2D3A44` | `#9DB4C4` | Selected choice boxes, "met" rubric boxes, the voice-connected indicator, selected segment fills, the completed-phase letter | Buttons, links, errors |
 | `--carbon-wash` | `#E3E7E9` | `#22292E` | Background of selected rows and hovered rows | Text; any element that is not a row or segment |
 | `--focus` | `#161616` | `#EDEBE4` | 2px focus outline | Anything else |
@@ -42,13 +44,19 @@ Each token has the same name in both themes, and component CSS references tokens
 | `--stamp` on `--carbon-wash` (text) | 5.25 | 4.58 |
 | `--on-stamp` on `--stamp` | 6.54 | 5.78 |
 | `--on-stamp` on `--stamp-hover` | 8.57 | 7.23 |
+| `--alert` on `--form` (text) | 7.08 | 7.22 |
+| `--alert` on `--alert-wash` (text) | 6.36 | 6.45 |
+| `--ink` on `--alert-wash` | 14.89 | 12.90 |
+| `--label` on `--alert-wash` | 5.69 | 6.01 |
 | `--carbon` on `--form` | 10.69 | 8.01 |
 | `--form` on `--carbon` (check glyph, segment text) | 10.69 | 8.01 |
 | `--grid-strong` on `--form` (input borders, non-text) | 3.12 | 3.53 |
 
 Any pairing not listed here is not permitted until it has been measured and added. Use `contrast()` from `src/theme/contrast.ts`.
 
-**Meaning rule.** Color never carries meaning alone. Every state colored `--stamp` or `--carbon` also has an uppercase text label, such as `FLAGGED`, `CRITICAL`, `MET` or `ERROR`.
+**Meaning rule.** Color never carries meaning alone. Every state colored `--stamp`, `--alert` or `--carbon` also has an uppercase text label, such as `FLAGGED`, `CRITICAL`, `MET` or `ERROR`.
+
+**Two reds, two meanings.** `--stamp` (orange-red, hue ≈ 3°) means *this is where you are or what you do next*. `--alert` (crimson, hue ≈ 341°) means *something went wrong*. Hue is not the only signal: alert states also carry an `--alert-wash` row or notice fill, and stamp is never paired with a wash. A screen may show both. Never swap them, and never use `--alert` to draw attention to a normal next step.
 
 ## 2. Typography
 
@@ -142,7 +150,7 @@ Load them with:
 | Primary | `--stamp` | `--on-stamp` | none | fill `--stamp-hover` | The 1 forward action per view (advance phase, submit, start case) |
 | Secondary | `--form` | `--ink` | 1px `--ink` | fill `--carbon-wash` | Alternatives to the primary action |
 | Plain | none | `--ink` | none | text `--stamp` | Header actions (Theme, Exit), inline actions in rows |
-| Destructive | `--form` | `--stamp` | 1px `--stamp` | fill `--carbon-wash` | End case, discard notes. Always opens a confirm dialog |
+| Destructive | `--form` | `--alert` | 1px `--alert` | fill `--alert-wash` | End case, discard notes. Always opens a confirm dialog |
 
 - **Sizes:** default min-height 40px, padding 12px 20px; small min-height 32px, padding 8px 12px. Under `@media (pointer: coarse)`, every button is min-height 44px.
 - **Disabled:** fill `--form`, text `--label`, 1px dashed `--grid-strong`, `cursor: not-allowed`. The reason appears as Meta text beside the button.
@@ -156,7 +164,7 @@ Load them with:
 - **Label:** a Label-role element above the input with an 8px gap, always a `<label for>`.
 - **Placeholder:** `--label`. It is never the only label.
 - **Focus:** border becomes `--ink`, plus the focus ring.
-- **Invalid:** 1px `--stamp` border, and a Meta line below it in `--stamp` starting `Error:`, linked with `aria-describedby`.
+- **Invalid:** 1px `--alert` border, and a Meta line below it in `--alert` starting `Error:`, linked with `aria-describedby`.
 - **Disabled:** dashed `--grid-strong` border, `--label` text.
 
 ### Choice rows (encounter actions and review answers)
@@ -221,12 +229,19 @@ Load them with:
 | Idle | 1.5px `--ink` border, empty | `Not connected` |
 | Connecting | 1.5px `--label` border, empty | `Connecting…` |
 | Connected | `--carbon` fill | `Connected · listening` |
-| Error | `--stamp` fill | `Error: <reason>`, plus a Secondary `Retry` button |
+| Error | `--alert` fill | `Error: <reason>` in `--alert`, plus a Secondary `Retry` button |
 
 ### Dialog
 
 - **Container:** `<dialog>` with `--form` fill, 2px `--ink` border, max-width 480px, padding 24px, and `--backdrop` behind it.
 - **Content:** the title in the Section role, then body, then actions right-aligned with a 12px gap. The primary or destructive action goes last.
+
+### Notices (error, offline)
+
+- A full-width row inside the sheet, directly under the phase bar: `--alert-wash` fill, a 1px `--alert` rule above and below, padding 12px 16px.
+- Content: the Label `ERROR` or `OFFLINE` in `--alert`, then Body text in `--ink` with an 8px gap, then an optional Secondary action (e.g. `Retry`) right-aligned.
+- `role="alert"` for errors and `role="status"` for offline.
+- There is no informational or success notice variant. Neutral information goes in a Field or Meta line.
 
 ### Tags
 
@@ -251,7 +266,7 @@ Each item is a section with the standard section header.
 |---|---|---|
 | Met | `--carbon` fill, `✕` | `MET` in `--carbon` |
 | Missed | 1.5px `--ink` border, empty | `MISSED` in `--ink` |
-| Critical miss | 1.5px `--stamp` border, empty | `CRITICAL` in `--stamp` |
+| Critical miss | 1.5px `--alert` border, empty; row fill `--alert-wash` | `CRITICAL` in `--alert` |
 | Unnecessary action taken | dashed `--grid-strong` | `UNNECESSARY` in `--label` |
 
 - **Evidence:** under each row, the student's own logged action is quoted in Value small, with its phase letter, e.g. `A · "How have these symptoms changed…"`. Missing evidence shows `No matching action in this attempt.`
@@ -266,7 +281,7 @@ Each item is a section with the standard section header.
 - **Answers:** single-select choice rows.
 - **Confidence control:** a segmented row of 3 cells (`UNSURE` / `FAIRLY SURE` / `SURE`), in the Label role, 1px `--grid-strong` cell walls, each cell min-height 40px. The selected cell has a `--carbon` fill and `--form` text.
 - **Feedback after submitting:**
-  - The chosen row's status reads `CORRECT` (`--carbon`) or `INCORRECT` (`--stamp`).
+  - The chosen row's status reads `CORRECT` (`--carbon`) or `INCORRECT` (`--alert`, row fill `--alert-wash`).
   - The correct row, if different, gets `ANSWER` in `--carbon`.
   - An explanation block in Body follows, under a `WHY` label.
 - **Excluded:** no streak counts, daily goals or countdowns.
@@ -310,7 +325,7 @@ The mechanism is the one already used by `src/index.css`:
 - Light is the default. Dark follows the system unless the user forces a theme in Settings (`data-theme`).
 - Both themes define every token in §1. A component never branches on theme; it reads tokens.
 - Set `color-scheme: light` or `dark` in the matching block, so native controls and scrollbars follow.
-- In dark theme, `--stamp` lightens and `--on-stamp` becomes near-black. Never put white text on dark-theme `--stamp`.
+- In dark theme, `--stamp` and `--alert` lighten, and `--on-stamp` becomes near-black. Never put white text on dark-theme `--stamp`.
 
 ## 9. Bans
 
@@ -322,7 +337,7 @@ The mechanism is the one already used by `src/index.css`:
 - **Pressure mechanics:** no streaks, daily goals, countdown timers, elapsed-time pressure displays, confetti, badges or leaderboards.
 - **Scores:** no hero score numerals, letter grades or readiness percentages.
 - **Pills:** no pill shapes, and no radius above 0.
-- **Accent color:** no colors outside §1. No second accent hue: `--stamp` is the only one, and `--carbon` marks state, not brand.
+- **Accent color:** no colors outside §1. `--stamp` is the only brand accent; `--alert` is for errors only; `--carbon` marks state, not brand.
 - **Text:** no italic, no centered body text and no all-caps text over 6 words.
 - **Implying shipped features:** no placeholder content presented as real data, such as case counts, user names or book codes that do not exist.
 
@@ -342,7 +357,8 @@ The mechanism is the one already used by `src/index.css`:
 | `--teal` as primary action | `--stamp` |
 | `--teal` as selected state | `--carbon` |
 | `--accent-soft` | `--carbon-wash` |
-| `--red`, `--danger-*` | `--stamp` |
+| `--red`, `--danger-text`, `--danger-line` | `--alert` |
+| `--danger-soft`, `--danger-soft-2` | `--alert-wash` |
 
 - **Tokens to remove:** `--amber`, `--warning-*`, `--info-*` and `--patient-*`. Their meanings are carried by text labels (§1, meaning rule).
-- **Home screen:** the `.home` burgundy and paper tokens are superseded. AGENTS.md still describes a warm-paper, burgundy home screen; update that line when the home screen is restyled.
+- **Home screen:** the `.home` burgundy and paper tokens are superseded by §1.
