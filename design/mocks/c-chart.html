@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>C · Charted form</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* C — Charted form. Light by default; dark follows the system unless overridden. */
+:root{
+  color-scheme:light;
+  --bg:#E9E7E0; --form:#F6F5F0; --grid:#C7C3B8; --grid-strong:#8F8B80; --ink:#161616; --label:#5B5A55;
+  --stamp:#B3261E; --carbon:#2D3A44; --carbon-wash:#E3E7E9; --on-stamp:#FFFFFF; --focus:#161616;
+  --sans:'Archivo',system-ui,sans-serif; --mono:'Spline Sans Mono',ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){
+  color-scheme:dark;
+  --bg:#121314; --form:#1A1B1D; --grid:#34363A; --grid-strong:#6E7178; --ink:#EDEBE4; --label:#A3A29C;
+  --stamp:#F0614F; --carbon:#9DB4C4; --carbon-wash:#22292E; --on-stamp:#121314; --focus:#EDEBE4;
+}}
+:root[data-theme=dark]{
+  color-scheme:dark;
+  --bg:#121314; --form:#1A1B1D; --grid:#34363A; --grid-strong:#6E7178; --ink:#EDEBE4; --label:#A3A29C;
+  --stamp:#F0614F; --carbon:#9DB4C4; --carbon-wash:#22292E; --on-stamp:#121314; --focus:#EDEBE4;
+}
+*{box-sizing:border-box;border-radius:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.5 var(--sans);font-stretch:100%;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.lbl{display:block;font:600 11px/1 var(--sans);font-stretch:75%;letter-spacing:.1em;text-transform:uppercase;color:var(--label)}
+.val{font:400 15px/1.4 var(--mono)}
+
+.sheet{max-width:1120px;margin:24px auto;overflow:hidden;background:var(--form);border:1px solid var(--grid-strong)}
+
+/* form header row */
+.top{display:grid;grid-template-columns:auto 1fr auto auto;border-bottom:1px solid var(--grid-strong)}
+.top>*{padding:12px 16px;border-right:1px solid var(--grid)}
+.top>*:last-child{border-right:0}
+.mark{font:800 15px/1 var(--sans);font-stretch:125%;letter-spacing:.02em;display:flex;align-items:center}
+.btn-plain{background:none;border:0;cursor:pointer;font:600 12px/1 var(--sans);font-stretch:75%;letter-spacing:.1em;text-transform:uppercase}
+.btn-plain:hover{color:var(--stamp)}
+
+/* section tabs */
+.tabs{display:grid;grid-template-columns:repeat(5,1fr);border-bottom:1px solid var(--grid-strong)}
+.tabs ol{display:contents}
+.tabs li{list-style:none;padding:12px 16px;border-right:1px solid var(--grid);font:600 13px/1.2 var(--sans);font-stretch:87.5%;text-transform:uppercase;letter-spacing:.06em;color:var(--label)}
+.tabs li:last-child{border-right:0}
+.tabs li b{font-family:var(--mono);font-weight:500;margin-right:8px}
+.tabs li[aria-current]{background:var(--stamp);color:var(--on-stamp)}
+
+/* chief complaint: the one oversized line */
+.cc{padding:32px 16px 24px;border-bottom:1px solid var(--grid-strong)}
+.cc h1{margin:12px 0 0;font:700 clamp(28px,4.4vw,52px)/1.04 var(--sans);font-stretch:112%;letter-spacing:-.02em;max-width:24ch}
+
+/* field grid */
+.fields{display:grid;grid-template-columns:repeat(8,1fr);margin-right:-1px;border-bottom:1px solid var(--grid-strong)}
+.f{padding:12px 16px;border-right:1px solid var(--grid);border-bottom:1px solid var(--grid)}
+.f .val{display:block;margin-top:8px;font-variant-numeric:tabular-nums}
+.f .val small{color:var(--label);font-size:12px}
+.span2{grid-column:span 2}.span4{grid-column:span 4}.span8{grid-column:span 8;border-right:0}
+.foot-note{grid-column:span 8;padding:8px 16px;font:400 12px/1.4 var(--mono);color:var(--label)}
+
+.body{display:grid;grid-template-columns:minmax(0,8fr) minmax(0,4fr)}
+.main{border-right:1px solid var(--grid-strong)}
+.sec-h{display:flex;justify-content:space-between;align-items:end;gap:16px;padding:20px 16px 12px;border-bottom:1px solid var(--grid)}
+.sec-h h2{margin:6px 0 0;font:700 22px/1.1 var(--sans);font-stretch:100%}
+.sec-h p{margin:6px 0 0;color:var(--label);font-size:14px}
+
+.choices{list-style:none;margin:0;padding:0}
+.choice{display:grid;grid-template-columns:20px 1fr 96px;gap:16px;align-items:start;padding:12px 16px;border-bottom:1px solid var(--grid);cursor:pointer;transition:background-color 100ms linear}
+.choice:hover{background:var(--carbon-wash)}
+.box{width:18px;height:18px;border:1.5px solid var(--ink);margin-top:2px;display:grid;place-items:center;font:500 14px/1 var(--mono)}
+.choice strong{display:block;font-weight:600}
+.choice .q{display:block;font:400 13px/1.45 var(--mono);color:var(--label);margin-top:4px}
+.st{font:600 11px/20px var(--sans);font-stretch:75%;letter-spacing:.1em;text-transform:uppercase;color:var(--label);text-align:right}
+.choice[aria-checked=true]{background:var(--carbon-wash)}
+.choice[aria-checked=true] .box{background:var(--carbon);border-color:var(--carbon);color:var(--form)}
+.choice[aria-checked=true] .box::after{content:"✕"}
+.choice[aria-checked=true] .st{color:var(--carbon)}
+.choice.flag .st{color:var(--stamp)}
+.choice.flag .box{border-color:var(--stamp)}
+.choice.out strong,.choice.out .q{color:var(--label);text-decoration:line-through}
+.choice.out .box{border-style:dashed;border-color:var(--grid-strong)}
+
+.act{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;padding:16px}
+.act p{margin:0;font:400 12px/1.4 var(--mono);color:var(--label)}
+.primary{background:var(--stamp);color:var(--on-stamp);border:0;padding:12px 20px;font:700 13px/1 var(--sans);font-stretch:87.5%;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+
+.side>div{padding:16px;border-bottom:1px solid var(--grid)}
+.side>div:last-child{border-bottom:0}
+.line{display:grid;grid-template-columns:28px 1fr;gap:4px 8px;margin-top:12px}
+.line .who{font:500 12px/1.5 var(--mono);color:var(--label)}
+.line p{margin:0;font-size:14px}
+.rev{grid-column:2;margin-top:4px;color:var(--stamp)!important}
+.signal{display:flex;gap:8px;align-items:center;margin-top:12px;font:400 14px/1.4 var(--mono)}
+.signal i{width:10px;height:10px;background:var(--carbon)}
+.side p.h{margin:8px 0 0;font-size:13px;color:var(--label)}
+textarea{display:block;width:100%;min-height:120px;margin-top:8px;resize:vertical;background:var(--form);color:var(--ink);border:1px solid var(--grid-strong);padding:8px;font:400 14px/1.5 var(--mono)}
+
+@media (max-width:860px){
+  .sheet{margin:0;border-left:0;border-right:0}
+  .top{grid-template-columns:1fr auto auto}.top>.case{display:none}
+  .tabs{grid-template-columns:repeat(5,auto);overflow-x:auto}.tabs li{white-space:nowrap;padding:12px}
+  .fields{grid-template-columns:repeat(4,1fr)}.span8,.foot-note{grid-column:span 4}.span4{grid-column:span 4}
+
+  .body{grid-template-columns:1fr}.main{border-right:0;border-bottom:1px solid var(--grid-strong)}
+  .choice{grid-template-columns:20px 1fr}.st{grid-column:2;text-align:left}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="sheet">
+  <header class="top">
+    <span class="mark">PA-SIM</span>
+    <span class="case"><span class="lbl">Encounter</span><span class="val">OSCE · Cough and sore throat</span></span>
+    <button class="btn-plain" type="button" onclick="toggleTheme()">Theme</button>
+    <button class="btn-plain" type="button">Exit</button>
+  </header>
+
+  <nav class="tabs" aria-label="Encounter phases"><ol>
+    <li aria-current="step"><b>A</b>History</li>
+    <li><b>B</b>Exam</li>
+    <li><b>C</b>Diagnostics</li>
+    <li><b>D</b>Diagnosis</li>
+    <li><b>E</b>Treatment</li>
+  </ol></nav>
+
+  <section class="cc">
+    <span class="lbl">Chief complaint, in the patient’s words</span>
+    <h1>“I have felt run down for a few days. My throat hurts and I cannot stop coughing.”</h1>
+  </section>
+
+  <div class="fields">
+    <div class="f span4"><span class="lbl">Patient</span><span class="val">Maya Chen · fictional</span></div>
+    <div class="f span2"><span class="lbl">Age</span><span class="val">28</span></div>
+    <div class="f span2"><span class="lbl">Pronouns</span><span class="val">she/her</span></div>
+    <div class="f"><span class="lbl">HR</span><span class="val">82 <small>bpm</small></span></div>
+    <div class="f"><span class="lbl">BP</span><span class="val">118/74</span></div>
+    <div class="f"><span class="lbl">RR</span><span class="val">16</span></div>
+    <div class="f"><span class="lbl">Temp</span><span class="val">37.8 <small>°C</small></span></div>
+    <div class="f"><span class="lbl">SpO₂</span><span class="val">98 <small>%</small></span></div>
+    <div class="f span2"><span class="lbl">Weight</span><span class="val">61 <small>kg</small></span></div>
+    <div class="f"><span class="lbl">Setting</span><span class="val">Clinic</span></div>
+    <div class="f span8"><span class="lbl">Initial information</span><span class="val">Speaking comfortably in full sentences · No visible distress · Symptoms began four days ago</span></div>
+    <p class="foot-note">Vitals, weight and setting are mock values for type study, not from the authored case.</p>
+  </div>
+
+  <div class="body">
+    <section class="main" aria-labelledby="ph">
+      <div class="sec-h">
+        <div><span class="lbl">Section A of E</span><h2 id="ph" tabindex="-1">History</h2><p>Clarify the timeline, associated symptoms, and safety concerns.</p></div>
+        <span class="lbl">1 selected</span>
+      </div>
+      <ul class="choices" role="listbox" aria-label="History actions" aria-multiselectable="true">
+        <li class="choice" role="option" aria-checked="true" tabindex="0"><span class="box" aria-hidden="true"></span><span><strong>Clarify symptom duration and progression</strong><span class="q">How have these symptoms changed since they started?</span></span><span class="st">Asked</span></li>
+        <li class="choice" role="option" aria-checked="false" tabindex="-1"><span class="box" aria-hidden="true"></span><span><strong>Ask about fever and chills</strong><span class="q">Have you had measured fever or chills?</span></span><span class="st"></span></li>
+        <li class="choice" role="option" aria-checked="false" tabindex="-1"><span class="box" aria-hidden="true"></span><span><strong>Ask about cough and nasal symptoms</strong><span class="q">Tell me about the cough, congestion, and drainage.</span></span><span class="st"></span></li>
+        <li class="choice" role="option" aria-checked="false" tabindex="-1"><span class="box" aria-hidden="true"></span><span><strong>Screen for dyspnea, chest pain, or swallowing difficulty</strong><span class="q">Any trouble breathing, chest pain, or trouble swallowing liquids?</span></span><span class="st"></span></li>
+        <li class="choice flag" role="option" aria-checked="false" tabindex="-1"><span class="box" aria-hidden="true"></span><span><strong>Ask about exposures and relevant risks</strong><span class="q">Any sick contacts, travel, pregnancy possibility, or immune conditions?</span></span><span class="st">Flagged</span></li>
+        <li class="choice out" role="option" aria-checked="false" tabindex="-1"><span class="box" aria-hidden="true"></span><span><strong>Ask for antibiotics immediately</strong><span class="q">Would you like an antibiotic today?</span></span><span class="st">Ruled out</span></li>
+      </ul>
+      <div class="act"><p>Entries save as you mark them.</p><button class="primary" type="button">Sign section A →</button></div>
+    </section>
+
+    <aside class="side" aria-label="Record">
+      <div>
+        <span class="lbl">Exchange</span>
+        <div class="line"><span class="who">PA</span><p>How have these symptoms changed since they started?</p></div>
+        <div class="line"><span class="who">PT</span><p>They began four days ago and are slowly improving, though the cough is annoying.</p><span class="lbl rev">Finding revealed</span></div>
+      </div>
+      <div>
+        <span class="lbl">Voice line</span>
+        <div class="signal"><i aria-hidden="true"></i>Connected · listening</div>
+        <p class="h">Marked entries on the form are the record.</p>
+      </div>
+      <div>
+        <label class="lbl" for="n">Clinician notes</label>
+        <textarea id="n" placeholder="Differential…"></textarea>
+      </div>
+    </aside>
+  </div>
+</div>
+<script>
+function toggleTheme(){const r=document.documentElement,d=r.dataset.theme||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');r.dataset.theme=d==='dark'?'light':'dark'}
+</script>
+</body>
+</html>

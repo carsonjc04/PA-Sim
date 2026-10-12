@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PA-Sim directions</title>
+<style>
+:root{color-scheme:light dark;--bg:#ECECEA;--ink:#1A1A1A;--muted:#5C5C58;--line:#C9C9C4}
+@media (prefers-color-scheme:dark){:root{--bg:#161616;--ink:#E8E8E4;--muted:#A0A09A;--line:#333}}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.4 ui-monospace,monospace}
+header{display:flex;gap:16px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+header span{color:var(--muted)}
+button{font:inherit;padding:6px 10px;border:1px solid var(--line);background:none;color:inherit;cursor:pointer}
+button[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+.row{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);height:calc(100vh - 53px)}
+.row.phone{grid-template-columns:repeat(3,376px);justify-content:center;gap:24px;background:var(--bg);padding:16px}
+figure{margin:0;display:flex;flex-direction:column;background:var(--bg)}
+figcaption{padding:8px 12px;border-bottom:1px solid var(--line)}
+figcaption a{color:inherit}
+iframe{flex:1;width:100%;border:0}
+@media (max-width:900px){.row,.row.phone{grid-template-columns:1fr;height:auto}iframe{height:80vh}}
+</style>
+</head>
+<body>
+<header>
+  <strong>PA-Sim · three directions</strong><span>Encounter view, same content. C is the chosen direction; see docs/design-system.md</span>
+  <button id="w" type="button" aria-pressed="false">360px width</button>
+</header>
+<div class="row" id="row">
+  <figure><figcaption><a href="../archive/a-instrument.html">A · Clinical instrument (archived)</a></figcaption><iframe src="../archive/a-instrument.html" title="Direction A"></iframe></figure>
+  <figure><figcaption><a href="../archive/b-paper.html">B · Warm paper (archived)</a></figcaption><iframe src="../archive/b-paper.html" title="Direction B"></iframe></figure>
+  <figure><figcaption><a href="c-chart.html">C · Charted form (chosen)</a></figcaption><iframe src="c-chart.html" title="Direction C"></iframe></figure>
+</div>
+<script>
+const b=document.getElementById('w'),r=document.getElementById('row');
+b.onclick=()=>{const on=b.getAttribute('aria-pressed')!=='true';b.setAttribute('aria-pressed',on);r.classList.toggle('phone',on);r.querySelectorAll('iframe').forEach(f=>f.style.width=on?'360px':'')}
+</script>
+</body>
+</html>
