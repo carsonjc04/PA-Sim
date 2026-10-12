@@ -1,5 +1,6 @@
 // Shared by the server (validation) and the browser (typing). Must never import scenario data or grading.
 import { z } from 'zod'
+import type { AnalyticsDashboard } from '../domain/analytics/dashboard'
 import type { ErrorType, MissKind, PromptType } from '../domain/remediation/types'
 import type { AlignmentClaim, BlueprintCoverage, FullExamGate } from '../domain/study/coverage'
 import type { PairPlan } from '../domain/study/recommend'
@@ -520,3 +521,17 @@ export interface AiStatus {
   estimatedVoiceRatePerMinuteUsd: number
   storeTranscripts: boolean
 }
+
+// ---- Learning analytics ----
+
+/** `blueprint` defaults to the current PANCE blueprint on the server. */
+export const analyticsDashboardQuery = z
+  .object({ timeZone: timeZoneSchema, blueprint: z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/).max(120).optional() })
+  .strict()
+export type AnalyticsDashboardQuery = z.infer<typeof analyticsDashboardQuery>
+
+/**
+ * Computed from the learner's stored events on every request. Every statement carries its sample size and
+ * evidence references. There is deliberately no readiness or pass estimate; `readiness.available` is false.
+ */
+export type PublicAnalyticsDashboard = AnalyticsDashboard

@@ -128,6 +128,7 @@ below the panel still completes the encounter and grades it identically.
 Routes: `/` (home), `/dashboard`, `/cases` (accepts `?system=&task=&rotation=`), `/encounter/:scenarioId`, `/results/:attemptId`, `/review`, and the study modes `/study`, `/study/rotation/:rotationId`, `/study/pance`, `/study/mixed` and `/study/sprint` ([docs/exam-blueprints.md](docs/exam-blueprints.md)).
 
 - `src/domain/study/` holds the pure blueprint, coverage and ranking logic; `server/study/` and `server/api/study.ts` serve it under `/api/study`.
+- `src/domain/analytics/` holds the pure, versioned learning metrics and recommendation rules behind the `/dashboard` progress view; `server/analytics/` and `server/api/analytics.ts` serve them at `GET /api/analytics/dashboard`, computed on each request from stored events. There is no readiness or pass estimate ([docs/analytics.md](docs/analytics.md), [docs/readiness-calibration-protocol.md](docs/readiness-calibration-protocol.md)).
 
 ### Backend
 
@@ -206,6 +207,8 @@ verifies the credential and the SDK surface but cannot open a session, because
 
 `server/content/blueprints.test.ts`, `server/content/taxonomy-history.test.ts`, `server/content/sprints.test.ts`, `server/study/*.test.ts`, `server/api/study.test.ts` and `src/features/study/study.test.tsx` cover the exam blueprints and study modes: taxonomy completeness, weight totals for every blueprint matrix, retired and legacy versions, historical tag stability for stored snapshots, empty categories, the full-exam and alignment gates, weakness ranking, sprint locking, and the case filters. See [docs/exam-blueprints.md](docs/exam-blueprints.md).
 
+`src/domain/analytics/analytics.test.ts`, `server/api/analytics.test.ts`, `scripts/analytics/*.test.ts` and `src/features/analytics/ProgressDashboard.test.tsx` cover the progress dashboard: aggregation, small samples, late and out-of-order events, retried requests, time zone and DST week boundaries, content-version changes, deterministic recommendations, traceability of every evidence reference to a stored row, the metric version lock (`npm run analytics:lock`), and a guard against readiness, pass-probability, percentile or PACKRAT-conversion claims. See [docs/analytics.md](docs/analytics.md).
+
 `src/features/encounter`, `src/features/debrief` and `src/features/settings` have jsdom tests for the redesigned encounter, voice cost states, debrief and display settings, including axe checks. `server/api/notes.test.ts` covers learner notes and annotations, including leakage scans. See [docs/accessibility.md](docs/accessibility.md).
 
 **Browser tests (opt-in).** `npm run test:e2e` runs Playwright against a real server (port 8788, test database, AI disabled) and Vite (port 5180). It covers a keyboard-only full case at 360 px, microphone denial, offline then sync, downtime mode, both themes at 100% and 150% text, axe including contrast, and horizontal overflow. `npm run test:audit` captures the UX audit screenshots and measurements. It needs `npm run db:up`. Install the browser once with `npx playwright install chromium`.
@@ -214,4 +217,5 @@ verifies the credential and the SDK surface but cannot open a session, because
 
 - API and playthrough tests need Postgres: `npm run db:up` first.
 - Use Node 22 or newer (`.nvmrc`). On Node 25, jsdom tests (`src/features/`, `src/voice/`) fail with `localStorage.setItem is not a function` because Node's experimental Web Storage global shadows jsdom's. Run them with `NODE_OPTIONS=--no-experimental-webstorage npm test`.
+- Known flake: `src/features/encounter/voice.test.tsx` ("warns two minutes before the cap and ends the session at the cap") can fail once under full-suite load and passes alone or on rerun. If it recurs, move it to fake timers or loosen the timing assertion; it is not a product bug.
 - HTTP tests bind one server per app to `127.0.0.1` through `server/test/http.ts` (`listenLocal`). Do not pass a bare `createApp()` to supertest: its default opens a fresh server on the IPv6 wildcard for each request, and on macOS a request can occasionally reach another local process on the same port, which shows up as stray 401 or 404 responses.

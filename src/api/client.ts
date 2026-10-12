@@ -8,6 +8,7 @@ import type {
   AuthStatus,
   EventResponse,
   HistoryPage,
+  PublicAnalyticsDashboard,
   PublicAnnotation,
   PublicAttempt,
   PublicNotes,
@@ -157,6 +158,11 @@ export const api = {
   coverage: (blueprintId: string) => request<PublicCoverage>(`/api/study/blueprints/${encodeURIComponent(blueprintId)}/coverage`, { retry: true }),
   studyPlan: (mode: StudyMode, blueprintId: string) =>
     request<PublicStudyPlan>(`/api/study/plan?mode=${mode}&blueprint=${encodeURIComponent(blueprintId)}&timeZone=${encodeURIComponent(browserTimeZone())}`, { retry: true }),
+  analyticsDashboard: (blueprintId?: string) =>
+    request<PublicAnalyticsDashboard>(
+      `/api/analytics/dashboard?timeZone=${encodeURIComponent(browserTimeZone())}${blueprintId ? `&blueprint=${encodeURIComponent(blueprintId)}` : ''}`,
+      { retry: true },
+    ),
   sprints: () => request<PublicSprint[]>('/api/study/sprints', { retry: true }),
   // Scoring stores nothing, so a retry is harmless.
   answerSprint: (sprintId: string, optionId: string) =>

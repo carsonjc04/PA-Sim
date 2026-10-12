@@ -1,0 +1,49 @@
+{
+  "analyticsVersion": "analytics-2026-10-11.1",
+  "metrics": {
+    "area.exposure": {
+      "version": 1,
+      "fingerprint": "74406c03a5f010b6fdbaf684db96c0dbc931693936ffca9589d7bfab29f20c50"
+    },
+    "area.proficiency": {
+      "version": 1,
+      "fingerprint": "1e81f8ba4bc84b9378811c7c35ae151f2f5b3c87582c3e8f2687af57c47a3e2f"
+    },
+    "objective.evidence": {
+      "version": 1,
+      "fingerprint": "3b6093cbae5f4192a9e5d4a08d8a532a7820a66815a243696a1abee49e695a90"
+    },
+    "error.frequency": {
+      "version": 1,
+      "fingerprint": "e338ba13950d22d910db0900282d33780f7a426db8db3552548527102c324bbb"
+    },
+    "critical.safety": {
+      "version": 1,
+      "fingerprint": "422e3adca2c2d18da55e7853a25dc9e448c7577074602e5ce4fde1e89206497a"
+    },
+    "decision.timing": {
+      "version": 1,
+      "fingerprint": "95bc37b05db51633506d97c046388ce2f85eb8db2e975df8ec9e0a67f9240ce6"
+    },
+    "retrieval.retention": {
+      "version": 1,
+      "fingerprint": "a44bd7e4c55d0b568c1839573eff499f4a3c384407ba8ead905f4310d5fafe64"
+    },
+    "retrieval.workload": {
+      "version": 1,
+      "fingerprint": "80e761d4d08d8aad63676398b9d0291ca9299a341eba1f924531c0e72dc4d725"
+    },
+    "blueprint.coverage": {
+      "version": 1,
+      "fingerprint": "2576b1f34ad4caf5311c4a0a13c52dec2d3bf36f05431ee43f0c15722cc82952"
+    },
+    "trend.weekly": {
+      "version": 1,
+      "fingerprint": "7806e891948527b37ef7b1cfb851654ccf652627bd7740697a7b04d809458ae2"
+    },
+    "recommendation.priorities": {
+      "version": 1,
+      "fingerprint": "b86553b150df497dccae94cfde0caf568003ace7f9d711f28d73f460fbef87a0"
+    }
+  }
+}

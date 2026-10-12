@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import cors from 'cors'
 import express, { type NextFunction, type Request, type Response } from 'express'
+import { analyticsRouter } from './api/analytics'
 import { attemptsRouter } from './api/attempts'
 import { liveRouter } from './api/live'
 import { reviewRouter } from './api/review'
@@ -33,6 +34,7 @@ export function createApp() {
   app.use('/api/attempts', attemptsRouter)
   app.use('/api/review', reviewRouter)
   app.use('/api/study', studyRouter)
+  app.use('/api/analytics', analyticsRouter)
   app.use('/api', router)
 
   app.use((_req, res) => {

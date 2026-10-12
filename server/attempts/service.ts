@@ -76,6 +76,13 @@ export async function getOwnedAttemptWithScenario(
   return { attempt, scenario: await repo.getContentDefinition(pool, attempt.contentVersionId) }
 }
 
+/** Confidence history already on a diagnosis row; rows from before history was kept hold one value. */
+function priorConfidence(event: repo.EventRow): { confidence: string; at: string }[] {
+  const d = (event.detail ?? {}) as { confidence?: string; confidenceHistory?: { confidence: string; at: string }[] }
+  if (Array.isArray(d.confidenceHistory)) return d.confidenceHistory
+  return d.confidence ? [{ confidence: d.confidence, at: event.createdAt }] : []
+}
+
 async function applyEvent(
   q: Queryable,
   attempt: repo.AttemptRow,
@@ -125,10 +132,16 @@ async function applyEvent(
     if (replaced.length) await repo.retractActions(q, attempt.id, 'diagnosis', replaced)
   }
   // Diagnosis confidence (guided flow only) is stored with the confirmed diagnosis; skipping it records nothing.
-  const detail = body.tool === 'propose_diagnosis' && body.confidence ? { confidence: body.confidence } : undefined
+  // The latest value drives grading; the history is kept so analytics can count changes of mind.
+  const confidence = body.tool === 'propose_diagnosis' ? body.confidence : undefined
+  const at = now().toISOString()
+  const detail = confidence ? { confidence, confidenceHistory: [{ confidence, at }] } : undefined
   for (const action of plan.actions) {
-    if (live.some((e) => e.type === 'action' && e.phase === plan.phase && e.actionId === action.id)) {
-      if (detail && plan.confirmed) await repo.setActionDetail(q, attempt.id, plan.phase, action.id, detail)
+    const existing = live.find((e) => e.type === 'action' && e.phase === plan.phase && e.actionId === action.id)
+    if (existing) {
+      if (confidence && plan.confirmed) {
+        await repo.setActionDetail(q, attempt.id, plan.phase, action.id, { confidence, confidenceHistory: [...priorConfidence(existing), { confidence, at }] })
+      }
       result.duplicates.push(action.id)
       continue
     }

@@ -149,6 +149,7 @@ The only instrumentation this feature adds. It exists to evaluate whether the lo
 - Every row also has `user_id` (pseudonymous uuid) and `type`.
 - A unique index allows at most one event of each type per card per session, so refreshes and retries do not double count.
 - `review_events` holds the full scheduling log, used for replay. `learning_events` is the analysis view.
+- The progress dashboard reads `retention` events for its recall metric. The full analytics event dictionary, covering every table the dashboard reads, is in `docs/analytics.md` §2.
 
 **Questions this is meant to answer.**
 - Do students return to due items? (`due` → `shown`)
@@ -164,7 +165,7 @@ The only instrumentation this feature adds. It exists to evaluate whether the lo
 - **First party only.** Events stay in the app's Postgres. There is no analytics vendor, pixel or third-party SDK.
 - **Pseudonymous.** Rows reference `users.id` (uuid). The dev display name lives only on `users`.
 - **Deletion.** Every remediation table cascades from `users`. Deleting a user deletes their cards, evidence, sessions, reviews and events.
-- **Purpose-limited.** Use this data to evaluate and tune the remediation loop. Do not use it for grading, ranking or anything shown to someone else.
+- **Purpose-limited.** Use this data to evaluate and tune the remediation loop, and to show the student their own progress (`docs/analytics.md`). Do not use it for grading, ranking or anything shown to someone else.
 - **Not clinical data.** Cases are fictional. Do not add real patient information to prompts or evidence.
 
 ## 8. Known limitations and open decisions

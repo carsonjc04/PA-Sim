@@ -487,3 +487,46 @@ body{background:var(--bg);color:var(--navy)}*{box-sizing:border-box}body{margin:
 .entry-media img{display:block;max-width:100%;height:auto;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
 .entry-media summary{cursor:pointer;font-size:0.8125rem;font-weight:600;margin-top:6px;color:var(--teal-dark)}
 .entry-media details p{margin:4px 0 0;font-size:0.875rem;color:var(--text-2)}
+/* Progress dashboard (src/features/analytics). Every rate is shown with its sample and evidence tier. */
+.progress{display:grid;gap:18px;margin-bottom:34px}
+.progress>*,.progress-grid>*{min-width:0}
+.progress-section h2{display:flex;align-items:center;gap:8px;margin:0 0 12px}
+.progress-section h3{font-size:0.9375rem;margin:18px 0 8px}
+.progress-section p{font-size:0.875rem;line-height:1.6;margin:0 0 10px}
+.progress-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.progress-loading{padding:18px 0}
+.progress-priorities{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.progress-priority{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:start;border-top:1px solid var(--line);padding-top:14px}
+.progress-priority:first-child{border-top:0;padding-top:0}
+.progress-priority h3{margin:2px 0 6px;font-size:1rem}
+.progress-priority--critical-safety .progress-rank{background:var(--danger-soft);color:var(--danger-text)}
+.progress-rank{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--accent-soft);color:var(--teal-dark);font-weight:700;font-size:0.8125rem}
+.progress-basis{color:var(--muted);font-size:0.75rem!important}
+.progress-evidence{font-size:0.8125rem}
+.progress-evidence summary{cursor:pointer;color:var(--teal-dark);font-weight:600}
+.progress-evidence ul{margin:6px 0 0;padding-left:18px;display:grid;gap:4px}
+.progress-big{font-size:1.25rem!important;font-weight:700;margin:0 0 4px!important}
+.progress-sub{margin-top:16px!important;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.progress-note{font-size:0.8125rem!important}
+.progress-rate{display:inline-flex;flex-wrap:wrap;align-items:center;gap:6px;font-variant-numeric:tabular-nums}
+.progress-rate .muted{font-size:0.8125rem}
+.progress-tier{font-size:0.6875rem;font-weight:700;letter-spacing:.4px;padding:3px 6px;border-radius:4px;background:var(--surface-2);color:var(--muted);white-space:nowrap}
+.progress-tier--limited{background:var(--warning-soft);color:var(--warning-text)}
+.progress-tier--adequate{background:var(--accent-soft);color:var(--teal-dark)}
+.progress-table-wrap{overflow-x:auto;margin-top:12px}
+.progress-table{width:100%;min-width:600px;border-collapse:collapse;font-size:0.875rem}
+.progress-table-wrap:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.progress-table caption{text-align:left;font-weight:700;padding:0 0 8px;color:var(--navy)}
+.progress-table th,.progress-table td{text-align:left;padding:9px 8px 9px 0;border-top:1px solid var(--line);vertical-align:top}
+.progress-table thead th{font-size:0.75rem;color:var(--muted);font-weight:600}
+.progress-table tbody th{font-weight:600}
+.progress-list{list-style:none;margin:0;padding:0}
+.progress-list li{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;border-top:1px solid var(--line);padding:9px 0;font-size:0.875rem}
+.progress-alert{display:flex;gap:10px;padding:12px 14px;border-radius:7px;background:var(--danger-soft);color:var(--danger-text);border:1px solid var(--danger-line);margin-bottom:14px;font-size:0.875rem}
+.progress-alert ul{margin:6px 0 0;padding-left:18px}
+.progress-flag{color:var(--danger-text)}
+.progress-limits{padding:4px 2px;color:var(--text-2)}
+.progress-limits h2{font-size:1rem;margin:0 0 8px}
+.progress-limits p{font-size:0.8125rem;line-height:1.6;margin:0 0 8px;max-width:760px}
+@media(max-width:850px){.progress-grid{grid-template-columns:1fr}}
+@media(max-width:520px){.progress-priority{grid-template-columns:auto 1fr}.progress-priority>.button{grid-column:2;justify-self:start}}

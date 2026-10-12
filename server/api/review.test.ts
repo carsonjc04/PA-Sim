@@ -340,7 +340,7 @@ describe('guessed-correct', () => {
     const again = await client.event(id, { type: 'action', tool: 'propose_diagnosis', actionIds: ['viral-uri'], confirmed: true, confidence: 'sure' })
     expect(again.body.result.duplicates).toEqual(['viral-uri'])
     const rows = (await db.pool.query(`SELECT detail FROM attempt_events WHERE attempt_id = $1 AND phase = 'diagnosis' AND retracted_at IS NULL`, [id])).rows
-    expect(rows).toEqual([{ detail: { confidence: 'sure' } }])
+    expect(rows).toEqual([{ detail: { confidence: 'sure', confidenceHistory: [{ confidence: 'unsure', at: clock.toISOString() }, { confidence: 'sure', at: clock.toISOString() }] } }])
     expect(JSON.stringify(again.body)).not.toContain('confidence')
   })
 

@@ -14,9 +14,6 @@ import {
 import {
   ArrowRight,
   ArrowUpRight,
-  BarChart3,
-  Check,
-  ClipboardList,
   Clock3,
   Mic,
   Stethoscope,
@@ -38,6 +35,7 @@ import {
 import { EncounterPage } from "./features/encounter/EncounterPage";
 import { DebriefPage } from "./features/debrief/DebriefPage";
 import { ReviewDueNote } from "./features/review/ReviewDueNote";
+import { ProgressDashboard } from "./features/analytics/ProgressDashboard";
 import { SettingsButton } from "./features/settings/SettingsDialog";
 import { TodayReview } from "./features/review/TodayReview";
 import { CaseFilters } from "./features/study/CaseFilters";
@@ -396,13 +394,6 @@ function DashboardContent() {
       .catch((e) => setError(errorMessage(e)))
       .finally(() => setLoading(false));
   }, [user]);
-  const completed = items.filter((a) => a.status === "submitted");
-  const average = completed.length
-    ? Math.round(
-        completed.reduce((n, a) => n + (a.finalScore ?? 0), 0) /
-          completed.length,
-      )
-    : null;
   return (
     <>
       <section className="dashboard-hero">
@@ -415,7 +406,7 @@ function DashboardContent() {
           </h1>
           <p className="lede">
             Your submitted encounters are scored by the server and saved to this
-            identity.
+            identity. Progress below is built only from what you have done.
           </p>
           <Link className="button button-primary" to="/cases">
             Start an encounter <ArrowRight size={17} />
@@ -423,36 +414,7 @@ function DashboardContent() {
         </div>
         <ReviewDueNote user={user} />
       </section>
-      <section className="stats-grid">
-        <Stat
-          icon={<BarChart3 size={19} />}
-          tone="teal"
-          value={<>{completed.length}</>}
-          label="Submitted encounters loaded"
-        />
-        <Stat
-          icon={<ClipboardList size={19} />}
-          tone="amber"
-          value={
-            <>
-              {average ?? "—"}
-              <small>{average !== null ? "%" : ""}</small>
-            </>
-          }
-          label="Average score"
-        />
-        <Stat
-          icon={<Check size={19} />}
-          tone="blue"
-          value={
-            <>
-              {completed.filter((a) => a.passed).length}
-              <small> / {completed.length}</small>
-            </>
-          }
-          label="Passes"
-        />
-      </section>
+      <ProgressDashboard user={user} />
       <section className="panel">
         <div className="section-heading">
           <div>
@@ -700,34 +662,6 @@ function Results() {
         <DebriefPage />
       </RequireUser>
     </Layout>
-  );
-}
-function Stat({
-  icon,
-  tone,
-  value,
-  label,
-  progress,
-}: {
-  icon: ReactNode;
-  tone: string;
-  value: ReactNode;
-  label: string;
-  progress?: number;
-}) {
-  return (
-    <div className="stat-card">
-      <span className={`stat-icon ${tone}`}>{icon}</span>
-      <div>
-        <strong>{value}</strong>
-        <span>{label}</span>
-      </div>
-      {progress !== undefined && (
-        <div className="mini-progress">
-          <i style={{ width: `${progress * 100}%` }} />
-        </div>
-      )}
-    </div>
   );
 }
 function Review() {

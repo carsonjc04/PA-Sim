@@ -50,7 +50,7 @@ Migration `0001_attempts.sql`:
 | `content_versions` | Immutable snapshot of a scenario. `id = <scenarioId>@<sha256[:12]>` of its canonical JSON; `definition` is server-only.                                                                                           |
 | `grading_versions` | One row per `GRADING_VERSION` used to grade.                                                                                                                                                                      |
 | `attempts`         | Owner, scenario, pinned `content_version_id`, status, current and locked phases, `next_seq`. At most one `active` attempt per user and scenario.                                                                  |
-| `attempt_events`   | Append-only, ordered by `seq`: `action`, `phase_locked`, `live_started`. Each event records phase, action ID, kind, confirmed flag, revealed text and source. Retracting sets `retracted_at` and deletes nothing. |
+| `attempt_events`   | Append-only, ordered by `seq`: `action`, `phase_locked`, `live_started`. Each event records phase, action ID, kind, confirmed flag, revealed text and source. Retracting sets `retracted_at` and deletes nothing. Timestamps come from the app clock (`server/lib/clock.ts`). A diagnosis row's `detail` holds the latest `confidence` plus a `confidenceHistory` list. |
 | `idempotency_keys` | `(attempt_id, key)` maps to the request hash and stored response.                                                                                                                                                 |
 | `attempt_results`  | One row per attempt. Holds grading version, content version, input digest, scores and the full `GradingResult`.                                                                                                   |
 
@@ -94,7 +94,7 @@ responses) and `learning_events` (instrumentation). See
 
 ## API
 
-All `/api/attempts`, `/api/review` and `/api/live` routes require an `AuthContext`.
+All `/api/attempts`, `/api/review`, `/api/analytics` and `/api/live` routes require an `AuthContext`.
 
 | Route                                      | Behavior                                                                                                                    |
 | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
@@ -108,6 +108,7 @@ All `/api/attempts`, `/api/review` and `/api/live` routes require an `AuthContex
 | `POST /api/live/session`, `/api/live/tool` | Voice. Take an `attemptId` with the same ownership check.                                                                   |
 | `GET /api/attempts/:id/remediation`        | Per-miss remediation state. `409 attempt_not_submitted` before submission.                                                  |
 | `/api/review/*`                            | Today's review: summary, sessions (start, resume), ratings (idempotent) and shown/answered events. See remediation.md §5.    |
+| `GET /api/analytics/dashboard?timeZone&blueprint` | Progress dashboard computed from the caller's stored events; read-only apart from the review backfill. No readiness estimate. See analytics.md. |
 
 Errors always have the shape `{ error: { code, message, requestId } }`. The
 codes are listed in `ApiErrorCode`.

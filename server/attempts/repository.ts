@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto'
 import type { PhaseId, ScenarioDefinition } from '../../src/domain/types'
 import { upgradeStoredDefinition } from '../content/legacy'
 import type { Queryable } from '../db/pool'
+import { now } from '../lib/clock'
 
 export interface UserRow {
   id: string
@@ -119,9 +120,9 @@ export async function insertAttempt(
   input: { userId: string; scenarioId: string; contentVersionId: string; firstPhase: PhaseId },
 ): Promise<AttemptRow> {
   const { rows } = await q.query(
-    `INSERT INTO attempts (id, user_id, scenario_id, content_version_id, status, current_phase)
-     VALUES ($1, $2, $3, $4, 'active', $5) RETURNING ${attemptColumns}`,
-    [randomUUID(), input.userId, input.scenarioId, input.contentVersionId, input.firstPhase],
+    `INSERT INTO attempts (id, user_id, scenario_id, content_version_id, status, current_phase, created_at, updated_at)
+     VALUES ($1, $2, $3, $4, 'active', $5, $6, $6) RETURNING ${attemptColumns}`,
+    [randomUUID(), input.userId, input.scenarioId, input.contentVersionId, input.firstPhase, now()],
   )
   return toAttempt(rows[0])
 }
@@ -146,10 +147,10 @@ export async function updateAttemptState(
   state: { currentPhase: PhaseId; lockedPhases: PhaseId[]; status?: 'submitted' },
 ): Promise<void> {
   await q.query(
-    `UPDATE attempts SET current_phase = $2, locked_phases = $3, updated_at = now(),
-       status = COALESCE($4, status), submitted_at = CASE WHEN $4 = 'submitted' THEN now() ELSE submitted_at END
+    `UPDATE attempts SET current_phase = $2, locked_phases = $3, updated_at = $5,
+       status = COALESCE($4, status), submitted_at = CASE WHEN $4 = 'submitted' THEN $5 ELSE submitted_at END
      WHERE id = $1`,
-    [attemptId, state.currentPhase, state.lockedPhases, state.status ?? null],
+    [attemptId, state.currentPhase, state.lockedPhases, state.status ?? null, now()],
   )
 }
 
@@ -188,9 +189,9 @@ export async function insertEvent(
   },
 ): Promise<void> {
   await q.query(
-    `WITH next AS (UPDATE attempts SET next_seq = next_seq + 1, updated_at = now() WHERE id = $1 RETURNING next_seq - 1 AS seq)
-     INSERT INTO attempt_events (attempt_id, seq, type, phase, action_id, kind, confirmed, revealed, source, detail)
-     SELECT $1, next.seq, $2, $3, $4, $5, $6, $7, $8, $9 FROM next`,
+    `WITH next AS (UPDATE attempts SET next_seq = next_seq + 1, updated_at = $10 WHERE id = $1 RETURNING next_seq - 1 AS seq)
+     INSERT INTO attempt_events (attempt_id, seq, type, phase, action_id, kind, confirmed, revealed, source, detail, created_at)
+     SELECT $1, next.seq, $2, $3, $4, $5, $6, $7, $8, $9, $10 FROM next`,
     [
       attemptId,
       event.type,
@@ -201,6 +202,7 @@ export async function insertEvent(
       event.revealed ?? null,
       event.source,
       event.detail === undefined ? null : JSON.stringify(event.detail),
+      now(),
     ],
   )
 }
@@ -216,9 +218,9 @@ export async function setActionDetail(q: Queryable, attemptId: string, phase: Ph
 
 export async function retractActions(q: Queryable, attemptId: string, phase: PhaseId, actionIds: string[]): Promise<number> {
   const { rowCount } = await q.query(
-    `UPDATE attempt_events SET retracted_at = now()
+    `UPDATE attempt_events SET retracted_at = $4
      WHERE attempt_id = $1 AND phase = $2 AND action_id = ANY($3) AND type = 'action' AND retracted_at IS NULL`,
-    [attemptId, phase, actionIds],
+    [attemptId, phase, actionIds, now()],
   )
   return rowCount ?? 0
 }

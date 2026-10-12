@@ -65,10 +65,14 @@ export function listBlueprints(): PublicBlueprintSummary[] {
   return all.map((b) => summaryOf(b, all, day)).sort((a, b) => a.id.localeCompare(b.id))
 }
 
-function blueprintById(id: string): Blueprint {
+export function blueprintById(id: string): Blueprint {
   const bp = contentPackage().blueprints.find((b) => b.id === id)
   if (!bp) throw new ApiError('Blueprint not found.', 404, 'blueprint_not_found')
   return bp
+}
+
+export function assertNotRetired(bp: Blueprint): void {
+  if (blueprintLifecycle(bp, contentPackage().blueprints, today()) === 'retired') throw new ApiError('This blueprint version is retired.', 410, 'blueprint_retired')
 }
 
 export function coverageFor(id: string): PublicCoverage {
@@ -115,7 +119,7 @@ export async function studyPlan(auth: AuthContext, query: { mode: StudyMode; blu
   const bp = blueprintById(query.blueprint)
   if (query.mode === 'rotation' && bp.exam !== 'eor') throw new ApiError('Rotation mode needs an End of Rotation blueprint.', 400, 'invalid_query')
   if (query.mode === 'pance' && bp.exam !== 'pance') throw new ApiError('PANCE mode needs the PANCE blueprint.', 400, 'invalid_query')
-  if (blueprintLifecycle(bp, contentPackage().blueprints, today()) === 'retired') throw new ApiError('This blueprint version is retired.', 410, 'blueprint_retired')
+  assertNotRetired(bp)
   const { observations: obs, attempts: n } = await observations(auth.userId)
   const library = contentPackage().knowledge
   const due = await dueKnowledge(auth, query.timeZone)
