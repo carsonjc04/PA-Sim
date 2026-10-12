@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>B · Warm paper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* B — Warm paper. Light by default; dark follows the system unless overridden. */
+:root{
+  color-scheme:light;
+  --bg:#F3EEE4; --page:#FBF8F2; --ink:#26211C; --muted:#6A6056; --rule:#DAD1C2; --rule-strong:#B9AD99;
+  --accent:#6B1F2A; --accent-wash:#F1E4E1; --pencil:#7A6A53; --critical:#9E2B25; --on-accent:#FBF8F2; --focus:#6B1F2A;
+  --serif:'Newsreader',Georgia,serif; --sans:'Source Sans 3',system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){
+  color-scheme:dark;
+  --bg:#1A1714; --page:#221E1A; --ink:#EEE6DA; --muted:#B5A999; --rule:#3A332C; --rule-strong:#5A5046;
+  --accent:#E3A1AA; --accent-wash:#3A2428; --pencil:#B8A68C; --critical:#F08A7E; --on-accent:#1A1714; --focus:#E3A1AA;
+}}
+:root[data-theme=dark]{
+  color-scheme:dark;
+  --bg:#1A1714; --page:#221E1A; --ink:#EEE6DA; --muted:#B5A999; --rule:#3A332C; --rule-strong:#5A5046;
+  --accent:#E3A1AA; --accent-wash:#3A2428; --pencil:#B8A68C; --critical:#F08A7E; --on-accent:#1A1714; --focus:#E3A1AA;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 17px/1.6 var(--sans);-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:3px}
+.smallcaps{font:600 12px/1.2 var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+
+/* running head, like a book page */
+.head{max-width:1040px;margin:0 auto;padding:24px 32px 0;display:flex;align-items:baseline;gap:24px}
+.wordmark{white-space:nowrap;font:500 20px/1 var(--serif);letter-spacing:-.01em}
+.head .sp{flex:1}
+.link{white-space:nowrap;background:none;border:0;padding:4px 0;font:600 14px/1 var(--sans);color:var(--muted);cursor:pointer;border-bottom:1px solid transparent}
+.link:hover{color:var(--ink);border-bottom-color:var(--rule-strong)}
+
+.phases{max-width:1040px;margin:16px auto 0;padding:0 32px;border-bottom:1px solid var(--rule)}
+.phases ol{display:flex;gap:32px;margin:0;padding:0;list-style:none;overflow-x:auto}
+.phases li{padding:12px 0;font:400 16px/1 var(--serif);color:var(--muted);white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-1px}
+.phases li i{font-style:normal;font-family:var(--sans);font-size:12px;margin-right:6px;font-variant-numeric:oldstyle-nums}
+.phases li[aria-current]{color:var(--ink);border-bottom-color:var(--accent)}
+
+/* the page */
+.page{max-width:1040px;margin:0 auto;padding:48px 32px 96px;display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:64px}
+.chapter{margin:0 0 8px}
+h1.cc{margin:0 0 24px;font:400 clamp(30px,4vw,44px)/1.15 var(--serif);letter-spacing:-.015em;max-width:22ch}
+.byline{margin:0 0 40px;color:var(--muted);font-size:15px}
+
+.vitals{width:100%;border-collapse:collapse;margin:0 0 8px;font-variant-numeric:tabular-nums lining-nums}
+.vitals th{text-align:left;font:600 12px/1 var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:0 0 8px;border-bottom:1px solid var(--ink)}
+.vitals td{padding:10px 0;font:400 22px/1 var(--serif);border-bottom:1px solid var(--rule)}
+.vitals td small{font:400 13px/1 var(--sans);color:var(--muted);margin-left:2px}
+.caption{margin:0 0 40px;font:italic 400 14px/1.4 var(--serif);color:var(--muted)}
+
+.initial{margin:0 0 48px;padding:0 0 0 20px;border-left:2px solid var(--rule)}
+.initial p{margin:0 0 4px}
+
+h2.phase{margin:0 0 4px;font:500 28px/1.2 var(--serif);letter-spacing:-.01em}
+.lede{margin:0 0 24px;color:var(--muted)}
+
+.choices{list-style:none;margin:0 0 32px;padding:0;border-top:1px solid var(--rule)}
+.choice{display:grid;grid-template-columns:40px 1fr auto;gap:16px;padding:16px 0;border-bottom:1px solid var(--rule);cursor:pointer}
+.num{font:400 20px/1.2 var(--serif);color:var(--muted);text-align:right;font-variant-numeric:oldstyle-nums}
+.choice strong{display:block;font-weight:600;font-size:17px}
+.choice .q{display:block;font:italic 400 16px/1.45 var(--serif);color:var(--muted);margin-top:2px}
+.mark{font:600 12px/1.6 var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.choice:hover strong{text-decoration:underline;text-decoration-color:var(--rule-strong);text-underline-offset:4px}
+.choice[aria-checked=true] .num{color:var(--accent)}
+.choice[aria-checked=true] strong{color:var(--accent)}
+.choice[aria-checked=true] .mark{color:var(--accent)}
+.choice.flag .mark{color:var(--pencil)}
+.choice.flag .num::after{content:"†";margin-left:2px;color:var(--pencil)}
+.choice.out strong,.choice.out .q{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--rule-strong)}
+
+.foot{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.foot p{margin:0;color:var(--muted);font-size:14px}
+.primary{background:var(--accent);color:var(--on-accent);border:0;border-radius:2px;padding:12px 20px;font:600 15px/1 var(--sans);cursor:pointer;transition:background-color 150ms ease-out}
+
+/* margin column: the conversation and the student's pencil */
+aside{border-left:1px solid var(--rule);padding-left:32px}
+aside section{margin-bottom:40px}
+.said{margin:12px 0 0}
+.said .pa{font-size:15px;color:var(--muted);margin:0 0 8px}
+.said blockquote{margin:0;font:400 19px/1.45 var(--serif)}
+.said .revealed{display:inline-block;margin-top:8px;font:600 12px/1 var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+.voice{display:flex;align-items:center;gap:10px;margin-top:12px;font-size:15px}
+.voice i{width:8px;height:8px;border-radius:50%;background:var(--accent)}
+aside p.help{margin:8px 0 0;font-size:14px;color:var(--muted)}
+textarea{width:100%;min-height:140px;margin-top:12px;resize:vertical;background:transparent;color:var(--pencil);border:0;border-top:1px solid var(--rule);
+  background-image:repeating-linear-gradient(to bottom,transparent 0 27px,var(--rule) 27px 28px);line-height:28px;padding:0;font:italic 400 17px/28px var(--serif)}
+textarea::placeholder{color:var(--muted)}
+
+@media (max-width:860px){
+  .page{grid-template-columns:1fr;gap:48px;padding:32px 16px 64px}
+  aside{border-left:0;border-top:1px solid var(--rule);padding:32px 0 0}
+  .head,.phases{padding-left:16px;padding-right:16px}
+  .phases ol{gap:20px}
+  .vitals td{font-size:18px;padding-right:8px}.vitals td small{display:block;margin:2px 0 0}
+  .head{gap:16px}.head .smallcaps{display:none}
+  .choice{grid-template-columns:28px 1fr;gap:12px}
+  .mark{grid-column:2}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<header class="head">
+  <span class="wordmark">PA-Sim</span>
+  <span class="smallcaps">OSCE Practice</span>
+  <span class="sp"></span>
+  <button class="link" type="button" onclick="toggleTheme()">Theme</button>
+  <button class="link" type="button">Leave encounter</button>
+</header>
+<nav class="phases" aria-label="Encounter phases"><ol>
+  <li aria-current="step"><i>i</i>History</li>
+  <li><i>ii</i>Examination</li>
+  <li><i>iii</i>Diagnostics</li>
+  <li><i>iv</i>Diagnosis</li>
+  <li><i>v</i>Treatment</li>
+</ol></nav>
+
+<div class="page">
+  <main>
+    <p class="smallcaps chapter">Cough and sore throat</p>
+    <h1 class="cc">“I have felt run down for a few days. My throat hurts and I cannot stop coughing.”</h1>
+    <p class="byline">Maya Chen, 28, she/her. A fictional patient.</p>
+
+    <table class="vitals">
+      <thead><tr><th>HR</th><th>BP</th><th>RR</th><th>Temp</th><th>SpO₂</th></tr></thead>
+      <tbody><tr><td>82<small>bpm</small></td><td>118/74</td><td>16</td><td>37.8<small>°C</small></td><td>98<small>%</small></td></tr></tbody>
+    </table>
+    <p class="caption">Vitals shown for type study only. They are not from the authored case.</p>
+
+    <div class="initial">
+      <p class="smallcaps" style="margin-bottom:8px">On first look</p>
+      <p>Speaking comfortably in full sentences.</p>
+      <p>No visible distress.</p>
+      <p>Symptoms began four days ago.</p>
+    </div>
+
+    <p class="smallcaps" style="margin:0 0 8px">Part i of v</p>
+    <h2 class="phase" id="ph" tabindex="-1">History</h2>
+    <p class="lede">Clarify the timeline, associated symptoms, and safety concerns.</p>
+
+    <ul class="choices" role="listbox" aria-label="History actions" aria-multiselectable="true">
+      <li class="choice" role="option" aria-checked="true" tabindex="0"><span class="num">1</span><span><strong>Clarify symptom duration and progression</strong><span class="q">How have these symptoms changed since they started?</span></span><span class="mark">Asked</span></li>
+      <li class="choice" role="option" aria-checked="false" tabindex="-1"><span class="num">2</span><span><strong>Ask about fever and chills</strong><span class="q">Have you had measured fever or chills?</span></span><span class="mark"></span></li>
+      <li class="choice" role="option" aria-checked="false" tabindex="-1"><span class="num">3</span><span><strong>Ask about cough and nasal symptoms</strong><span class="q">Tell me about the cough, congestion, and drainage.</span></span><span class="mark"></span></li>
+      <li class="choice" role="option" aria-checked="false" tabindex="-1"><span class="num">4</span><span><strong>Screen for dyspnea, chest pain, or swallowing difficulty</strong><span class="q">Any trouble breathing, chest pain, or trouble swallowing liquids?</span></span><span class="mark"></span></li>
+      <li class="choice flag" role="option" aria-checked="false" tabindex="-1"><span class="num">5</span><span><strong>Ask about exposures and relevant risks</strong><span class="q">Any sick contacts, travel, pregnancy possibility, or immune conditions?</span></span><span class="mark">Return to</span></li>
+      <li class="choice out" role="option" aria-checked="false" tabindex="-1"><span class="num">6</span><span><strong>Ask for antibiotics immediately</strong><span class="q">Would you like an antibiotic today?</span></span><span class="mark">Set aside</span></li>
+    </ul>
+
+    <div class="foot"><p>Each choice is kept as you make it.</p><button class="primary" type="button">Continue to examination</button></div>
+  </main>
+
+  <aside aria-label="Conversation and notes">
+    <section>
+      <p class="smallcaps">The conversation</p>
+      <div class="said">
+        <p class="pa">You asked how the symptoms have changed.</p>
+        <blockquote>“They began four days ago and are slowly improving, though the cough is annoying.”</blockquote>
+        <span class="revealed">Finding revealed</span>
+      </div>
+    </section>
+    <section>
+      <p class="smallcaps">Voice</p>
+      <div class="voice"><i aria-hidden="true"></i>Connected. Speak when ready.</div>
+      <p class="help">The choices on the page remain the record of the encounter.</p>
+    </section>
+    <section>
+      <label class="smallcaps" for="n">Your notes</label>
+      <textarea id="n" placeholder="Differential, in pencil…"></textarea>
+    </section>
+  </aside>
+</div>
+<script>
+function toggleTheme(){const r=document.documentElement,d=r.dataset.theme||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');r.dataset.theme=d==='dark'?'light':'dark'}
+</script>
+</body>
+</html>
