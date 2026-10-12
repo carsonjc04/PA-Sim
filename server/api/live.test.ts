@@ -216,3 +216,105 @@ describe('POST /api/live/session with a key', () => {
     expect(res.body.output.ok).toBe(false)
   })
 })
+
+describe('server-side voice session limit', () => {
+  let app: Server
+  let create: ReturnType<typeof vi.fn>
+  let closed: string[]
+  let guard: typeof import('../live/sessionGuard')
+  let clock: typeof import('../lib/clock')
+  let n = 0
+
+  beforeEach(async () => {
+    vi.resetModules()
+    process.env.OPENAI_API_KEY = 'sk-test-not-a-real-key'
+    const { createApp: freshApp } = await import('../app')
+    const { setOpenAIClient: setClient } = await import('../openai/client')
+    const { setPool } = await import('../db/pool')
+    const { resetRateLimit: resetLimit } = await import('./live')
+    guard = await import('../live/sessionGuard')
+    clock = await import('../lib/clock')
+    setPool(db.pool)
+    await db.reset()
+    resetLimit()
+    guard.resetSessionGuards()
+    closed = []
+    guard.setSessionCloser({ close: async (id) => void closed.push(id) })
+    create = vi.fn().mockImplementation(async () => ({ session: { id: `live_sess_${(n += 1)}` }, transport: { type: 'webrtc', sdp: 'v=0\r\nanswer\r\n' } }))
+    setClient({ live: { create } } as never)
+    app = await listenLocal(freshApp())
+  })
+
+  afterEach(() => {
+    clock.setClock(null)
+    guard.resetSessionGuards()
+    guard.setSessionCloser(null)
+    vi.useRealTimers()
+    delete process.env.OPENAI_API_KEY
+    setOpenAIClient(null)
+    vi.resetModules()
+  })
+
+  const relay = (attemptId: string, user = USER) =>
+    request(app).post('/api/live/tool').set('X-Dev-User', user).send({ attemptId, callId: `call_${Math.random().toString(36).slice(2)}`, name: 'record_history_topics', arguments: JSON.stringify({ actionIds: [getScenario('chest-pressure').phases[0].actions[0].id] }) })
+
+  it('refuses tool calls past the limit and ends the session on the server', async () => {
+    const id = await newEncounter(app)
+    const started = await session(app, { sdp: validSdp, attemptId: id })
+    expect(started.status).toBe(200)
+    expect((await relay(id)).body.output.ok).toBe(true)
+
+    // 20-minute default limit; move the server clock past it. The browser's timer is irrelevant here.
+    clock.setClock(() => new Date(Date.now() + 21 * 60_000))
+    const late = await relay(id)
+    expect(late.status).toBe(409)
+    expect(late.body.error.code).toBe('live_session_expired')
+    expect(closed).toEqual([started.body.sessionId])
+    const { rows } = await db.pool.query("SELECT count(*)::int AS n FROM attempt_events WHERE attempt_id = $1 AND type = 'action'", [id])
+    expect(rows[0].n).toBe(1)
+  })
+
+  it('does not reveal another user’s attempt through the limit check', async () => {
+    const id = await newEncounter(app)
+    await session(app, { sdp: validSdp, attemptId: id })
+    clock.setClock(() => new Date(Date.now() + 21 * 60_000))
+    expect((await relay(id, 'mallory')).status).toBe(404)
+    expect(closed).toEqual([])
+  })
+
+  it('closes the previous session when the same attempt starts a new one', async () => {
+    const id = await newEncounter(app)
+    const first = await session(app, { sdp: validSdp, attemptId: id })
+    const second = await session(app, { sdp: validSdp, attemptId: id })
+    await vi.waitFor(() => expect(closed).toEqual([first.body.sessionId]))
+    expect(second.body.sessionId).not.toBe(first.body.sessionId)
+  })
+
+  it('schedules a close at the deadline when the session is created', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+    guard.armSession('live_sess_timer', Date.now() + 20 * 60_000)
+    await vi.advanceTimersByTimeAsync(20 * 60_000 - 1000)
+    expect(closed).toEqual([])
+    await vi.advanceTimersByTimeAsync(2000)
+    expect(closed).toEqual(['live_sess_timer'])
+  })
+
+  it('re-arms open sessions and closes expired ones after a restart', async () => {
+    const id = await newEncounter(app)
+    const insert = (sessionId: string, minutesAgo: number) =>
+      db.pool.query(
+        `INSERT INTO attempt_events (attempt_id, seq, type, phase, source, detail, confirmed, created_at)
+         VALUES ($1, (SELECT coalesce(max(seq), 0) + 1 FROM attempt_events WHERE attempt_id = $1), 'live_started', 'history', 'system', $2, false, now() - make_interval(mins => $3))`,
+        [id, JSON.stringify({ sessionId }), minutesAgo],
+      )
+    await insert('live_sess_expired', 30)
+    await insert('live_sess_open', 5)
+    await insert('live_sess_ancient', 600)
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+    const result = await guard.resumeSessionGuards()
+    expect(result).toEqual({ armed: 1, closed: 1 })
+    await vi.waitFor(() => expect(closed).toEqual(['live_sess_expired']))
+    await vi.advanceTimersByTimeAsync(16 * 60_000)
+    expect(closed).toEqual(['live_sess_expired', 'live_sess_open'])
+  })
+})

@@ -257,6 +257,8 @@ Notes are **structurally isolated**:
 - They are never part of grading input, never embedded in attempt, history, debrief or remediation payloads, never sent to the voice model, and never logged.
 - `server/api/notes.test.ts` scans every other table and payload for a note's text and captures the log.
 
+**Retention policy:** a learner's notes and annotations are kept for as long as the attempt exists and are deleted with it (and with the user). There is no separate retention period.
+
 In the browser, unsaved text is buffered in `localStorage` (keyed by attempt), so it survives going offline or closing the tab. It syncs when the connection returns. The privacy notice is shown at the notes field itself.
 
 ## Reasoning debrief
@@ -273,13 +275,22 @@ It does not generate text. It does not link findings to diagnoses beyond what th
 
 Clinical images are attached to the public event of the action that reveals them, and are never sent before that action is recorded.
 
+## Voice session limit (server-enforced)
+
+A Live session is billed while it is open. The browser connects to OpenAI directly over WebRTC, so the browser's timer is a convenience, not a control. `server/live/sessionGuard.ts` is the kill switch:
+
+- **On creation:** `POST /api/live/session` schedules a close at `MAX_LIVE_SESSION_MINUTES`. It also closes the attempt's previous session, so one attempt never has two meters running.
+- **On every tool relay:** `POST /api/live/tool` checks the attempt's current session against the limit, after the ownership check. Past the limit it returns 409 `live_session_expired` and closes the session. This is the backstop if a timer was lost.
+- **On startup:** sessions still inside their window are re-armed, and sessions that expired while the server was down are closed.
+
+Closing attaches a trusted sideband WebSocket to the session (`openai/resources/live/sideband/ws`, which needs the `ws` package) and sends `session.close`. It waits up to five seconds for `session.closed`. A failed close is logged with the session ID only and retried at the next check.
+
+Remaining gap: a session that is never relayed to again and expires while the server is down for more than an hour after its limit is not swept.
+
+Voice does not reconnect automatically after a dropped connection. The learner chooses Reconnect, so a metered session never restarts without an explicit action.
+
 ## Known limitations
 
-- **Session length is enforced by the client only.** `MAX_LIVE_SESSION_MINUTES`
-  is reported in `/api/ai/status`, and the voice panel ends the session at that
-  point (with a warning in the last two minutes). The server does not close it,
-  so a modified client could keep a session open. Server-side enforcement is an
-  open decision.
 - **Rate limiting keys on `req.ip`** with no `trust proxy` setting, so behind a
   hosting proxy every client may share one bucket. The bucket map is in memory.
 - **The browser still relays voice tool calls.** The server validates every ID

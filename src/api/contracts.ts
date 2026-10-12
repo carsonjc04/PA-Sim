@@ -94,6 +94,7 @@ export type ApiErrorCode =
   | 'sprint_not_found'
   | 'sprint_locked'
   | 'notes_conflict'
+  | 'live_session_expired'
   | 'annotation_target_not_found'
   | 'review_out_of_order'
 

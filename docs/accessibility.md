@@ -101,5 +101,5 @@ Real screen-reader runs are not automated. Before a release, check:
 ## Known limits
 
 - Guided mode needs the ClinicSim server. While offline, choices pause with a stated reason; notes keep saving on the device and sync on reconnect.
-- The voice session limit is enforced by the client, not the server.
+- The voice session limit is shown and enforced in the browser and, independently, on the server (see docs/architecture.md). Voice never reconnects on its own.
 - jsdom cannot check color contrast or real focus order; the Playwright suite covers both.

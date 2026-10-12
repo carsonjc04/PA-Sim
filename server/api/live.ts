@@ -4,6 +4,7 @@ import { authOf, requireAuth } from '../auth/context'
 import { getOwnedAttemptWithScenario, recordEvent, recordLiveStarted } from '../attempts/service'
 import { aiEnabled, env } from '../config/env'
 import { ApiError } from '../http/errors'
+import { assertSessionWithinLimit, onSessionStarted } from '../live/sessionGuard'
 import { openaiClient } from '../openai/client'
 import { PATIENT_PROMPT_VERSION, buildDelegateInstructions, buildPatientInstructions } from '../prompts/patient'
 import { isToolName } from '../tools/contracts'
@@ -119,6 +120,9 @@ liveRouter.post('/session', async (req, res) => {
     reasoningModel: env.OPENAI_DELEGATE_MODEL,
   })
 
+  // The server owns the kill switch: close at the limit, and close this attempt's previous session.
+  await onSessionStarted(attempt.id, result.session.id)
+
   // Only the SDP answer and session ID cross to the browser.
   res.json({ sessionId: result.session.id, sdp: result.transport.sdp })
 })
@@ -138,6 +142,13 @@ liveRouter.post('/tool', async (req, res) => {
     args = JSON.parse(parsed.data.arguments || '{}')
   } catch {
     throw new ApiError('Tool arguments were not valid JSON', 400, 'invalid_tool_arguments')
+  }
+
+  // Validation-path backstop: past the limit, refuse the call and end the session server-side.
+  // Ownership first, so another user's attempt ID reveals nothing.
+  await getOwnedAttemptWithScenario(authOf(req), parsed.data.attemptId)
+  if (!(await assertSessionWithinLimit(parsed.data.attemptId))) {
+    throw new ApiError(`The voice session reached its ${env.MAX_LIVE_SESSION_MINUTES}-minute limit and was ended. Guided mode still works.`, 409, 'live_session_expired')
   }
 
   try {
