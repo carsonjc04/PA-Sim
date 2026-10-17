@@ -1,38 +1,45 @@
 import { SidebandWS } from 'openai/resources/live/sideband/ws'
 import { env } from '../config/env'
-import { getPool } from '../db/pool'
 import { now } from '../lib/clock'
 import { openaiClient } from '../openai/client'
+import * as ledger from './ledger'
 
 /**
  * Server-side kill switch for billed Live voice sessions.
  *
- * The browser talks to OpenAI directly over WebRTC, so the browser's own timer cannot be trusted to end a
- * session: a modified client, or a timer that never fires, would keep the meter running. The server created
- * the session, so it also ends it:
- * - at creation it schedules a close at the deadline (MAX_LIVE_SESSION_MINUTES);
- * - every tool relay checks the deadline, refuses calls past it and closes the session (the backstop if a
- *   timer was lost, for example across a restart);
- * - starting a new session closes the attempt's previous one, so one attempt never has two meters running;
- * - on startup, sessions still inside their window are re-armed and recently expired ones are closed.
+ * The browser talks to OpenAI directly over WebRTC, so nothing the browser does can be trusted to end a
+ * session. The server minted the session and records it in the ledger (live_sessions), so it also ends it:
+ * - at creation it schedules a close at the deadline (the attempt's remaining voice budget);
+ * - a sweeper runs every LIVE_SWEEP_INTERVAL_MS: sessions open past their deadline are flagged and closed,
+ *   sessions with no student activity for LIVE_IDLE_TIMEOUT_SECONDS are closed (abandoned tabs);
+ * - every tool relay checks the ledger and refuses calls for a session that is over (the leash);
+ * - starting a session closes the same user's other open sessions, so one user never has two meters running;
+ * - a flagged session blocks new sessions for that user and address until its close is confirmed.
  *
- * Closing uses a trusted sideband connection to the session and sends `session.close`. Closing an already
- * closed session is harmless; failures are logged (session ID only) and retried by the next check.
+ * Closing uses a trusted sideband connection to the session and sends `session.close`. A close is recorded in
+ * the ledger only when confirmed; otherwise the sweeper retries it.
  */
 
 export interface SessionCloser {
-  close(sessionId: string): Promise<void>
+  /** Resolves true when the provider confirmed the close (or the session no longer exists), false if unconfirmed. */
+  close(sessionId: string): Promise<boolean | void>
 }
 
 const CLOSE_TIMEOUT_MS = 5_000
 
+/** A session the provider no longer knows about is already closed. */
+function isGone(error: unknown): boolean {
+  const e = error as { status?: number; code?: string; error?: { code?: string } } | undefined
+  return e?.status === 404 || e?.code === 'session_not_found' || e?.error?.code === 'session_not_found'
+}
+
 /** Attaches a sideband WebSocket to the session, asks it to close, and waits for the close (bounded). */
 export const sidebandCloser: SessionCloser = {
   close(sessionId) {
-    return new Promise<void>((resolve, reject) => {
+    return new Promise<boolean>((resolve, reject) => {
       let settled = false
       const ws = new SidebandWS(openaiClient(), { session_id: sessionId })
-      const finish = (error?: unknown) => {
+      const finish = (error?: unknown, confirmed = false) => {
         if (settled) return
         settled = true
         clearTimeout(timer)
@@ -41,11 +48,11 @@ export const sidebandCloser: SessionCloser = {
         } catch {
           /* already closed */
         }
-        if (error) reject(error instanceof Error ? error : new Error('sideband close failed'))
-        else resolve()
+        if (error && !isGone(error)) reject(error instanceof Error ? error : new Error('sideband close failed'))
+        else resolve(confirmed || Boolean(error))
       }
       const timer = setTimeout(() => finish(), CLOSE_TIMEOUT_MS)
-      ws.on('session.closed', () => finish())
+      ws.on('session.closed', () => finish(undefined, true))
       ws.on('error', (e: unknown) => finish(e))
       // Queued until the socket opens.
       ws.send({ type: 'session.close' })
@@ -60,24 +67,25 @@ export function setSessionCloser(next: SessionCloser | null): void {
 }
 
 const timers = new Map<string, ReturnType<typeof setTimeout>>()
-const closed = new Set<string>()
+const inflight = new Set<string>()
 
-export const sessionLimitMs = () => env.MAX_LIVE_SESSION_MINUTES * 60_000
-
-/** Ends a session now (idempotent within this process). */
-export async function closeSession(sessionId: string, reason: 'limit' | 'replaced' | 'expired'): Promise<void> {
+/** Ends a session now. Recorded in the ledger only when the close is confirmed; otherwise the sweeper retries. */
+export async function closeSession(sessionId: string, reason: ledger.EndReason): Promise<boolean> {
   const t = timers.get(sessionId)
   if (t) clearTimeout(t)
   timers.delete(sessionId)
-  if (closed.has(sessionId)) return
-  closed.add(sessionId)
+  if (inflight.has(sessionId)) return false
+  inflight.add(sessionId)
   try {
-    await closer.close(sessionId)
-    console.log('[live] closed session', { sessionId, reason })
+    const confirmed = (await closer.close(sessionId)) !== false
+    if (confirmed) await ledger.markEnded(sessionId, reason)
+    console.log('[live] closed session', { sessionId, reason, confirmed })
+    return confirmed
   } catch {
-    // Allow a later check (tool relay, restart sweep) to try again.
-    closed.delete(sessionId)
-    console.error('[live] could not close session; will retry on the next check', { sessionId, reason })
+    console.error('[live] could not close session; the sweeper will retry', { sessionId, reason })
+    return false
+  } finally {
+    inflight.delete(sessionId)
   }
 }
 
@@ -91,68 +99,82 @@ export function armSession(sessionId: string, deadline: number): void {
   timers.set(sessionId, timer)
 }
 
-interface StartedSession {
-  sessionId: string
-  startedAt: number
-  attemptId: string
-}
-
-/** Live sessions recorded for an attempt, newest first. */
-async function sessionsFor(attemptId: string): Promise<StartedSession[]> {
-  const { rows } = await getPool().query<{ session_id: string; created_at: Date; attempt_id: string }>(
-    `SELECT detail->>'sessionId' AS session_id, created_at, attempt_id FROM attempt_events
-     WHERE attempt_id = $1 AND type = 'live_started' AND detail->>'sessionId' IS NOT NULL ORDER BY seq DESC`,
-    [attemptId],
-  )
-  return rows.map((r) => ({ sessionId: r.session_id, startedAt: r.created_at.getTime(), attemptId: r.attempt_id }))
-}
-
-/** Called right after a new session is created and recorded. */
-export async function onSessionStarted(attemptId: string, sessionId: string): Promise<void> {
-  armSession(sessionId, now().getTime() + sessionLimitMs())
-  for (const prior of (await sessionsFor(attemptId)).filter((s) => s.sessionId !== sessionId)) {
-    if (now().getTime() - prior.startedAt < sessionLimitMs() + 60 * 60_000) void closeSession(prior.sessionId, 'replaced')
+/** Called right after a new session is created and recorded in the ledger. */
+export async function onSessionStarted(session: { sessionId: string; userId: string; deadline: Date }): Promise<void> {
+  armSession(session.sessionId, session.deadline.getTime())
+  for (const prior of await ledger.otherOpenSessionsOf(session.userId, session.sessionId)) {
+    void closeSession(prior.sessionId, 'replaced')
   }
 }
 
 /**
- * The validation-path check for tool relays. Returns false (and closes the session) when the attempt's
- * current voice session is past its limit, so the server stops serving it whatever the browser does.
+ * The leash. A tool call is served only for a session the ledger says is open, unexpired and not idle, by the
+ * server clock. A session found over is closed on the spot.
  */
-export async function assertSessionWithinLimit(attemptId: string): Promise<boolean> {
-  const [latest] = await sessionsFor(attemptId)
-  if (!latest) return true
-  if (now().getTime() - latest.startedAt <= sessionLimitMs()) return true
-  await closeSession(latest.sessionId, 'expired')
-  return false
+export async function verifyServable(sessionId: string, attemptId: string): Promise<ledger.SessionVerdict> {
+  const session = await ledger.getSession(sessionId)
+  const verdict = ledger.judge(session && session.attemptId === attemptId ? session : null)
+  if (!verdict.ok && verdict.session && !verdict.session.endedAt) {
+    if (verdict.code === 'live_session_expired') await ledger.flag(sessionId)
+    void closeSession(sessionId, verdict.code === 'live_session_idle' ? 'idle' : 'limit')
+  }
+  return verdict
 }
 
-/** On startup: re-arm sessions still inside their window and close ones that expired while the server was down. */
-export async function resumeSessionGuards(): Promise<{ armed: number; closed: number }> {
-  const limit = sessionLimitMs()
-  const { rows } = await getPool().query<{ session_id: string; created_at: Date }>(
-    `SELECT detail->>'sessionId' AS session_id, created_at FROM attempt_events
-     WHERE type = 'live_started' AND detail->>'sessionId' IS NOT NULL AND created_at > $1`,
-    [new Date(now().getTime() - limit - 60 * 60_000)],
-  )
-  let armed = 0
-  let closedCount = 0
-  for (const r of rows) {
-    const deadline = r.created_at.getTime() + limit
-    if (deadline > now().getTime()) {
-      armSession(r.session_id, deadline)
-      armed += 1
-    } else {
-      void closeSession(r.session_id, 'expired')
-      closedCount += 1
+/**
+ * One sweeper pass over open sessions: flag and close those past their deadline, close idle ones, and stop
+ * blocking on a flagged session long after the provider must have ended it.
+ */
+export async function sweep(): Promise<{ expired: number; idle: number; assumed: number }> {
+  const at = now()
+  const result = { expired: 0, idle: 0, assumed: 0 }
+  for (const s of await ledger.openSessions()) {
+    if (at.getTime() >= s.deadlineAt.getTime() + ledger.ASSUME_ENDED_AFTER_MS) {
+      await ledger.markEnded(s.sessionId, 'assumed_expired')
+      console.error('[live] session close never confirmed; assuming the provider ended it', { sessionId: s.sessionId })
+      result.assumed += 1
+      continue
+    }
+    const verdict = ledger.judge(s, at)
+    if (verdict.ok) continue
+    if (verdict.code === 'live_session_expired') {
+      await ledger.flag(s.sessionId)
+      result.expired += 1
+      await closeSession(s.sessionId, 'limit')
+    } else if (verdict.code === 'live_session_idle') {
+      result.idle += 1
+      await closeSession(s.sessionId, 'idle')
     }
   }
-  return { armed, closed: closedCount }
+  return result
 }
 
-/** Test seam: forget all timers and close records. */
+let sweeper: ReturnType<typeof setInterval> | null = null
+
+/** On startup: re-arm open sessions' deadlines, run one sweep, then keep sweeping. */
+export async function startSessionGuards(): Promise<{ armed: number; swept: Awaited<ReturnType<typeof sweep>> }> {
+  let armed = 0
+  for (const s of await ledger.openSessions()) {
+    if (s.deadlineAt.getTime() > now().getTime()) {
+      armSession(s.sessionId, s.deadlineAt.getTime())
+      armed += 1
+    }
+  }
+  const swept = await sweep()
+  if (!sweeper) {
+    sweeper = setInterval(() => {
+      sweep().catch(() => console.error('[live] sweep failed; will retry'))
+    }, env.LIVE_SWEEP_INTERVAL_MS)
+    sweeper.unref?.()
+  }
+  return { armed, swept }
+}
+
+/** Test seam: forget all timers, the sweeper and in-flight closes. */
 export function resetSessionGuards(): void {
   for (const t of timers.values()) clearTimeout(t)
   timers.clear()
-  closed.clear()
+  inflight.clear()
+  if (sweeper) clearInterval(sweeper)
+  sweeper = null
 }

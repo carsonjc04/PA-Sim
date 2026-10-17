@@ -37,7 +37,7 @@ export async function createTestDatabase(options: { migrate?: boolean } = {}): P
     async reset() {
       await pool.query(
         'TRUNCATE users, content_versions, grading_versions, attempts, attempt_events, idempotency_keys, attempt_results, ' +
-          'scheduler_params, review_cards, remediation_evidence, evidence_cards, remediation_derivations, review_sessions, review_events, learning_events, attempt_annotations, attempt_notes CASCADE',
+          'scheduler_params, review_cards, remediation_evidence, evidence_cards, remediation_derivations, review_sessions, review_events, learning_events, attempt_annotations, attempt_notes, live_sessions CASCADE',
       )
     },
     async close() {

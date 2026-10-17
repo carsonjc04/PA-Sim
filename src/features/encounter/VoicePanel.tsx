@@ -16,17 +16,22 @@ const statusLabel: Record<VoiceConnectionState, string> = {
 
 const usd = (n: number) => `$${n.toFixed(2)}`
 const minutesBetween = (from: number, to: number) => Math.max(0, Math.floor((to - from) / 60_000))
+const clock = (ms: number) => {
+  const total = Math.max(0, Math.ceil(ms / 1000))
+  return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`
+}
 
 /**
  * Optional voice layer over the same attempt as guided mode. Cost is stated in plain language before and during
  * a session, End session is always beside Mute (muting does not stop billing), and the session ends itself at
- * the advertised limit.
+ * the server's deadline. The server enforces the same deadline and an idle timeout on its own (see
+ * server/live/sessionGuard.ts); the browser ends first so the learner sees why.
  */
 export function VoicePanel({ attemptId, onActivity, onToolRejected }: { attemptId: string; onActivity?: () => void; onToolRejected?: (reason: string) => void }) {
   const [status, setStatus] = useState<AiStatus | null>(null)
   const [unreachable, setUnreachable] = useState(false)
   const [now, setNow] = useState(() => Date.now())
-  const [autoEnded, setAutoEnded] = useState(false)
+  const [autoEnded, setAutoEnded] = useState<'limit' | 'idle' | null>(null)
   const voice = useVoiceEncounter(attemptId, onToolRejected)
   const errorRef = useRef<HTMLDivElement>(null)
 
@@ -40,28 +45,45 @@ export function VoicePanel({ attemptId, onActivity, onToolRejected }: { attemptI
     if (transcriptLength > 0) onActivity?.()
   }, [transcriptLength, onActivity])
 
-  // Tick while connected so elapsed time and the estimate stay current.
+  // Tick while connected so the countdown, the estimate and the idle check stay current.
   const connectedAt = voice.connectedAt
   useEffect(() => {
     if (connectedAt === null) return
-    const t = setInterval(() => setNow(Date.now()), 5_000)
+    const t = setInterval(() => setNow(Date.now()), 1_000)
     return () => clearInterval(t)
   }, [connectedAt])
 
-  // Close the session at the advertised limit: it is billed while open, and the server does not enforce it.
+  // End at the server's deadline (the encounter's remaining voice budget). The server closes it there anyway.
   const max = status?.maxSessionMinutes ?? null
+  const deadline = voice.deadlineAt ?? (connectedAt !== null && max !== null ? connectedAt + max * 60_000 : null)
   const { disconnect } = voice
   useEffect(() => {
-    if (connectedAt === null || max === null) return
+    if (deadline === null) return
     const t = setTimeout(
       () => {
-        setAutoEnded(true)
+        setAutoEnded('limit')
         disconnect()
       },
-      Math.max(0, connectedAt + max * 60_000 - Date.now()),
+      Math.max(0, deadline - Date.now()),
     )
     return () => clearTimeout(t)
-  }, [connectedAt, max, disconnect])
+  }, [deadline, disconnect])
+
+  // Abandoned tabs: warn after half the server's idle timeout with no speech, end at three quarters.
+  const idleSeconds = status?.idleTimeoutSeconds ?? null
+  const quietMs = connectedAt !== null && voice.lastSpeechAt !== null ? now - voice.lastSpeechAt : 0
+  const idleWarning = idleSeconds !== null && quietMs >= (idleSeconds * 1000) / 2
+  useEffect(() => {
+    if (connectedAt === null || idleSeconds === null || voice.lastSpeechAt === null) return
+    const t = setTimeout(
+      () => {
+        setAutoEnded('idle')
+        disconnect()
+      },
+      Math.max(0, voice.lastSpeechAt + idleSeconds * 750 - Date.now()),
+    )
+    return () => clearTimeout(t)
+  }, [connectedAt, idleSeconds, voice.lastSpeechAt, disconnect])
 
   // Move focus to a new error (for example a blocked microphone) so it is read out and actionable.
   const errorCode = voice.error?.code
@@ -95,7 +117,7 @@ export function VoicePanel({ attemptId, onActivity, onToolRejected }: { attemptI
   const minutes = connectedAt === null ? 0 : minutesBetween(connectedAt, now)
   // The estimate counts the current minute as used, so it errs high rather than low.
   const estimate = connectedAt === null ? 0 : (minutes + 1) * rate
-  const left = connectedAt === null || max === null ? null : max - minutes
+  const remainingMs = connectedAt === null || deadline === null ? null : deadline - now
   const dropped = voice.error?.code === 'webrtc_failed'
 
   return (
@@ -111,10 +133,22 @@ export function VoicePanel({ attemptId, onActivity, onToolRejected }: { attemptI
         {status.storeTranscripts ? 'This server may store the conversation transcript.' : 'The conversation transcript is not saved.'}
       </p>
 
+      {remainingMs !== null && (
+        <p className="voice-timer">
+          Time left <span role="timer" aria-label={`${clock(remainingMs)} left`}>{clock(remainingMs)}</span>
+        </p>
+      )}
+
       {connectedAt !== null && (
         <p className="voice-meter" role="status">
           Connected {minutes} {minutes === 1 ? 'minute' : 'minutes'}, about {usd(estimate)} so far (an estimate, not a bill).
-          {left !== null && left <= 2 && ` The session ends automatically in ${left <= 0 ? 'under a minute' : `${left} ${left === 1 ? 'minute' : 'minutes'}`}.`}
+          {remainingMs !== null && remainingMs <= 2 * 60_000 && ` Wrapping up: summarize and close. The session ends in ${remainingMs < 60_000 ? 'under a minute' : `${Math.ceil(remainingMs / 60_000)} minutes`}.`}
+        </p>
+      )}
+
+      {idleWarning && state === 'live' && (
+        <p className="voice-hint voice-hint--warning" role="alert">
+          <strong>Still there?</strong> The session ends soon if no one speaks.
         </p>
       )}
 
@@ -143,7 +177,16 @@ export function VoicePanel({ attemptId, onActivity, onToolRejected }: { attemptI
         </p>
       )}
 
-      {state === 'closed' && !voice.error && <p className="voice-hint">{autoEnded ? `Session ended automatically after ${max} minutes to cap the cost.` : 'Session ended. You are no longer billed.'}</p>}
+      {state === 'closed' && !voice.error && (
+        <p className="voice-hint">
+          {voice.endedByServer ??
+            (autoEnded === 'limit'
+              ? `Session ended at this encounter's ${max}-minute voice limit to cap the cost.`
+              : autoEnded === 'idle'
+                ? 'Session ended after a quiet stretch so it would stop billing.'
+                : 'Session ended. You are no longer billed.')}
+        </p>
+      )}
 
       {voice.error && (
         <div className="voice-error" role="alert" tabIndex={-1} ref={errorRef}>

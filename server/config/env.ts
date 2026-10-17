@@ -6,6 +6,8 @@ const schema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().positive().default(8787),
   CLIENT_ORIGIN: z.string().url().default('http://localhost:5173'),
+  /** Reverse-proxy hops in front of the server (1 on Render). Without it every client shares the proxy's address. */
+  TRUST_PROXY_HOPS: z.coerce.number().int().min(0).max(5).default(0),
   DATABASE_URL: z.preprocess(blankAsUnset, z.string().url().optional()),
   DATABASE_SSL: z.stringbool().default(false),
 
@@ -26,6 +28,12 @@ const schema = z.object({
   ENABLE_AI_CASE_GENERATION: z.stringbool().default(false),
   AI_CASE_MODE: z.enum(['bounded', 'handcrafted']).default('bounded'),
   MAX_LIVE_SESSION_MINUTES: z.coerce.number().int().positive().max(60).default(20),
+  /** No student activity for this long and the server ends the session (abandoned tabs). */
+  LIVE_IDLE_TIMEOUT_SECONDS: z.coerce.number().int().min(30).default(120),
+  /** Open voice sessions allowed across the whole server, and per client address. */
+  LIVE_MAX_CONCURRENT_SESSIONS: z.coerce.number().int().positive().default(3),
+  LIVE_MAX_SESSIONS_PER_CLIENT: z.coerce.number().int().positive().default(2),
+  LIVE_SWEEP_INTERVAL_MS: z.coerce.number().int().min(1_000).default(30_000),
   STORE_TRANSCRIPTS: z.stringbool().default(false),
   LIVE_VOICE_RATE_PER_MINUTE_USD: z.coerce.number().nonnegative().default(0.05),
 })
@@ -82,6 +90,7 @@ export function publicCapabilities() {
     delegationMode: env.OPENAI_DELEGATION_MODE,
     caseGenerationEnabled: aiEnabled && env.ENABLE_AI_CASE_GENERATION,
     maxSessionMinutes: env.MAX_LIVE_SESSION_MINUTES,
+    idleTimeoutSeconds: env.LIVE_IDLE_TIMEOUT_SECONDS,
     storeTranscripts: env.STORE_TRANSCRIPTS,
     estimatedVoiceRatePerMinuteUsd: env.LIVE_VOICE_RATE_PER_MINUTE_USD,
     setupHint: aiEnabled

@@ -130,7 +130,7 @@ describe('authorization', () => {
     const live = await request(app)
       .post('/api/live/tool')
       .set('X-Dev-User', 'bob')
-      .send({ attemptId: id, callId: 'call_x', name: 'record_follow_up', arguments: '{"actionIds":["x"]}' })
+      .send({ attemptId: id, sessionId: 'live_sess_x', callId: 'call_x', name: 'record_follow_up', arguments: '{"actionIds":["x"]}' })
     expect(live.status).toBe(404)
 
     // Alice's attempt is untouched by Bob's attempts.

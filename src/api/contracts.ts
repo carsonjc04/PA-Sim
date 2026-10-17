@@ -96,6 +96,14 @@ export type ApiErrorCode =
   | 'sprint_locked'
   | 'notes_conflict'
   | 'live_session_expired'
+  | 'live_session_required'
+  | 'live_session_ended'
+  | 'live_session_idle'
+  | 'live_session_not_found'
+  | 'live_session_unresolved'
+  | 'live_budget_spent'
+  | 'live_client_limit'
+  | 'live_capacity'
   | 'annotation_target_not_found'
   | 'review_out_of_order'
 
@@ -515,8 +523,10 @@ export type SetAnnotationBody = z.infer<typeof setAnnotationBody>
 export interface AiStatus {
   aiEnabled: boolean
   setupHint: string | null
-  /** Advertised session cap. The client ends the session at this point. */
+  /** Voice budget per encounter. The server enforces it; the client also ends the session there. */
   maxSessionMinutes: number
+  /** The server ends a session with no student speech for this long. */
+  idleTimeoutSeconds: number
   /** Estimate shown to learners in plain language; not a bill. */
   estimatedVoiceRatePerMinuteUsd: number
   storeTranscripts: boolean

@@ -39,6 +39,12 @@ function allowedIds(scenario: ScenarioDefinition, tool: ToolName, phase: PhaseId
   return phases.flatMap((p) => p.actions.map((a) => a.id))
 }
 
+/** Topic labels for the backend model only; the voice model never sees them. */
+function historyTopics(scenario: ScenarioDefinition): string {
+  const history = scenario.phases.find((p) => p.id === 'history')
+  return (history?.actions ?? []).map((a) => `${a.id} = ${a.label}`).join('; ')
+}
+
 /**
  * Argument schemas enumerate the scenario's real IDs, so the delegated model
  * cannot invent an action. The server re-validates every ID regardless; this
@@ -53,7 +59,7 @@ export function buildCaseTools(scenario: ScenarioDefinition): FunctionTool[] {
       actionIds: {
         type: 'array',
         items: { type: 'string', enum: ids },
-        description: 'One or more IDs from the enumerated list.',
+        description: name === 'record_history_topics' ? `One or more topic IDs. Topics: ${historyTopics(scenario)}` : 'One or more IDs from the enumerated list.',
       },
     }
     const required = ['actionIds']

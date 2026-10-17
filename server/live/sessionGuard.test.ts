@@ -41,7 +41,7 @@ describe('sideband closer', () => {
     expect(ws.params).toEqual({ session_id: 'live_sess_abc' })
     expect(ws.sent).toEqual([{ type: 'session.close' }])
     ws.emit('session.closed', { reason: 'close_requested' })
-    await expect(done).resolves.toBeUndefined()
+    await expect(done).resolves.toBe(true)
     expect(ws.closed).toBe(true)
   })
 
@@ -52,11 +52,17 @@ describe('sideband closer', () => {
     expect(sockets[0].closed).toBe(true)
   })
 
-  it('gives up waiting after a bounded time instead of hanging', async () => {
+  it('treats a session the provider no longer has as closed', async () => {
+    const done = sidebandCloser.close('live_sess_gone')
+    sockets[0].emit('error', Object.assign(new Error('not found'), { status: 404 }))
+    await expect(done).resolves.toBe(true)
+  })
+
+  it('gives up waiting after a bounded time and reports the close as unconfirmed, so the sweeper retries', async () => {
     vi.useFakeTimers()
     const done = sidebandCloser.close('live_sess_slow')
     await vi.advanceTimersByTimeAsync(5_001)
-    await expect(done).resolves.toBeUndefined()
+    await expect(done).resolves.toBe(false)
     expect(sockets[0].closed).toBe(true)
   })
 })

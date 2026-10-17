@@ -13,6 +13,8 @@ import { ApiError } from './http/errors'
 
 export function createApp() {
   const app = express()
+  // req.ip keys the voice rate limit and the session ledger's per-address checks; behind a proxy it must be the client.
+  if (env.TRUST_PROXY_HOPS > 0) app.set('trust proxy', env.TRUST_PROXY_HOPS)
 
   app.use((req, _res, next) => {
     ;(req as Request & { requestId: string }).requestId = randomUUID()

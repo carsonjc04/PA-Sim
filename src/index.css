@@ -428,6 +428,8 @@ body{background:var(--bg);color:var(--navy)}*{box-sizing:border-box}body{margin:
 .voice-panel h2{margin:0;font-size:1rem;color:var(--navy)}
 .voice-cost{margin:0 0 10px;font-size:0.8125rem;line-height:1.55;color:var(--text-2)}
 .voice-meter{margin:0 0 10px;font-size:0.875rem;font-weight:600;color:var(--navy);background:var(--surface-2);border-radius:6px;padding:7px 10px}
+.voice-timer{margin:0 0 6px;font-size:0.875rem;color:var(--text-2)}
+.voice-timer [role=timer]{font-variant-numeric:tabular-nums;color:var(--navy);font-weight:600}
 .voice-status--idle,.voice-status--closed{background:var(--surface-2);color:var(--muted)}
 .voice-controls .voice-end{background:var(--red);color:var(--on-accent)}
 .voice-controls .voice-end:hover{background:var(--red-hover)}

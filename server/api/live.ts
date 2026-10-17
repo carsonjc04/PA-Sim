@@ -4,7 +4,8 @@ import { authOf, requireAuth } from '../auth/context'
 import { getOwnedAttemptWithScenario, recordEvent, recordLiveStarted } from '../attempts/service'
 import { aiEnabled, env } from '../config/env'
 import { ApiError } from '../http/errors'
-import { assertSessionWithinLimit, onSessionStarted } from '../live/sessionGuard'
+import * as ledger from '../live/ledger'
+import { closeSession, onSessionStarted, verifyServable } from '../live/sessionGuard'
 import { openaiClient } from '../openai/client'
 import { PATIENT_PROMPT_VERSION, buildDelegateInstructions, buildPatientInstructions } from '../prompts/patient'
 import { isToolName } from '../tools/contracts'
@@ -17,12 +18,17 @@ const sessionBody = z.object({
   attemptId: z.string().uuid(),
 })
 
+const sessionRef = z.string().min(1).max(200).regex(/^[A-Za-z0-9_-]+$/)
+
 const toolBody = z.object({
   attemptId: z.string().uuid(),
+  sessionId: sessionRef,
   callId: z.string().min(1).max(200).regex(/^[A-Za-z0-9_-]+$/),
   name: z.string().min(1).max(100),
   arguments: z.string().max(10_000),
 })
+
+const sessionCall = z.object({ attemptId: z.string().uuid(), sessionId: sessionRef })
 
 const hits = new Map<string, number[]>()
 
@@ -66,6 +72,8 @@ liveRouter.post('/session', async (req, res) => {
     throw new ApiError('This attempt is already submitted.', 409, 'attempt_submitted')
   }
   enforceRateLimit(req)
+  const clientKey = ledger.clientKeyOf(req.ip)
+  const reservation = await ledger.reserveMint({ userId: auth.userId, clientKey, attemptId: attempt.id })
 
   let result
   try {
@@ -96,6 +104,7 @@ liveRouter.post('/session', async (req, res) => {
       attemptId: attempt.id,
       status: status || 'unknown',
     })
+    reservation.release()
     if (status === 401 || status === 403) {
       throw new ApiError(
         'The server rejected the OpenAI credentials. Check the API key and that the project has billing enabled.',
@@ -113,6 +122,20 @@ liveRouter.post('/session', async (req, res) => {
     throw new ApiError('Could not start the voice session.', 502, 'provider_unavailable')
   }
 
+  // Ledger first: from here on the server can end this session whatever the browser does. The reservation
+  // is held until the row exists, so the session is counted at every moment.
+  let deadline: Date
+  try {
+    deadline = await ledger.recordMint({ sessionId: result.session.id, attemptId: attempt.id, userId: auth.userId, clientKey, remainingMs: reservation.remainingMs })
+  } catch (cause) {
+    // Never leave a billed session running that the ledger does not know about.
+    void closeSession(result.session.id, 'limit')
+    throw cause
+  } finally {
+    reservation.release()
+  }
+  await onSessionStarted({ sessionId: result.session.id, userId: auth.userId, deadline })
+
   await recordLiveStarted(auth, attempt.id, {
     sessionId: result.session.id,
     promptVersion: PATIENT_PROMPT_VERSION,
@@ -120,11 +143,8 @@ liveRouter.post('/session', async (req, res) => {
     reasoningModel: env.OPENAI_DELEGATE_MODEL,
   })
 
-  // The server owns the kill switch: close at the limit, and close this attempt's previous session.
-  await onSessionStarted(attempt.id, result.session.id)
-
-  // Only the SDP answer and session ID cross to the browser.
-  res.json({ sessionId: result.session.id, sdp: result.transport.sdp })
+  // Only the SDP answer, session ID and the server's deadline cross to the browser.
+  res.json({ sessionId: result.session.id, sdp: result.transport.sdp, deadlineAt: deadline.toISOString() })
 })
 
 /**
@@ -144,12 +164,13 @@ liveRouter.post('/tool', async (req, res) => {
     throw new ApiError('Tool arguments were not valid JSON', 400, 'invalid_tool_arguments')
   }
 
-  // Validation-path backstop: past the limit, refuse the call and end the session server-side.
+  // The leash: only a session the server's ledger says is open, unexpired and not idle is served. A client
+  // that keeps the connection alive past the budget can keep talking but gets nothing from the case.
   // Ownership first, so another user's attempt ID reveals nothing.
   await getOwnedAttemptWithScenario(authOf(req), parsed.data.attemptId)
-  if (!(await assertSessionWithinLimit(parsed.data.attemptId))) {
-    throw new ApiError(`The voice session reached its ${env.MAX_LIVE_SESSION_MINUTES}-minute limit and was ended. Guided mode still works.`, 409, 'live_session_expired')
-  }
+  const verdict = await verifyServable(parsed.data.sessionId, parsed.data.attemptId)
+  if (!verdict.ok) throw sessionOver(verdict.code)
+  await ledger.touch(parsed.data.sessionId, parsed.data.attemptId)
 
   try {
     const { result } = await recordEvent(
@@ -183,4 +204,36 @@ liveRouter.post('/tool', async (req, res) => {
     }
     throw cause
   }
+})
+
+function sessionOver(code: Exclude<ledger.SessionVerdict, { ok: true }>['code']): ApiError {
+  const message = {
+    live_session_required: 'No voice session is open for this encounter.',
+    live_session_ended: 'This voice session has ended. Continue with the case below.',
+    live_session_expired: `The voice session reached its ${env.MAX_LIVE_SESSION_MINUTES}-minute limit and was ended. Continue with the case below.`,
+    live_session_idle: 'The voice session was ended after a period with no speech. Continue with the case below.',
+  }[code]
+  return new ApiError(message, 409, code)
+}
+
+/** Student speech keeps the session from being ended as idle. Refused once the session is over. */
+liveRouter.post('/activity', async (req, res) => {
+  const parsed = sessionCall.safeParse(req.body ?? {})
+  if (!parsed.success) throw new ApiError('Invalid activity request', 400, 'invalid_body')
+  await getOwnedAttemptWithScenario(authOf(req), parsed.data.attemptId)
+  const verdict = await verifyServable(parsed.data.sessionId, parsed.data.attemptId)
+  if (!verdict.ok) throw sessionOver(verdict.code)
+  await ledger.touch(parsed.data.sessionId, parsed.data.attemptId)
+  res.json({ ok: true, deadlineAt: verdict.session.deadlineAt.toISOString() })
+})
+
+/** End session: the server closes it over its trusted channel too, so the ledger frees it at once. */
+liveRouter.post('/end', async (req, res) => {
+  const parsed = sessionCall.safeParse(req.body ?? {})
+  if (!parsed.success) throw new ApiError('Invalid end request', 400, 'invalid_body')
+  await getOwnedAttemptWithScenario(authOf(req), parsed.data.attemptId)
+  const session = await ledger.getSession(parsed.data.sessionId)
+  if (!session || session.attemptId !== parsed.data.attemptId) throw new ApiError('Unknown voice session', 404, 'live_session_not_found')
+  const confirmed = session.endedAt ? true : await closeSession(session.sessionId, 'client_end')
+  res.json({ ok: true, confirmed })
 })

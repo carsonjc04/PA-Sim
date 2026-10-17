@@ -10,13 +10,15 @@ const mocks = vi.hoisted(() => ({ api: { aiStatus: vi.fn() }, voice: {} as Voice
 vi.mock('../../api/client', () => ({ api: mocks.api }))
 vi.mock('../../voice/useVoiceEncounter', () => ({ useVoiceEncounter: () => mocks.voice }))
 
-const status = { aiEnabled: true, setupHint: null, maxSessionMinutes: 20, estimatedVoiceRatePerMinuteUsd: 0.05, storeTranscripts: false }
+const status = { aiEnabled: true, setupHint: null, maxSessionMinutes: 20, idleTimeoutSeconds: 120, estimatedVoiceRatePerMinuteUsd: 0.05, storeTranscripts: false }
 function voice(over: Partial<VoiceEncounter> = {}): VoiceEncounter {
-  return { state: 'idle', transcript: [], error: null, patientSpeaking: false, muted: false, usage: null, connectedAt: null, connect: vi.fn(), disconnect: vi.fn(), toggleMute: vi.fn(), retry: vi.fn(), ...over }
+  return { state: 'idle', transcript: [], error: null, patientSpeaking: false, muted: false, usage: null, connectedAt: null, deadlineAt: null, lastSpeechAt: null, endedByServer: null, connect: vi.fn(), disconnect: vi.fn(), toggleMute: vi.fn(), retry: vi.fn(), ...over }
 }
 const renderPanel = async () => {
   const view = render(<VoicePanel attemptId="a" />)
   await screen.findByRole('heading', { level: 2 })
+  // Flush effects so timers armed by the panel exist before a test moves the clock.
+  await act(async () => {})
   return view
 }
 
@@ -58,14 +60,41 @@ describe('voice cost and session state', () => {
   it('warns two minutes before the cap and ends the session at the cap', async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true })
     const disconnect = vi.fn()
-    mocks.voice = voice({ state: 'live', connectedAt: Date.now() - 18 * 60_000, disconnect })
+    // A long idle timeout keeps this test about the time cap alone.
+    mocks.api.aiStatus.mockResolvedValue({ ...status, idleTimeoutSeconds: 600 })
+    mocks.voice = voice({ state: 'live', connectedAt: Date.now() - 18 * 60_000, lastSpeechAt: Date.now(), disconnect })
     await renderPanel()
-    expect(screen.getByRole('status')).toHaveTextContent('The session ends automatically in 2 minutes.')
+    expect(screen.getByRole('status')).toHaveTextContent('Wrapping up: summarize and close. The session ends in 2 minutes.')
+    expect(screen.getByRole('timer')).toHaveTextContent(/^[12]:\d\d$/)
     expect(disconnect).not.toHaveBeenCalled()
     await act(async () => {
       vi.advanceTimersByTime(2 * 60_000 + 1_000)
     })
     expect(disconnect).toHaveBeenCalledTimes(1)
+  })
+
+  it('counts down to the server’s deadline, not the client’s own idea of the cap', async () => {
+    mocks.voice = voice({ state: 'live', connectedAt: Date.now(), lastSpeechAt: Date.now(), deadlineAt: Date.now() + 5 * 60_000 })
+    await renderPanel()
+    expect(screen.getByRole('timer')).toHaveTextContent(/^(5:00|4:59)$/)
+  })
+
+  it('warns when no one has spoken for half the idle timeout, then ends the session', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    const disconnect = vi.fn()
+    mocks.voice = voice({ state: 'live', connectedAt: Date.now() - 70_000, lastSpeechAt: Date.now() - 61_000, disconnect })
+    await renderPanel()
+    expect(screen.getByRole('alert')).toHaveTextContent('Still there? The session ends soon if no one speaks.')
+    await act(async () => {
+      vi.advanceTimersByTime(30_000)
+    })
+    expect(disconnect).toHaveBeenCalledTimes(1)
+  })
+
+  it('says why the server ended the session', async () => {
+    mocks.voice = voice({ state: 'closed', endedByServer: 'The voice session reached its 20-minute limit and was ended. Continue with the case below.' })
+    await renderPanel()
+    expect(screen.getByText(/reached its 20-minute limit/)).toBeInTheDocument()
   })
 
   it('shows a dropped connection as its own state, not billed, with Reconnect', async () => {

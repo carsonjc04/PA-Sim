@@ -4,7 +4,7 @@ import { createApp } from './app'
 import { aiEnabled, env, insecureAuth } from './config/env'
 import { migrate } from './db/migrate'
 import { getPool } from './db/pool'
-import { resumeSessionGuards } from './live/sessionGuard'
+import { startSessionGuards } from './live/sessionGuard'
 
 const port = Number(process.env.PORT ?? env.PORT)
 
@@ -15,9 +15,9 @@ if (env.DATABASE_URL) {
   console.warn('[server] DATABASE_URL is not set; practice history endpoints will return 503')
 }
 if (env.DATABASE_URL && aiEnabled) {
-  // Re-arm the server-side voice session limit after a restart; timers do not survive the process.
-  const resumed = await resumeSessionGuards()
-  if (resumed.armed || resumed.closed) console.log(`[server] voice session guard: ${resumed.armed} re-armed, ${resumed.closed} expired and closed`)
+  // Re-arm deadlines after a restart (timers do not survive the process) and start the ledger sweeper.
+  const guard = await startSessionGuards()
+  console.log(`[server] voice session guard: ${guard.armed} re-armed; swept ${JSON.stringify(guard.swept)}`)
 }
 if (insecureAuth) {
   console.warn('[server] WARNING: AUTH_PROVIDER=dev in production. Any visitor can act as any user. Demo use only.')

@@ -104,6 +104,8 @@ function harness() {
     onUsage: vi.fn(),
     onPatientSpeakingChange: vi.fn(),
     onToolRejected: vi.fn(),
+    onSessionOver: vi.fn(),
+    onStudentSpeech: vi.fn(),
   }
   return { states, events, client: new LiveVoiceClient(events) }
 }
@@ -257,7 +259,42 @@ describe('voice connection lifecycle', () => {
     const [url, init] = (fetch as ReturnType<typeof vi.fn>).mock.calls[0]
     expect(url).toBe('http://localhost:8787/api/live/tool')
     expect(init.headers['X-Dev-User']).toBe('alice')
-    expect(JSON.parse(init.body)).toMatchObject({ attemptId: 'att-1', callId: 'call_1' })
+    expect(JSON.parse(init.body)).toMatchObject({ attemptId: 'att-1', sessionId: 'live_sess_1', callId: 'call_1' })
+  })
+
+  it('ends the session when the server refuses a tool call because the budget is spent, and tells the model to wrap up', async () => {
+    const { client, events } = harness()
+    const pending = start(client)
+    await vi.waitFor(() => expect(FakePeerConnection.last?.channel).toBeTruthy())
+    const channel = FakePeerConnection.last!.channel!
+    channel.deliver({ type: 'session.started', event_id: 'e1' })
+    await pending
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, json: async () => ({ error: { code: 'live_session_expired', message: 'The voice session reached its 20-minute limit.' } }) }))
+    channel.deliver({
+      type: 'response.event',
+      event_id: 'e6',
+      event: { type: 'response.output_item.done', item: { type: 'function_call', call_id: 'call_3', name: 'record_history_topics', arguments: '{"actionIds":["onset"]}' } },
+    })
+    await vi.waitFor(() => expect(events.onSessionOver).toHaveBeenCalledWith('The voice session reached its 20-minute limit.'))
+    expect(events.onToolRejected).not.toHaveBeenCalled()
+    await vi.waitFor(() => expect(channel.sent.length).toBeGreaterThan(0))
+    expect(JSON.parse((channel.sent[0] as { item: { output: string } }).item.output).reason).toMatch(/visit time is over/)
+  })
+
+  it('reports student speech to the server, throttled, so an active session is not ended as idle', async () => {
+    const { client, events } = harness()
+    const pending = start(client)
+    await vi.waitFor(() => expect(FakePeerConnection.last?.channel).toBeTruthy())
+    const channel = FakePeerConnection.last!.channel!
+    channel.deliver({ type: 'session.started', event_id: 'e1' })
+    await pending
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ ok: true }) })
+    vi.stubGlobal('fetch', fetchMock)
+    for (const delta of ['Hi, ', 'what ', 'brings you in?']) channel.deliver({ type: 'session.input_transcript.delta', delta, start_ms: 0, end_ms: 1 })
+    expect(events.onStudentSpeech).toHaveBeenCalledTimes(3)
+    const activity = fetchMock.mock.calls.filter(([url]) => String(url).endsWith('/api/live/activity'))
+    expect(activity).toHaveLength(1)
+    expect(JSON.parse(activity[0][1].body)).toEqual({ attemptId: 'att-1', sessionId: 'live_sess_1' })
   })
 
   it('reports a refused tool call so the page can show it, and still answers the model', async () => {

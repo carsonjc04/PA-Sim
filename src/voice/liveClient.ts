@@ -11,6 +11,8 @@ const DATA_CHANNEL_NAME = 'oai-events'
 const ICE_GATHERING_TIMEOUT_MS = 3000
 const CLOSE_ACK_TIMEOUT_MS = 1500
 const PATIENT_SPEAKING_IDLE_MS = 900
+/** Student speech is reported to the server at most this often, so it does not end the session as idle. */
+const ACTIVITY_THROTTLE_MS = 15_000
 
 interface FunctionCallItem {
   type: 'function_call'
@@ -49,6 +51,8 @@ export class LiveVoiceClient {
   private pendingToolCalls = 0
   private speakingTimer: ReturnType<typeof setTimeout> | null = null
   private startedResolve: (() => void) | null = null
+  private deadlineAt: number | null = null
+  private lastActivityPost = 0
 
   private readonly events: VoiceClientEvents
 
@@ -62,6 +66,11 @@ export class LiveVoiceClient {
 
   getSessionId(): string | null {
     return this.sessionId
+  }
+
+  /** The server's deadline for this session (epoch ms): the encounter's remaining voice budget. */
+  getDeadline(): number | null {
+    return this.deadlineAt
   }
 
   private setState(next: VoiceConnectionState) {
@@ -83,6 +92,8 @@ export class LiveVoiceClient {
     this.apiBaseUrl = apiBaseUrl
     this.aggregator.reset()
     this.sessionId = null
+    this.deadlineAt = null
+    this.lastActivityPost = 0
 
     if (typeof RTCPeerConnection === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
       this.fail({
@@ -148,7 +159,7 @@ export class LiveVoiceClient {
     await peer.setLocalDescription(await peer.createOffer())
     await this.waitForIceGathering(peer)
 
-    let answer: { sessionId: string; sdp: string }
+    let answer: { sessionId: string; sdp: string; deadlineAt?: string }
     try {
       const response = await fetch(`${this.apiBaseUrl}/api/live/session`, {
         method: 'POST',
@@ -165,7 +176,7 @@ export class LiveVoiceClient {
           recoverable: body?.error?.code !== 'missing_api_key',
         })
       }
-      answer = (await response.json()) as { sessionId: string; sdp: string }
+      answer = (await response.json()) as { sessionId: string; sdp: string; deadlineAt?: string }
     } catch (cause) {
       if (this.state === 'error') throw cause
       this.fail({
@@ -176,6 +187,7 @@ export class LiveVoiceClient {
     }
 
     this.sessionId = answer.sessionId
+    this.deadlineAt = answer.deadlineAt ? Date.parse(answer.deadlineAt) : null
     await peer.setRemoteDescription({ type: 'answer', sdp: answer.sdp })
 
     // The session is only live once the server says so.
@@ -216,6 +228,7 @@ export class LiveVoiceClient {
         return
 
       case 'session.input_transcript.delta':
+        this.reportActivity()
         this.events.onTranscript(
           this.aggregator.apply({
             speaker: 'student',
@@ -278,15 +291,18 @@ export class LiveVoiceClient {
         headers: { 'Content-Type': 'application/json', ...this.headers() },
         body: JSON.stringify({
           attemptId: this.attemptId,
+          sessionId: this.sessionId,
           callId: item.call_id,
           name: item.name,
           arguments: item.arguments,
         }),
       })
-      const body = (await response.json()) as { output?: unknown; error?: { message?: string } }
-      const output = response.ok ? body.output : { ok: false, reason: 'Tool call rejected.' }
+      const body = (await response.json()) as { output?: unknown; error?: { code?: string; message?: string } }
+      const over = body.error?.code?.startsWith('live_session_') ?? false
+      if (over) this.events.onSessionOver?.(body.error?.message ?? 'The voice session has ended.')
+      const output = response.ok ? body.output : { ok: false, reason: over ? 'The visit time is over. Wrap up kindly and give no new information.' : 'Tool call rejected.' }
       const rejected = output as { ok?: boolean; reason?: string } | undefined
-      if (!response.ok || rejected?.ok === false) this.events.onToolRejected?.(body.error?.message ?? rejected?.reason ?? 'The clinic system could not record that.')
+      if (!over && (!response.ok || rejected?.ok === false)) this.events.onToolRejected?.(body.error?.message ?? rejected?.reason ?? 'The clinic system could not record that.')
       this.send({
         type: 'response.item.create',
         event_id: newId(),
@@ -314,6 +330,25 @@ export class LiveVoiceClient {
         this.send({ type: 'response.create', event_id: newId() })
       }
     }
+  }
+
+  /** Tells the server the student is still here. Throttled; a refusal means the server has ended the session. */
+  private reportActivity() {
+    this.events.onStudentSpeech?.()
+    const at = Date.now()
+    if (!this.sessionId || at - this.lastActivityPost < ACTIVITY_THROTTLE_MS) return
+    this.lastActivityPost = at
+    void fetch(`${this.apiBaseUrl}/api/live/activity`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...this.headers() },
+      body: JSON.stringify({ attemptId: this.attemptId, sessionId: this.sessionId }),
+    })
+      .then(async (response) => {
+        if (response.ok) return
+        const body = (await response.json().catch(() => null)) as { error?: { code?: string; message?: string } } | null
+        if (body?.error?.code?.startsWith('live_session_')) this.events.onSessionOver?.(body.error.message ?? 'The voice session has ended.')
+      })
+      .catch(() => undefined)
   }
 
   private markPatientSpeaking() {
@@ -364,6 +399,15 @@ export class LiveVoiceClient {
     })
 
     this.send({ type: 'session.close' })
+    // The server also closes it over its own channel, so the ledger frees the session at once.
+    if (this.sessionId) {
+      void fetch(`${this.apiBaseUrl}/api/live/end`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...this.headers() },
+        body: JSON.stringify({ attemptId: this.attemptId, sessionId: this.sessionId }),
+        keepalive: true,
+      }).catch(() => undefined)
+    }
     await closed
     this.teardown()
     this.setState('closed')

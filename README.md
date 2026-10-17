@@ -93,9 +93,11 @@ the server sees a key; it never returns the key itself.
 | `npm run test:live`                           | Yes, a small authentication check                    |
 
 `gpt-live-1` is billed per second of session duration. Close the session when
-you are done; leaving the tab open keeps it open. The server rate-limits
-session creation. `MAX_LIVE_SESSION_MINUTES` is reported to the browser but is
-not yet enforced, so nothing closes a forgotten session automatically.
+you are done. The server enforces a voice budget of `MAX_LIVE_SESSION_MINUTES`
+per encounter (summed across reconnects), ends sessions idle for
+`LIVE_IDLE_TIMEOUT_SECONDS`, and caps open sessions per address and server-wide;
+see "Voice session limit" in `docs/architecture.md`. On Render set
+`TRUST_PROXY_HOPS=1` so these limits see each client's own address.
 
 ### Testing your microphone
 

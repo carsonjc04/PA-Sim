@@ -278,22 +278,23 @@ Clinical images are attached to the public event of the action that reveals them
 
 ## Voice session limit (server-enforced)
 
-A Live session is billed while it is open. The browser connects to OpenAI directly over WebRTC, so the browser's timer is a convenience, not a control. `server/live/sessionGuard.ts` is the kill switch:
+A Live session is billed while it is open, and OpenAI has no per-session duration setting. The browser connects to OpenAI directly over WebRTC, so the browser's timer is a convenience, not a control. The server enforces the cap in three layers that do not depend on an honest client:
 
-- **On creation:** `POST /api/live/session` schedules a close at `MAX_LIVE_SESSION_MINUTES`. It also closes the attempt's previous session, so one attempt never has two meters running.
-- **On every tool relay:** `POST /api/live/tool` checks the attempt's current session against the limit, after the ownership check. Past the limit it returns 409 `live_session_expired` and closes the session. This is the backstop if a timer was lost.
-- **On startup:** sessions still inside their window are re-armed, and sessions that expired while the server was down are closed.
+- **Ledger** (`live_sessions`, `server/live/ledger.ts`): every minted session is recorded with user, attempt, a hashed client address, start, deadline and last activity. The budget is `MAX_LIVE_SESSION_MINUTES` of session time **per encounter**, summed across reconnects, so reconnecting does not reset the clock. Minting is refused when the budget is spent (`live_budget_spent`), when the user or address has a flagged, unconfirmed session (`live_session_unresolved`), or at the per-address (`LIVE_MAX_SESSIONS_PER_CLIENT`) or server-wide (`LIVE_MAX_CONCURRENT_SESSIONS`) open-session limit. Check-and-reserve is serialized, so a parallel burst cannot slip past. A new session closes the same user's other open sessions.
+- **Tools leash** (`POST /api/live/tool`): a call must name a session the ledger says is open, unexpired and not idle, by the server clock; otherwise 409 and nothing is recorded or revealed. History facts are not in the patient prompt (`server/prompts/patient.ts`); each one is released by `record_history_topics`, so a client that keeps talking past the budget gets nothing further from the case.
+- **Sweeper and idle detection** (`server/live/sessionGuard.ts`): a timer closes each session at its deadline, and a sweep every `LIVE_SWEEP_INTERVAL_MS` flags and closes sessions open past the deadline and closes sessions with no student activity for `LIVE_IDLE_TIMEOUT_SECONDS`. The browser reports student speech to `POST /api/live/activity` (throttled to one call per 15 s). A heartbeat cannot extend a session past its deadline. `POST /api/live/end` closes the session on the server when the learner chooses End session. On startup, open sessions are re-armed and swept.
 
-Closing attaches a trusted sideband WebSocket to the session (`openai/resources/live/sideband/ws`, which needs the `ws` package) and sends `session.close`. It waits up to five seconds for `session.closed`. A failed close is logged with the session ID only and retried at the next check.
+Closing attaches a trusted sideband WebSocket to the session and sends `session.close`. A close is recorded only when `session.closed` arrives or the provider reports the session gone. An unconfirmed close stays open and flagged, blocking that user and address, and the sweeper retries. One hour past the deadline, the session is marked `assumed_expired` so the block cannot last forever.
 
-Remaining gap: a session that is never relayed to again and expires while the server is down for more than an hour after its limit is not swept.
+The UI layer (`VoicePanel`) counts down to the server's deadline, says "Wrapping up: summarize and close" in the last two minutes, warns after half the idle timeout without speech, and ends the session itself at three quarters of the idle timeout.
 
-Voice does not reconnect automatically after a dropped connection. The learner chooses Reconnect, so a metered session never restarts without an explicit action.
+Remaining gaps: the ledger's in-flight reservations assume one server process. Whether `session.closed` and the "session gone" error take the shapes assumed here must be confirmed against the live API.
 
 ## Known limitations
 
-- **Rate limiting keys on `req.ip`** with no `trust proxy` setting, so behind a
-  hosting proxy every client may share one bucket. The bucket map is in memory.
+- **Rate limiting and per-address voice limits key on `req.ip`.** Behind a
+  hosting proxy set `TRUST_PROXY_HOPS` (1 on Render), or every client shares one
+  address. The rate-limit bucket map is in memory.
 - **The browser still relays voice tool calls.** The server validates every ID
   and records idempotently by call ID. But a modified client can call
   `/api/live/tool` for its own attempt with any valid ID, so whether the student
@@ -375,7 +376,7 @@ consistency and is explicitly forbidden from sounding like a preceptor.
 | Injection or malformed input                     | Zod-validated bodies, queries, headers and cursors. Parameterized SQL only. 256 KB body limit.                                                            | None identified.                                                                                                                                 |
 | Model tool calls reach into hidden state         | IDs only. Each call resolves against the current phase of the pinned content. Diagnosis and plan choices need confirmation.                               | Covered in Known limitations (browser relay).                                                                                                    |
 | Enumerating attempt IDs                          | Random UUIDv4. Ownership-scoped lookups. 404 regardless of cause.                                                                                         | None identified.                                                                                                                                 |
-| Cost abuse                                       | Rate limit on session creation, which now also requires an owned, unsubmitted attempt.                                                                    | Rate limiting depends on proxy configuration; no per-user voice budget.                                                                          |
+| Cost abuse                                       | Rate limit on session creation; per-encounter voice budget, per-address and server-wide open-session caps, idle close, and a tools leash (see Voice session limit). | Address-based limits depend on `TRUST_PROXY_HOPS`; dev auth lets one person use many identities, bounded by the address and server-wide caps.     |
 | PII exposure                                     | Patients are synthetic. Only a display name is stored. No transcripts. Development identities are labeled "not passwords".                                | Users could type real names as dev identities.                                                                                                   |
 | Schema drift or a tampered migration             | Checksummed migrations, an advisory lock, and refusal to start on mismatch.                                                                               | Migrations are forward-only; there are no down migrations.                                                                                       |
 

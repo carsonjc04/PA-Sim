@@ -47,6 +47,10 @@ export interface VoiceClientEvents {
   onPatientSpeakingChange: (speaking: boolean) => void
   /** A voice tool call the clinic server refused or could not answer (shown to the learner as a system message). */
   onToolRejected?: (reason: string) => void
+  /** The server refused this session as over (time budget spent, idle, or ended). */
+  onSessionOver?: (reason: string) => void
+  /** Any student speech, used for the idle warning. */
+  onStudentSpeech?: () => void
 }
 
 export interface StartVoiceOptions {
