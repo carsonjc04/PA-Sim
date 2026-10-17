@@ -86,7 +86,8 @@ describe('POST /api/live/session with a key', () => {
     app = await listenLocal(freshApp())
   })
 
-  afterEach(() => {
+  afterEach(async () => {
+    await (await import('../live/sessionGuard')).settleSessionGuards()
     delete process.env.OPENAI_API_KEY
     setOpenAIClient(null)
     vi.resetModules()

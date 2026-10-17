@@ -67,26 +67,33 @@ export function setSessionCloser(next: SessionCloser | null): void {
 }
 
 const timers = new Map<string, ReturnType<typeof setTimeout>>()
-const inflight = new Set<string>()
+const inflight = new Map<string, Promise<boolean>>()
 
-/** Ends a session now. Recorded in the ledger only when the close is confirmed; otherwise the sweeper retries. */
-export async function closeSession(sessionId: string, reason: ledger.EndReason): Promise<boolean> {
+/**
+ * Ends a session now. Recorded in the ledger only when the close is confirmed; otherwise the sweeper retries.
+ * A second call while a close is in flight shares it.
+ */
+export function closeSession(sessionId: string, reason: ledger.EndReason): Promise<boolean> {
   const t = timers.get(sessionId)
   if (t) clearTimeout(t)
   timers.delete(sessionId)
-  if (inflight.has(sessionId)) return false
-  inflight.add(sessionId)
-  try {
-    const confirmed = (await closer.close(sessionId)) !== false
-    if (confirmed) await ledger.markEnded(sessionId, reason)
-    console.log('[live] closed session', { sessionId, reason, confirmed })
-    return confirmed
-  } catch {
-    console.error('[live] could not close session; the sweeper will retry', { sessionId, reason })
-    return false
-  } finally {
-    inflight.delete(sessionId)
-  }
+  const running = inflight.get(sessionId)
+  if (running) return running
+  const attempt = (async () => {
+    try {
+      const confirmed = (await closer.close(sessionId)) !== false
+      if (confirmed) await ledger.markEnded(sessionId, reason)
+      console.log('[live] closed session', { sessionId, reason, confirmed })
+      return confirmed
+    } catch {
+      console.error('[live] could not close session; the sweeper will retry', { sessionId, reason })
+      return false
+    } finally {
+      inflight.delete(sessionId)
+    }
+  })()
+  inflight.set(sessionId, attempt)
+  return attempt
 }
 
 /** Schedules the close at `deadline` (epoch ms). */
@@ -168,6 +175,11 @@ export async function startSessionGuards(): Promise<{ armed: number; swept: Awai
     sweeper.unref?.()
   }
   return { armed, swept }
+}
+
+/** Test seam: waits for closes still in flight, so they cannot write into the next test. */
+export async function settleSessionGuards(): Promise<void> {
+  while (inflight.size) await Promise.allSettled([...inflight.values()])
 }
 
 /** Test seam: forget all timers, the sweeper and in-flight closes. */

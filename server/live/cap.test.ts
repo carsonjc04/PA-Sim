@@ -18,6 +18,9 @@ const scenario = scenarios.find((s) => s.id === 'chest-pressure') as ScenarioDef
 const historyIds = scenario.phases.find((p) => p.id === 'history')!.actions.map((a) => a.id)
 const MIN = 60_000
 
+// Each case makes up to ~40 sequential HTTP calls against a real database; 5 s is too tight under a loaded suite.
+vi.setConfig({ testTimeout: 20_000 })
+
 let db: TestDatabase
 beforeAll(async () => {
   db = await createTestDatabase()
@@ -71,6 +74,7 @@ async function boot(overrides: Record<string, string> = {}): Promise<Rig> {
 }
 
 afterEach(async () => {
+  await rig?.guard.settleSessionGuards()
   rig?.guard.resetSessionGuards()
   for (const k of ['OPENAI_API_KEY', 'LIVE_SESSION_RATE_LIMIT', 'LIVE_MAX_SESSIONS_PER_CLIENT', 'LIVE_MAX_CONCURRENT_SESSIONS']) delete process.env[k]
   vi.resetModules()
