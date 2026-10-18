@@ -231,6 +231,12 @@ Load them with:
 | Connected | `--carbon` fill | `Connected · listening` |
 | Error | `--alert` fill | `Error: <reason>` in `--alert`, plus a Secondary `Retry` button |
 
+### History mode and hints
+
+- **History mode control:** a segmented row of 2 cells (`VOICE, NO LIST` / `GUIDED LIST`), built like the confidence control (§5, Review cards). It shows only during the history phase. Under it, 1 Label-role line says what the selected mode does, and that a switch is noted in the debrief.
+- **Voice history:** no choice rows are rendered: not hidden by CSS, absent from the DOM. The screen holds the chief complaint, the exchange log, voice status and the hint block.
+- **Hint block:** a section with the standard section header (`HINTS`), 1 line of Label-role text stating that hints are scaffolding, don't record a question or change the score, and are reported in the debrief. It also holds 1 quiet button (`Show one suggested question`) and a mono `Hints used · n` count. Revealed suggestions form an ordered list, quoted in Value small. A press never moves focus.
+
 ### Dialog
 
 - **Container:** `<dialog>` with `--form` fill, 2px `--ink` border, max-width 480px, padding 24px, and `--backdrop` behind it.
@@ -268,6 +274,9 @@ Each item is a section with the standard section header.
 | Missed | 1.5px `--ink` border, empty | `MISSED` in `--ink` |
 | Critical miss | 1.5px `--alert` border, empty; row fill `--alert-wash` | `CRITICAL` in `--alert` |
 | Unnecessary action taken | dashed `--grid-strong` | `UNNECESSARY` in `--label` |
+| Asked after a hint (history checklist) | `--carbon` border, `✕` in `--carbon`, no fill | `ASKED WITH HINT` in `--carbon` |
+
+- **History checklist:** every authored key history question as a rubric row (`ASKED`, `ASKED WITH HINT` or `MISSED`), with its time since start and the authored question quoted. Above it, a Field row: `Hints used · n`, plus any history-mode switches.
 
 - **Evidence:** under each row, the student's own logged action is quoted in Value small, with its phase letter, e.g. `A · "How have these symptoms changed…"`. Missing evidence shows `No matching action in this attempt.`
 - **Teaching points:** an ordered list with 2-digit mono numerals (`01`, `02`) in `--label`, Body text, and 12px between items.

@@ -8,6 +8,7 @@ import { VoicePanel } from './VoicePanel'
 import { CaseSurface, Portrait } from './CaseSurface'
 import { buildEntries, ENTRY_LABEL, optionsFor } from './encounterModel'
 import { phaseIndexOf, useAnnotations, useAttemptNotes, useEncounter, useOnline } from './hooks'
+import { HistoryHints, HistoryModeToggle } from './HistoryScaffold'
 import { NotesPanel } from './NotesPanel'
 import { OptionList } from './OptionList'
 
@@ -151,6 +152,9 @@ export function EncounterPage() {
       ? 'You are offline. Choices are paused until the connection returns; notes keep saving on this device.'
       : undefined
   const lastPhase = index === phaseOrder.length - 1
+  // Voice history: the question list is never rendered, only the door note, voice and hints.
+  const historyNow = shown === 'history' && current === 'history'
+  const voiceHistory = historyNow && attempt.historyMode === 'voice'
 
   const stepPhase = (dir: -1 | 1) => {
     const at = viewable.indexOf(shown)
@@ -295,10 +299,12 @@ export function EncounterPage() {
                 </div>
               </div>
             )}
+            {historyNow && <HistoryModeToggle mode={attempt.historyMode} onChange={enc.setHistoryMode} disabled={enc.busy || offlineBlocks} />}
+
             {voiceNotices.map((n) => (
               <div key={n.id} className="entry entry--system entry--warning system-message" role="alert">
                 <p>
-                  <strong>Voice request not recorded.</strong> {n.text} You can make the same choice below.
+                  <strong>Voice request not recorded.</strong> {n.text} {voiceHistory ? 'Try asking again.' : 'You can make the same choice below.'}
                 </p>
                 <button type="button" className="button button-quiet button-small" onClick={() => setVoiceNotices((all) => all.filter((x) => x.id !== n.id))}>
                   Dismiss
@@ -314,19 +320,23 @@ export function EncounterPage() {
               </div>
             )}
 
-            <OptionList
-              key={shown}
-              label={`${shownDef.label} choices`}
-              options={optionsFor(scenario, shown)}
-              selected={selected}
-              single={shown === 'diagnosis'}
-              readOnly={readOnly}
-              readOnlyReason={readOnlyReason}
-              annotations={annotations}
-              shortcuts={settings.shortcuts}
-              onChoose={enc.choose}
-              onMark={toggle}
-            />
+            {voiceHistory ? (
+              <HistoryHints hints={attempt.hints} onHint={enc.requestHint} disabled={offlineBlocks} />
+            ) : (
+              <OptionList
+                key={shown}
+                label={`${shownDef.label} choices`}
+                options={optionsFor(scenario, shown)}
+                selected={selected}
+                single={shown === 'diagnosis'}
+                readOnly={readOnly}
+                readOnlyReason={readOnlyReason}
+                annotations={annotations}
+                shortcuts={settings.shortcuts}
+                onChoose={enc.choose}
+                onMark={toggle}
+              />
+            )}
 
             {!reviewing && current === 'diagnosis' && enc.draft.diagnosis.length > 0 && <ConfidenceToggle value={enc.confidence} onChange={enc.setConfidence} disabled={enc.busy} />}
 
@@ -337,7 +347,9 @@ export function EncounterPage() {
                     ? 'Choose one primary diagnosis. It is saved when you lock the phase.'
                     : current === 'treatment'
                       ? 'Choose every plan element. They are saved when you submit.'
-                      : 'Each choice is saved as you make it.'}{' '}
+                      : voiceHistory
+                        ? 'Ask the patient aloud in the voice panel. What you ask is recorded as you go.'
+                        : 'Each choice is saved as you make it.'}{' '}
                   {enc.busy && <span>Saving…</span>}
                 </p>
                 <div className="phase-footer-actions">
@@ -395,7 +407,7 @@ export function EncounterPage() {
               </div>
             </details>
           )}
-          <details className="side-disclosure voice-disclosure">
+          <details className="side-disclosure voice-disclosure" open={voiceHistory || undefined}>
             <summary>Voice conversation (optional)</summary>
             <VoicePanel attemptId={attempt.id} onActivity={enc.refresh} onToolRejected={onToolRejected} />
           </details>

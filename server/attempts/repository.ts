@@ -24,7 +24,7 @@ export interface AttemptRow {
 
 export interface EventRow {
   seq: number
-  type: 'action' | 'phase_locked' | 'live_started'
+  type: 'action' | 'phase_locked' | 'live_started' | 'hint_used' | 'mode_changed'
   phase: PhaseId
   actionId: string | null
   kind: string | null

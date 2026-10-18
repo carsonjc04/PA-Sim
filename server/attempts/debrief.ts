@@ -1,13 +1,13 @@
-import type { PublicDebriefMiss, PublicReasoningDebrief, PublicTimelineEntry } from '../../src/api/contracts'
+import type { PublicChecklistItem, PublicDebriefMiss, PublicReasoningDebrief, PublicTimelineEntry } from '../../src/api/contracts'
 import { deriveMisses } from '../../src/domain/remediation/misses'
 import type { Confidence } from '../../src/domain/remediation/types'
 import type { PhaseId, ScenarioDefinition } from '../../src/domain/types'
+import { hintEvents, keyHistoryActions, net } from './history'
 import type { EventRow } from './repository'
 
 export const REASONING_PROVENANCE =
   "Built from this case's authored reasoning and rubric and from your own choices. It is not a probability model and has not been clinically validated."
 
-const net = (effects?: { points: number }[]) => (effects ?? []).reduce((n, e) => n + e.points, 0)
 
 function selections(events: EventRow[]): Record<PhaseId, string[]> {
   const out: Record<PhaseId, string[]> = { history: [], exam: [], diagnostics: [], diagnosis: [], treatment: [] }
@@ -73,5 +73,19 @@ export function buildReasoningDebrief(s: ScenarioDefinition, events: EventRow[],
     .filter((m) => m.kind === 'omission' && (m.phase === 'history' || m.phase === 'exam' || m.phase === 'diagnostics'))
     .map((m) => ({ id: m.rubricItemId, phase: m.phase, label: m.label, feedback: m.whyItMattered ?? '' }))
 
-  return { misses, timeline, differential, keyFindingsBeforeDiagnosis, missedEvidence, provenance: REASONING_PROVENANCE }
+  // The full key-question checklist: asked, asked after a hint for that item, or missed. Times are event times
+  // (transcripts are not stored).
+  const hints = hintEvents(events)
+  const hintSeq = new Map(hints.map((e) => [e.actionId as string, e.seq]))
+  const historyChecklist: PublicChecklistItem[] = keyHistoryActions(s).map((a) => {
+    const asked = events.find((e) => e.type === 'action' && e.phase === 'history' && e.actionId === a.id && e.confirmed)
+    if (!asked) return { actionId: a.id, label: a.label, question: a.paText, status: 'missed', offsetMs: null, source: null }
+    const hinted = (hintSeq.get(a.id) ?? Number.POSITIVE_INFINITY) < asked.seq
+    return { actionId: a.id, label: a.label, question: a.paText, status: hinted ? 'asked_with_hint' : 'asked', offsetMs: Math.max(0, Date.parse(asked.createdAt) - start), source: asked.source === 'voice' ? 'voice' : 'guided' }
+  })
+  const modeChanges = events
+    .filter((e) => e.type === 'mode_changed')
+    .map((e) => ({ offsetMs: Math.max(0, Date.parse(e.createdAt) - start), mode: (e.detail as { mode?: unknown } | null)?.mode === 'voice' ? ('voice' as const) : ('guided' as const) }))
+
+  return { misses, timeline, differential, keyFindingsBeforeDiagnosis, missedEvidence, historyChecklist, hintsUsed: hints.length, modeChanges, provenance: REASONING_PROVENANCE }
 }

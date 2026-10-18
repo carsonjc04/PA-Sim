@@ -17,6 +17,7 @@ import { now } from '../lib/clock'
 import { confidenceOf, deriveRemediationSafely } from '../review/derive'
 import { planTool } from '../tools/execute'
 import { toAttemptSummary, toPublicAttempt } from './projection'
+import { historyModeOf, nextHint } from './history'
 import * as repo from './repository'
 
 const notFound = () => new ApiError('Attempt not found.', 404, 'attempt_not_found')
@@ -103,6 +104,21 @@ async function applyEvent(
     await repo.insertEvent(q, attempt.id, { type: 'phase_locked', phase: body.phase, source: 'system' })
     attempt.currentPhase = next
     attempt.lockedPhases = lockedPhases
+    return result
+  }
+
+  if (body.type === 'set_mode' || body.type === 'hint') {
+    if (submitted) throw new ApiError('This attempt is already submitted.', 409, 'attempt_submitted')
+    if (attempt.currentPhase !== 'history') throw new ApiError('Voice history and hints apply only to the history phase.', 409, 'wrong_phase')
+    const live = await repo.listLiveEvents(q, attempt.id)
+    if (body.type === 'set_mode') {
+      if (historyModeOf(live) !== body.mode) await repo.insertEvent(q, attempt.id, { type: 'mode_changed', phase: 'history', source, detail: { mode: body.mode } })
+      return result
+    }
+    if (historyModeOf(live) !== 'voice') throw new ApiError('Hints are available only in voice history.', 409, 'wrong_mode')
+    const hint = nextHint(scenario, live)
+    if (!hint) throw new ApiError('No more suggestions: every key question has been asked or suggested.', 409, 'no_hints_left')
+    await repo.insertEvent(q, attempt.id, { type: 'hint_used', phase: 'history', actionId: hint.id, source })
     return result
   }
 

@@ -34,6 +34,13 @@ const debrief: PublicDebrief = {
     ],
     keyFindingsBeforeDiagnosis: [{ actionId: 'onset', label: 'Clarify onset', revealed: 'It began with exertion.' }],
     missedEvidence: [{ id: 'omit-ecg', phase: 'diagnostics', label: 'Obtain an ECG', feedback: 'An ECG within 10 minutes changes management.' }],
+    historyChecklist: [
+      { actionId: 'onset', label: 'Clarify onset', question: 'When did this start?', status: 'asked', offsetMs: 30_000, source: 'voice' },
+      { actionId: 'radiation', label: 'Ask about radiation', question: 'Does the pain spread anywhere?', status: 'asked_with_hint', offsetMs: 95_000, source: 'voice' },
+      { actionId: 'risk', label: 'Ask about cardiac risk factors', question: 'Do you smoke or have diabetes?', status: 'missed', offsetMs: null, source: null },
+    ],
+    hintsUsed: 3,
+    modeChanges: [{ offsetMs: 5_000, mode: 'voice' }],
     provenance: 'Built from this case’s authored reasoning. Not clinically validated.',
   },
 }
@@ -52,11 +59,25 @@ afterEach(cleanup)
 const renderDebrief = () => render(<MemoryRouter initialEntries={['/results/att']}><Routes><Route path="/results/:attemptId" element={<DebriefPage />} /></Routes></MemoryRouter>)
 
 describe('reasoning-first debrief', () => {
+  it('shows the full key-question checklist with asked, asked-with-hint and missed states, times and hint count', async () => {
+    renderDebrief()
+    const section = (await screen.findByRole('heading', { name: 'History checklist: what did I ask?' })).closest('section')!
+    const rows = within(section).getAllByRole('listitem')
+    expect(rows).toHaveLength(3)
+    expect(rows[0]).toHaveTextContent('Asked · Under 1 min')
+    expect(rows[0]).toHaveTextContent('Clarify onset')
+    expect(rows[1]).toHaveTextContent('Asked with hint · 1 min')
+    expect(rows[2]).toHaveTextContent('Missed')
+    expect(rows[2]).toHaveTextContent('Do you smoke or have diabetes?')
+    expect(section).toHaveTextContent('Hints used: 3.')
+    expect(section).toHaveTextContent('switched the history mode 1 time (to voice at under 1 min)')
+  })
+
   it('orders sections: safety, misses, timeline, differential, retrieve later, then score', async () => {
     renderDebrief()
     await screen.findByRole('heading', { level: 1, name: 'Chest pressure with sweating' })
     const h2 = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent?.trim())
-    expect(h2).toEqual(['Critical safety issue', 'What did I miss, and why did it matter?', 'Reasoning timeline', 'What evidence shaped the differential?', 'What should I retrieve later?', 'Turn misses into practice', 'Score and rubric'])
+    expect(h2).toEqual(['Critical safety issue', 'What did I miss, and why did it matter?', 'History checklist: what did I ask?', 'Reasoning timeline', 'What evidence shaped the differential?', 'What should I retrieve later?', 'Turn misses into practice', 'Score and rubric'])
     expect(screen.queryByText(/59%/, { selector: 'h1 *, h1, header *' })).not.toBeInTheDocument()
   })
 
