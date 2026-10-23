@@ -2,7 +2,7 @@ import { ArrowRight, Flag, RotateCcw, ShieldAlert, Star } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { api, ApiRequestError } from '../../api/client'
-import type { PublicAnnotation, PublicAttempt, PublicDebriefMiss, PublicNotes, PublicTimelineEntry } from '../../api/contracts'
+import type { PublicAnnotation, PublicAttempt, PublicChecklistItem, PublicDebriefMiss, PublicNotes, PublicTimelineEntry } from '../../api/contracts'
 import type { MissKind } from '../../domain/remediation/types'
 import { phaseOrder, type Category, type PhaseId } from '../../domain/types'
 import { marksFor } from '../encounter/encounterModel'
@@ -32,6 +32,9 @@ const TIMELINE_VERB: Record<PublicTimelineEntry['type'], Record<string, string>>
   diagnosis: {},
   plan: {},
 }
+
+const CHECKLIST_STATE: Record<PublicChecklistItem['status'], string> = { asked: 'Asked', asked_with_hint: 'Asked with hint', missed: 'Missed' }
+const CHECKLIST_MODE = { voice: 'to voice', guided: 'to guided' } as const
 
 const minutes = (ms: number) => {
   const m = Math.floor(ms / 60_000)
@@ -129,6 +132,33 @@ export function DebriefPage() {
               </ul>
             </div>
           ))
+        )}
+      </section>
+
+      <section className="debrief-section" aria-labelledby="checklist-title">
+        <h2 id="checklist-title">History checklist: what did I ask?</h2>
+        <p className="debrief-note">
+          Every key history question in this case. Times are when the question was recorded, since you started. Hints used: {r.hintsUsed}.
+          {r.modeChanges.length > 0 && ` You switched the history mode ${r.modeChanges.length} ${r.modeChanges.length === 1 ? 'time' : 'times'} (${r.modeChanges.map((m) => `${CHECKLIST_MODE[m.mode]} at ${minutes(m.offsetMs).toLowerCase()}`).join(', ')}).`}
+        </p>
+        {r.historyChecklist.length === 0 ? (
+          <p>This case has no key history questions in its rubric.</p>
+        ) : (
+          <ul className="checklist">
+            {r.historyChecklist.map((c) => (
+              <li key={c.actionId} className={`checklist-item checklist-item--${c.status}`}>
+                <span className="checklist-state">
+                  {CHECKLIST_STATE[c.status]}
+                  {c.offsetMs !== null && ` · ${minutes(c.offsetMs)}`}
+                </span>
+                <span>
+                  <strong>{c.label}</strong>
+                  {c.source === 'voice' && <span className="debrief-badge">From voice</span>}
+                </span>
+                <p className="checklist-question">“{c.question}”</p>
+              </li>
+            ))}
+          </ul>
         )}
       </section>
 

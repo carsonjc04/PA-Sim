@@ -41,6 +41,10 @@ export const attemptEventBody = z.discriminatedUnion('type', [
     .strict(),
   z.object({ type: z.literal('lock_phase'), phase: phaseSchema }).strict(),
   z.object({ type: z.literal('retract'), phase: phaseSchema, actionId: stableId }).strict(),
+  /** Voice history only: reveal one suggested key question. Logged, never graded. */
+  z.object({ type: z.literal('hint') }).strict(),
+  /** History phase only: voice hides the option list, guided shows it. Logged so the debrief can report switches. */
+  z.object({ type: z.literal('set_mode'), mode: z.enum(['voice', 'guided']) }).strict(),
 ]).refine((b) => b.type !== 'action' || b.confidence === undefined || b.tool === 'propose_diagnosis', {
   message: 'confidence is only recorded with propose_diagnosis',
   path: ['confidence'],
@@ -77,6 +81,8 @@ export type ApiErrorCode =
   | 'wrong_phase'
   | 'phase_locked'
   | 'event_not_found'
+  | 'no_hints_left'
+  | 'wrong_mode'
   | 'diagnosis_required'
   | 'ai_unavailable'
   | 'missing_api_key'
@@ -234,8 +240,35 @@ export interface PublicReasoningDebrief {
   keyFindingsBeforeDiagnosis: { actionId: string; label: string; revealed: string | null }[]
   /** Authored data-gathering items the learner did not collect, with why each mattered. */
   missedEvidence: { id: string; phase: PhaseId; label: string; feedback: string }[]
+  /** Every authored key history question, asked (with or without a hint) or missed. */
+  historyChecklist: PublicChecklistItem[]
+  hintsUsed: number
+  /** Each switch of the history mode, in order (empty if the learner never left guided). */
+  modeChanges: { offsetMs: number; mode: HistoryMode }[]
   /** Shown with the debrief so nobody mistakes it for a validated model. */
   provenance: string
+}
+
+export type HistoryMode = 'voice' | 'guided'
+
+/** A suggested question revealed by a hint: authored PA phrasing of one key history item. */
+export interface PublicHint {
+  seq: number
+  actionId: string
+  text: string
+  at: string
+}
+
+/** One authored key history item and whether the learner asked it. Debrief only. */
+export interface PublicChecklistItem {
+  actionId: string
+  label: string
+  /** The authored PA phrasing of the question. */
+  question: string
+  status: 'asked' | 'asked_with_hint' | 'missed'
+  /** Milliseconds since the attempt started, for asked items. */
+  offsetMs: number | null
+  source: 'guided' | 'voice' | null
 }
 
 export interface PublicAttempt {
@@ -247,6 +280,10 @@ export interface PublicAttempt {
   lockedPhases: PhaseId[]
   scenario: PublicScenario
   events: PublicEvent[]
+  /** History-phase mode; guided unless the learner chose voice. */
+  historyMode: HistoryMode
+  /** Hints revealed so far, oldest first. */
+  hints: PublicHint[]
   createdAt: string
   submittedAt: string | null
   debrief: PublicDebrief | null

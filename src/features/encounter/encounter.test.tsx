@@ -27,6 +27,7 @@ const scenario = {
   clinicalReferences: [],
   tags: { organSystems: [], panceTasks: [], eorRotations: [], suitability: def.taxonomy.suitability },
 } as PublicScenario
+const keyHistory = () => def.phases.find((p) => p.id === 'history')!.actions.filter((a) => (a.effects ?? []).reduce((n, e) => n + e.points, 0) > 0 && !a.unsafeReason)
 const responseOf = (id: string) => def.phases.flatMap((p) => p.actions).find((a) => a.id === id)?.response ?? null
 
 // ---- In-memory fake of the attempts API ----
@@ -39,7 +40,7 @@ let notes: PublicNotes
 let annotations: PublicAnnotation[]
 let offline = false
 const calls: AttemptEventBody[] = []
-const net = <T,>(fn: () => T): Promise<T> => (offline ? Promise.reject(new (mocks.ApiRequestError as unknown as typeof NetError)('Could not reach the ClinicSim server.')) : Promise.resolve(structuredClone(fn())))
+const net = <T,>(fn: () => T): Promise<T> => (offline ? Promise.reject(new (mocks.ApiRequestError as unknown as typeof NetError)('Could not reach the ClinicSim server.')) : Promise.resolve().then(() => structuredClone(fn())))
 
 const mocks = vi.hoisted(() => {
   class ApiRequestError extends Error {
@@ -59,7 +60,7 @@ vi.mock('../../api/client', () => ({ api: mocks.api, ApiRequestError: mocks.ApiR
 vi.mock('./VoicePanel', () => ({ VoicePanel: () => <p>Voice mode is not configured. Guided mode works without it.</p> }))
 
 function reset() {
-  attempt = { id: '00000000-0000-4000-8000-000000000001', scenarioId: 'respiratory', contentVersionId: 'respiratory@x', status: 'active', currentPhase: 'history', lockedPhases: [], scenario, events: [], createdAt: new Date().toISOString(), submittedAt: null, debrief: null }
+  attempt = { id: '00000000-0000-4000-8000-000000000001', scenarioId: 'respiratory', contentVersionId: 'respiratory@x', status: 'active', currentPhase: 'history', lockedPhases: [], scenario, events: [], historyMode: 'guided', hints: [], createdAt: new Date().toISOString(), submittedAt: null, debrief: null }
   notes = { body: '', version: 0, updatedAt: null }
   annotations = []
   offline = false
@@ -74,6 +75,14 @@ function reset() {
         if (body.type === 'lock_phase') {
           attempt.lockedPhases.push(body.phase)
           attempt.currentPhase = phaseOrder[phaseOrder.indexOf(body.phase) + 1] ?? body.phase
+        } else if (body.type === 'set_mode') {
+          attempt.historyMode = body.mode
+        } else if (body.type === 'hint') {
+          // Same pick as server/attempts/history.ts: next key history item not asked or hinted, in authored order.
+          const used = new Set([...attempt.events.map((e) => e.actionId), ...attempt.hints.map((h) => h.actionId)])
+          const next = keyHistory().find((a) => !used.has(a.id))
+          if (!next) throw new mocks.ApiRequestError('No more suggestions: every key question has been asked or suggested.', 409, 'no_hints_left')
+          attempt.hints.push({ seq: (seq += 1), actionId: next.id, text: next.paText, at: new Date().toISOString() })
         } else if (body.type === 'action') {
           for (const id of body.actionIds) {
             const e: PublicEvent = { seq: (seq += 1), phase: attempt.currentPhase, actionId: id, kind: 'action', confirmed: true, revealed: responseOf(id), source: 'guided', at: new Date().toISOString() }
@@ -357,7 +366,8 @@ describe('accessibility', () => {
     act(() => void window.dispatchEvent(new Event('online')))
     await user.click(screen.getByRole('button', { name: /Lock phase and continue/ }))
     expect(await axeViolations(document.body)).toEqual([])
-  })
+   // Four axe scans; under the parallel suite this can pass the 5 s default.
+  }, 20_000)
 
   it('keeps one h1 and a logical heading order', async () => {
     renderEncounter()
@@ -365,5 +375,80 @@ describe('accessibility', () => {
     const levels = screen.getAllByRole('heading').map((h) => Number(h.tagName.slice(1)))
     expect(levels.filter((l) => l === 1)).toHaveLength(1)
     for (let i = 1; i < levels.length; i += 1) expect(levels[i] - levels[i - 1]).toBeLessThanOrEqual(1)
+  })
+})
+
+describe('voice history scaffolding', () => {
+  const histActions = def.phases.find((p) => p.id === 'history')!.actions
+  const anyQuestionOnScreen = () => histActions.filter((a) => screen.queryAllByText(a.label, { exact: false }).length + screen.queryAllByText(a.paText, { exact: false }).length > 0)
+  const toVoice = async (user: ReturnType<typeof userEvent.setup>) => {
+    await user.click(screen.getByRole('button', { name: 'Voice, no list' }))
+    await waitFor(() => expect(screen.queryByRole('group', { name: /choices$/ })).not.toBeInTheDocument())
+  }
+
+  it('shows the option list in guided mode exactly as before', async () => {
+    renderEncounter()
+    await ready()
+    expect(screen.getByRole('button', { name: 'Guided list' })).toHaveAttribute('aria-pressed', 'true')
+    expect(within(choices()).getAllByRole('button', { pressed: false }).length).toBeGreaterThanOrEqual(histActions.length)
+    expect(screen.queryByRole('button', { name: /suggested question/ })).not.toBeInTheDocument()
+  })
+
+  it('hides every question in voice mode: door note, voice and a hint button only', async () => {
+    const user = userEvent.setup()
+    renderEncounter()
+    await ready()
+    await toVoice(user)
+    expect(calls).toContainEqual({ type: 'set_mode', mode: 'voice' })
+    expect(anyQuestionOnScreen()).toEqual([])
+    expect(screen.getByText(def.opening)).toBeInTheDocument()
+    expect(screen.getByText('Voice mode is not configured. Guided mode works without it.')).toBeVisible()
+    expect(screen.getByRole('button', { name: 'Show one suggested question' })).toBeEnabled()
+  })
+
+  it('reveals one suggestion per press, logs each as an event, and never shows the list', async () => {
+    const user = userEvent.setup()
+    const { container } = renderEncounter()
+    await ready()
+    await toVoice(user)
+    const key = keyHistory()
+    const button = screen.getByRole('button', { name: 'Show one suggested question' })
+    for (let n = 1; n <= key.length; n += 1) {
+      await user.click(button)
+      const list = await screen.findByRole('list', { name: 'Suggested questions' })
+      await waitFor(() => expect(within(list).getAllByRole('listitem')).toHaveLength(n))
+      expect(within(list).getAllByRole('listitem')[n - 1]).toHaveTextContent(key[n - 1].paText)
+      expect(screen.getByText(`Hints used: ${n}`)).toBeInTheDocument()
+      // Distractors and not-yet-hinted questions stay hidden.
+      expect(anyQuestionOnScreen().map((a) => a.id)).toEqual(key.slice(0, n).map((a) => a.id))
+    }
+    expect(await axeViolations(container)).toEqual([])
+    expect(calls.filter((c) => c.type === 'hint')).toHaveLength(key.length)
+    // Hints never record a question.
+    expect(calls.some((c) => c.type === 'action')).toBe(false)
+    expect(document.activeElement).toBe(button)
+    await user.click(button)
+    expect(await screen.findByRole('alert')).toHaveTextContent('No more suggestions')
+  }, 20_000)
+
+  it('shows and hides the list with the mode, and never leaks it into voice after a switch', async () => {
+    const user = userEvent.setup()
+    renderEncounter()
+    await ready()
+    await toVoice(user)
+    await user.click(screen.getByRole('button', { name: 'Guided list' }))
+    await waitFor(() => expect(choices()).toBeInTheDocument())
+    expect(screen.queryByRole('button', { name: 'Show one suggested question' })).not.toBeInTheDocument()
+    await toVoice(user)
+    expect(anyQuestionOnScreen()).toEqual([])
+    expect(calls.filter((c) => c.type === 'set_mode').map((c) => c.type === 'set_mode' && c.mode)).toEqual(['voice', 'guided', 'voice'])
+  })
+
+  it('keeps voice mode across a reload', async () => {
+    attempt.historyMode = 'voice'
+    renderEncounter()
+    await ready()
+    expect(screen.queryByRole('group', { name: /choices$/ })).not.toBeInTheDocument()
+    expect(anyQuestionOnScreen()).toEqual([])
   })
 })

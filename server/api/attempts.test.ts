@@ -381,3 +381,68 @@ describe('hidden content never reaches the browser', () => {
     }
   })
 })
+
+describe('voice history scaffolding', () => {
+  const history = scenario.phases.find((p) => p.id === 'history')!.actions
+  const key = history.filter((a) => (a.effects ?? []).reduce((n, e) => n + e.points, 0) > 0 && !a.unsafeReason)
+
+  it('serves hints only in voice history: one key question at a time, in authored order, never a distractor', async () => {
+    const client = as('hinter')
+    const id = (await client.start()).body.attempt.id as string
+    expect((await client.get(id)).body.historyMode).toBe('guided')
+    expect((await client.event(id, { type: 'hint' })).body.error.code).toBe('wrong_mode')
+
+    const voice = await client.event(id, { type: 'set_mode', mode: 'voice' })
+    expect(voice.body.attempt.historyMode).toBe('voice')
+    // Asking the first key question directly means a hint never suggests it.
+    await client.event(id, { type: 'action', tool: 'record_history_topics', actionIds: [key[0].id] })
+    for (let n = 1; n < key.length; n += 1) {
+      const res = await client.event(id, { type: 'hint' })
+      expect(res.status).toBe(200)
+      const hints = (res.body.attempt as PublicAttempt).hints
+      expect(hints.map((h) => h.actionId)).toEqual(key.slice(1, n + 1).map((a) => a.id))
+      expect(hints.at(-1)!.text).toBe(key[n].paText)
+      // A hint records nothing graded.
+      expect((res.body.attempt as PublicAttempt).events.map((e) => e.actionId)).toEqual([key[0].id])
+    }
+    const done = await client.event(id, { type: 'hint' })
+    expect(done.status).toBe(409)
+    expect(done.body.error.code).toBe('no_hints_left')
+    expect(history.length).toBeGreaterThan(key.length) // the case has distractors, and none were offered
+
+    await client.event(id, { type: 'lock_phase', phase: 'history' })
+    expect((await client.event(id, { type: 'hint' })).body.error.code).toBe('wrong_phase')
+    expect((await client.event(id, { type: 'set_mode', mode: 'guided' })).body.error.code).toBe('wrong_phase')
+  })
+
+  it('reports asked, asked-with-hint and missed in the debrief, with hint count and mode switches, and grades as without hints', async () => {
+    const run = async (user: string, withHints: boolean) => {
+      const client = as(user)
+      const id = (await client.start()).body.attempt.id as string
+      await client.event(id, { type: 'set_mode', mode: 'voice' })
+      await client.event(id, { type: 'action', tool: 'record_history_topics', actionIds: [key[0].id] })
+      if (withHints) {
+        await client.event(id, { type: 'hint' })
+        await client.event(id, { type: 'hint' })
+        await client.event(id, { type: 'set_mode', mode: 'guided' })
+      }
+      await client.event(id, { type: 'action', tool: 'record_history_topics', actionIds: [key[1].id] })
+      for (const phase of ['history', 'exam', 'diagnostics']) await client.event(id, { type: 'lock_phase', phase })
+      await client.event(id, { type: 'action', tool: 'propose_diagnosis', actionIds: [scenario.correctPrimary], confirmed: true })
+      await client.event(id, { type: 'lock_phase', phase: 'diagnosis' })
+      return (await client.submit(id)).body as PublicAttempt
+    }
+    const hinted = await run('hinted', true)
+    const plain = await run('plain', false)
+    const r = hinted.debrief!.reasoning
+    expect(r.hintsUsed).toBe(2)
+    expect(r.modeChanges.map((m) => m.mode)).toEqual(['voice', 'guided'])
+    expect(r.historyChecklist.map((c) => [c.actionId, c.status])).toEqual(key.map((a, i) => [a.id, i === 0 ? 'asked' : i === 1 ? 'asked_with_hint' : 'missed']))
+    expect(r.historyChecklist[0].offsetMs).not.toBeNull()
+    expect(r.historyChecklist.at(-1)!.offsetMs).toBeNull()
+    expect(plain.debrief!.reasoning.hintsUsed).toBe(0)
+    expect(plain.debrief!.reasoning.historyChecklist[1].status).toBe('asked')
+    expect(hinted.debrief!.finalScore).toBe(plain.debrief!.finalScore)
+    expect(hinted.debrief!.categoryScores).toEqual(plain.debrief!.categoryScores)
+  })
+})

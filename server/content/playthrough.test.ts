@@ -89,8 +89,12 @@ describe.each(pkg.scenarios.map((s) => [s.id, s] as const))('playthrough: %s', (
     const fx = file.fixtures[0]
     const a = (await play(scenario, fx.selections, 'alice')).body.debrief!
     const b = (await play(scenario, fx.selections, 'bob')).body.debrief!
-    // Timeline offsets are wall-clock times, so they are the only part allowed to differ.
-    const timeless = (d: typeof a) => ({ ...d, gradedAt: '', reasoning: { ...d.reasoning, timeline: d.reasoning.timeline.map((t) => ({ ...t, offsetMs: 0 })) } })
+    // Timeline and checklist offsets are wall-clock times, so they are the only part allowed to differ.
+    const timeless = (d: typeof a) => ({
+      ...d,
+      gradedAt: '',
+      reasoning: { ...d.reasoning, timeline: d.reasoning.timeline.map((t) => ({ ...t, offsetMs: 0 })), historyChecklist: d.reasoning.historyChecklist.map((c) => ({ ...c, offsetMs: c.offsetMs === null ? null : 0 })) },
+    })
     expect(timeless(a)).toEqual(timeless(b))
     // Two full HTTP playthroughs; under the parallel suite this can pass the 5 s default.
   }, 20_000)

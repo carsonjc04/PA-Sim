@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { api, ApiRequestError } from '../../api/client'
-import type { AnnotationMark, AnnotationTargetKind, PublicAnnotation, PublicAttempt, PublicNotes } from '../../api/contracts'
+import type { AnnotationMark, AnnotationTargetKind, HistoryMode, PublicAnnotation, PublicAttempt, PublicNotes } from '../../api/contracts'
 import { phaseOrder, type PhaseId } from '../../domain/types'
 import { PHASE_TOOL, planEvents } from './encounterModel'
 
@@ -48,7 +48,7 @@ export function useEncounter(scenarioId: string | undefined, onNotFound: () => v
     stateRef.current = state
   })
   // Retries call the latest handlers through a ref, so a failed action can be repeated without stale closures.
-  const handlers = useRef<{ choose: (id: string) => void; advance: () => Promise<boolean>; submit: () => Promise<boolean> } | null>(null)
+  const handlers = useRef<{ choose: (id: string) => void; advance: () => Promise<boolean>; submit: () => Promise<boolean>; setHistoryMode: (mode: HistoryMode) => void } | null>(null)
 
   useEffect(() => {
     if (!scenarioId) return
@@ -141,8 +141,29 @@ export function useEncounter(scenarioId: string | undefined, onNotFound: () => v
     }, again)
   }, [commitDrafts, run])
 
+  const setHistoryMode = useCallback(
+    (mode: HistoryMode) => {
+      const { attempt, busy } = stateRef.current
+      if (!attempt || busy || attempt.historyMode === mode) return
+      void run(async () => (await api.event(attempt.id, { type: 'set_mode', mode })).attempt, () => handlers.current?.setHistoryMode(mode))
+    },
+    [run],
+  )
+
+  /** Reveals one suggested question. Resolves to an error message, or null when a hint was recorded. */
+  const requestHint = useCallback(async (): Promise<string | null> => {
+    const { attempt } = stateRef.current
+    if (!attempt) return null
+    try {
+      patch({ attempt: (await api.event(attempt.id, { type: 'hint' })).attempt })
+      return null
+    } catch (e) {
+      return isNetwork(e) ? 'Offline: no hint was shown. Try again when the connection returns.' : message(e)
+    }
+  }, [patch])
+
   useLayoutEffect(() => {
-    handlers.current = { choose, advance, submit }
+    handlers.current = { choose, advance, submit, setHistoryMode }
   })
 
   return {
@@ -151,6 +172,8 @@ export function useEncounter(scenarioId: string | undefined, onNotFound: () => v
     choose,
     advance,
     submit,
+    setHistoryMode,
+    requestHint,
     setConfidence: (confidence: Confidence | null) => patch({ confidence }),
     dismissError: () => patch({ actionError: null }),
   }
