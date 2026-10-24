@@ -18,7 +18,7 @@ code,kbd,samp{font-family:var(--mono)}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 
 /* Type roles shared across screens (§2) */
-.eyebrow,.tag,.home-kicker,.home-action-tag,.home-action-badge,.home-plate-label,.voice-speaker,.timeline-kind,.review-why span,.phase-step-state,.progress-tier,.mark-badge,.debrief-badge,.phase-locked-tag,.checklist-state,.option-selected-text,.study-missing,.difficulty,.case-status,.identity-form label,.study-select,.study-findings dt,.review-rating legend,.confidence-toggle legend,.settings-group legend,.study-sprint legend,.entry-label,.brand small,.identity-chip small,.voice-status,.review-state{font-family:var(--sans);font-size:0.6875rem;line-height:1;font-weight:600;font-stretch:75%;letter-spacing:.1em;text-transform:uppercase}
+.eyebrow,.tag,.home-kicker,.home-action-tag,.home-action-badge,.home-plate-label,.voice-speaker,.timeline-kind,.review-why span,.phase-step-state,.progress-tier,.mark-badge,.debrief-badge,.phase-locked-tag,.checklist-state,.option-selected-text,.study-missing,.difficulty,.case-status,.identity-form label,.study-select,.study-findings dt,.review-rating legend,.confidence-toggle legend,.settings-group legend,.study-sprint legend,.entry-label,.brand small,.identity-chip small,.voice-status,.voice-presence-state,.review-state{font-family:var(--sans);font-size:0.6875rem;line-height:1;font-weight:600;font-stretch:75%;letter-spacing:.1em;text-transform:uppercase}
 .timeline-time,.notes-meta,.voice-timer [role=timer],.phase-bar-meta,.attempt-copy span,.progress-basis,.review-card-top small,.study-weight,.library-count,.voice-meter,.home-figure figcaption,footer{font-family:var(--mono);font-variant-numeric:tabular-nums}
 .tag,.home-action-badge,.mark-badge,.debrief-badge,.phase-locked-tag,.progress-tier,.study-missing{display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border:1px solid var(--grid-strong);background:var(--form);color:var(--ink);white-space:nowrap}
 
@@ -85,6 +85,18 @@ h1 em{font-weight:inherit;color:inherit}
 .case-card-top,.case-footer,.case-meta{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .tag-amber{color:var(--ink)}
 .case-status{color:var(--label)}
+.patient-portrait{display:block;object-fit:cover;object-position:50% 30%;border:1px solid var(--grid-strong);background:var(--form)}
+.case-card-portrait{width:calc(100% + 32px);height:auto;aspect-ratio:4/3;margin:-16px -16px 16px;border:0;border-bottom:1px solid var(--grid)}
+.phase-bar-portrait{width:48px;height:48px;align-self:center}
+.voice-presence{display:flex;align-items:center;gap:12px;margin:0 0 12px}
+.voice-presence .patient-portrait{width:96px;height:96px;border:2px solid var(--grid-strong);transition:border-color 100ms linear}
+.voice-presence figcaption{display:flex;flex-direction:column;gap:8px;font-size:0.875rem;color:var(--ink)}
+.voice-presence-state{color:var(--label)}
+.voice-presence--listening .patient-portrait{border-color:var(--ink)}
+.voice-presence--listening .voice-presence-state{color:var(--ink)}
+.voice-presence--thinking .patient-portrait{border-color:var(--label)}
+.voice-presence--speaking .patient-portrait{border-color:var(--carbon)}
+.voice-presence--speaking .voice-presence-state{color:var(--carbon)}
 .case-card h2{font-size:1.0625rem;line-height:1.3;font-weight:600;margin:24px 0 8px}
 .case-card>p{color:var(--label);font-size:0.8125rem;line-height:1.45;margin:0}
 .case-meta{font-family:var(--mono);font-size:0.75rem;color:var(--label);margin-top:auto;padding:20px 0 12px}
@@ -172,11 +184,7 @@ h1 em{font-weight:inherit;color:inherit}
 .home-figure{margin:0}
 .home-plate{position:relative;border:1px solid var(--grid-strong);background:var(--form);aspect-ratio:5/4;overflow:hidden}
 .home-plate-label{position:absolute;top:12px;left:12px;padding:4px 8px;background:var(--form);border:1px solid var(--grid-strong);color:var(--label);z-index:1}
-.home-plate-art{position:absolute;inset:0;display:grid;place-items:center;color:var(--ink)}
-.home-book{position:relative;width:58%;height:44%;display:flex}
-.home-book-spine{position:absolute;left:calc(50% - 1px);top:0;bottom:0;width:1px;background:var(--ink);z-index:1}
-.home-book-page{flex:1;background:var(--form);border:1px solid var(--ink)}
-.home-plate-art svg{position:absolute;right:12%;bottom:12%}
+.home-plate-portrait{position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:cover;object-position:50% 30%}
 .home-figure figcaption{display:flex;gap:12px;margin-top:12px;font-size:0.75rem;line-height:1.4;color:var(--label)}
 .home-figure figcaption em{font-family:var(--sans);font-weight:600;color:var(--ink);white-space:nowrap}
 .home-banner{background:var(--form);border-top:1px solid var(--grid-strong);display:flex;align-items:center;justify-content:space-between;gap:24px;padding:20px max(16px,calc((100vw - 1120px)/2))}

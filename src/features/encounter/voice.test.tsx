@@ -12,7 +12,7 @@ vi.mock('../../voice/useVoiceEncounter', () => ({ useVoiceEncounter: () => mocks
 
 const status = { aiEnabled: true, setupHint: null, maxSessionMinutes: 20, idleTimeoutSeconds: 120, estimatedVoiceRatePerMinuteUsd: 0.05, storeTranscripts: false }
 function voice(over: Partial<VoiceEncounter> = {}): VoiceEncounter {
-  return { state: 'idle', transcript: [], error: null, patientSpeaking: false, muted: false, usage: null, connectedAt: null, deadlineAt: null, lastSpeechAt: null, endedByServer: null, connect: vi.fn(), disconnect: vi.fn(), toggleMute: vi.fn(), retry: vi.fn(), ...over }
+  return { state: 'idle', transcript: [], error: null, patientSpeaking: false, presence: 'idle', muted: false, usage: null, connectedAt: null, deadlineAt: null, lastSpeechAt: null, endedByServer: null, connect: vi.fn(), disconnect: vi.fn(), toggleMute: vi.fn(), retry: vi.fn(), ...over }
 }
 const renderPanel = async () => {
   const view = render(<VoicePanel attemptId="a" />)
@@ -121,5 +121,27 @@ describe('voice cost and session state', () => {
     expect(screen.getByRole('heading', { name: 'Voice is not set up' })).toBeInTheDocument()
     expect(screen.getByText(/Guided mode is complete without voice/)).toBeInTheDocument()
     expect(screen.queryByRole('button')).not.toBeInTheDocument()
+  })
+})
+
+describe('voice presence portrait', () => {
+  const patient = { caseId: 'respiratory', name: 'Maya Chen', alt: 'Maya Chen, the fictional patient in the cough and sore throat case' }
+  it.each([
+    ['idle', 'Waiting'],
+    ['listening', 'Listening'],
+    ['thinking', 'Thinking'],
+    ['speaking', 'Speaking'],
+  ] as const)('shows the %s state as a label and a class, never by motion alone', async (presence, label) => {
+    mocks.voice = voice({ state: presence === 'idle' ? 'idle' : 'live', presence, connectedAt: presence === 'idle' ? null : Date.now() })
+    render(<VoicePanel attemptId="a" patient={patient} />)
+    const img = await screen.findByRole('img', { name: patient.alt })
+    const figure = img.closest('figure')!
+    expect(figure).toHaveClass(`voice-presence--${presence}`)
+    expect(figure).toHaveTextContent(label)
+  })
+
+  it('shows no portrait outside voice history', async () => {
+    await renderPanel()
+    expect(screen.queryByRole('img')).not.toBeInTheDocument()
   })
 })

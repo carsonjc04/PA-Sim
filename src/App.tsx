@@ -18,6 +18,12 @@ import {
   Mic,
   Stethoscope,
 } from "lucide-react";
+import { PatientPortrait } from "./features/patient/PatientPortrait";
+import {
+  FEATURED_CASE,
+  patientPortraitAlt,
+  usePatientPortrait,
+} from "./features/patient/portrait";
 import {
   api,
   ApiRequestError,
@@ -252,6 +258,7 @@ function LegacyNotice() {
   );
 }
 function Home() {
+  const plate = usePatientPortrait(FEATURED_CASE.id);
   return (
     <div className="home">
       <Header showIdentity={false} />
@@ -307,30 +314,27 @@ function Home() {
               </li>
             </ol>
           </div>
-          <figure className="home-figure">
-            <div
-              className="home-plate"
-              role="img"
-              aria-label="Illustration of an open study book beside a stethoscope"
-            >
-              <span className="home-plate-label" aria-hidden="true">
-                Plate 01
-              </span>
-              <div className="home-plate-art" aria-hidden="true">
-                <div className="home-book">
-                  <span className="home-book-spine" />
-                  <span className="home-book-page home-book-page--left" />
-                  <span className="home-book-page home-book-page--right" />
-                </div>
-                <Stethoscope size={44} strokeWidth={1.4} />
+          {plate && (
+            <figure className="home-figure">
+              <div className="home-plate">
+                <span className="home-plate-label" aria-hidden="true">
+                  Plate 01
+                </span>
+                <img
+                  className="home-plate-portrait"
+                  src={plate.src}
+                  alt={patientPortraitAlt(FEATURED_CASE.patient, FEATURED_CASE.title)}
+                  width={512}
+                  height={512}
+                  onError={plate.onError}
+                />
               </div>
-            </div>
-            <figcaption>
-              <em>Fig. A</em> Use ClinicSim alongside your reading: move from a
-              study prompt into a spoken patient encounter while the material is
-              fresh.
-            </figcaption>
-          </figure>
+              <figcaption>
+                <em>Fig. A</em> The featured case:{" "}
+                {FEATURED_CASE.title.toLowerCase()}. Patient is fictional.
+              </figcaption>
+            </figure>
+          )}
         </div>
       </main>
       <div className="home-banner">
@@ -573,6 +577,11 @@ function Cases() {
           const status = statusById[s.id];
           return (
             <article className="case-card" key={s.id}>
+              <PatientPortrait
+                caseId={s.id}
+                alt={patientPortraitAlt(s.patient.name, s.summary.title)}
+                className="case-card-portrait"
+              />
               <div className="case-card-top">
                 <span className={`tag ${s.summary.urgent ? "tag-amber" : ""}`}>
                   {s.summary.urgent ? "Urgent decision" : "Routine visit"}

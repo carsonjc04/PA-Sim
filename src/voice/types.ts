@@ -39,6 +39,9 @@ export interface SessionUsage {
   [key: string]: unknown
 }
 
+/** What the patient appears to be doing, for the portrait presence: derived from speech and transcript timing. */
+export type VoicePresence = 'idle' | 'listening' | 'thinking' | 'speaking'
+
 export interface VoiceClientEvents {
   onStateChange: (state: VoiceConnectionState) => void
   onTranscript: (segments: TranscriptSegment[]) => void

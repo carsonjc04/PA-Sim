@@ -6,6 +6,8 @@ import { ConfidenceToggle } from '../review/ConfidenceToggle'
 import { useDisplaySettings } from '../settings/displaySettings'
 import { VoicePanel } from './VoicePanel'
 import { CaseSurface, Portrait } from './CaseSurface'
+import { PatientPortrait } from '../patient/PatientPortrait'
+import { patientPortraitAlt, patientPortraitSrc } from '../patient/portrait'
 import { buildEntries, ENTRY_LABEL, optionsFor } from './encounterModel'
 import { phaseIndexOf, useAnnotations, useAttemptNotes, useEncounter, useOnline } from './hooks'
 import { HistoryHints, HistoryModeToggle } from './HistoryScaffold'
@@ -155,6 +157,7 @@ export function EncounterPage() {
   // Voice history: the question list is never rendered, only the door note, voice and hints.
   const historyNow = shown === 'history' && current === 'history'
   const voiceHistory = historyNow && attempt.historyMode === 'voice'
+  const portraitAlt = patientPortraitAlt(scenario.patient.name, scenario.summary.title)
 
   const stepPhase = (dir: -1 | 1) => {
     const at = viewable.indexOf(shown)
@@ -209,6 +212,7 @@ export function EncounterPage() {
           </span>
         </div>
         <div className="phase-bar-title">
+          <PatientPortrait caseId={scenario.id} alt={portraitAlt} className="phase-bar-portrait" />
           <h1>{scenario.summary.title}</h1>
           <p className="phase-bar-patient">
             {scenario.patient.name}, {scenario.patient.demographics} · {scenario.summary.pronouns}
@@ -392,7 +396,8 @@ export function EncounterPage() {
               <summary>Patient and clinician</summary>
               <div className="side-portraits">
                 <figure>
-                  <Portrait config={scenario.patient.portrait} small />
+                  {/* Portrait falls back to the authored initials if the photo is missing or fails. */}
+                  <Portrait config={{ ...scenario.patient.portrait, src: patientPortraitSrc(scenario.id) ?? undefined, alt: portraitAlt }} small />
                   <figcaption>
                     {scenario.patient.name}
                     <small>Fictional patient</small>
@@ -410,7 +415,12 @@ export function EncounterPage() {
           )}
           <details className="side-disclosure voice-disclosure" open={voiceHistory || undefined}>
             <summary>Voice conversation (optional)</summary>
-            <VoicePanel attemptId={attempt.id} onActivity={enc.refresh} onToolRejected={onToolRejected} />
+            <VoicePanel
+              attemptId={attempt.id}
+              onActivity={enc.refresh}
+              onToolRejected={onToolRejected}
+              patient={voiceHistory ? { caseId: scenario.id, name: scenario.patient.name, alt: portraitAlt } : undefined}
+            />
           </details>
         </aside>
       </div>

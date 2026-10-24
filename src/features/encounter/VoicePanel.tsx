@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { api } from '../../api/client'
 import type { AiStatus } from '../../api/contracts'
 import { useVoiceEncounter } from '../../voice/useVoiceEncounter'
-import type { VoiceConnectionState } from '../../voice/types'
+import type { VoiceConnectionState, VoicePresence } from '../../voice/types'
+import { PatientPortrait } from '../patient/PatientPortrait'
 
 const statusLabel: Record<VoiceConnectionState, string> = {
   idle: 'Not connected',
@@ -13,6 +14,8 @@ const statusLabel: Record<VoiceConnectionState, string> = {
   closed: 'Session ended',
   error: 'Problem',
 }
+
+const presenceLabel: Record<VoicePresence, string> = { idle: 'Waiting', listening: 'Listening', thinking: 'Thinking', speaking: 'Speaking' }
 
 const usd = (n: number) => `$${n.toFixed(2)}`
 const minutesBetween = (from: number, to: number) => Math.max(0, Math.floor((to - from) / 60_000))
@@ -27,7 +30,18 @@ const clock = (ms: number) => {
  * the server's deadline. The server enforces the same deadline and an idle timeout on its own (see
  * server/live/sessionGuard.ts); the browser ends first so the learner sees why.
  */
-export function VoicePanel({ attemptId, onActivity, onToolRejected }: { attemptId: string; onActivity?: () => void; onToolRejected?: (reason: string) => void }) {
+export function VoicePanel({
+  attemptId,
+  onActivity,
+  onToolRejected,
+  patient,
+}: {
+  attemptId: string
+  onActivity?: () => void
+  onToolRejected?: (reason: string) => void
+  /** Shown as the voice presence portrait during voice history. */
+  patient?: { caseId: string; name: string; alt: string }
+}) {
   const [status, setStatus] = useState<AiStatus | null>(null)
   const [unreachable, setUnreachable] = useState(false)
   const [now, setNow] = useState(() => Date.now())
@@ -126,6 +140,16 @@ export function VoicePanel({ attemptId, onActivity, onToolRejected }: { attemptI
         <h2 id="voice-title">Voice conversation</h2>
         <span className={`voice-status voice-status--${state}`}>{state === 'live' && voice.patientSpeaking ? 'Patient speaking' : statusLabel[state]}</span>
       </header>
+
+      {patient && (
+        <figure className={`voice-presence voice-presence--${voice.presence}`}>
+          <PatientPortrait caseId={patient.caseId} alt={patient.alt} />
+          <figcaption>
+            <span className="voice-presence-state">{presenceLabel[voice.presence]}</span>
+            {patient.name}
+          </figcaption>
+        </figure>
+      )}
 
       <p className="voice-cost">
         Voice uses a paid AI service: about {usd(rate)} per minute while connected, for up to {max} minutes (about {usd((max ?? 0) * rate)} in total).{' '}
