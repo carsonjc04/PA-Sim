@@ -295,6 +295,24 @@ Each item is a section with the standard section header.
   - An explanation block in Body follows, under a `WHY` label.
 - **Excluded:** no streak counts, daily goals or countdowns.
 
+### Patient portraits
+
+- **Source:** static committed files at `public/portraits/<caseId>.webp`, resolved by case ID through `src/features/patient/portrait.ts`. A case without a file, or a file that fails to load, renders no image and no placeholder box.
+- **Treatment:** square photo, 1px `--grid-strong` border (2px on the voice presence), 0 radius, `object-fit: cover`, never stretched, never filtered or inverted in dark theme.
+- **Alt text:** `<Patient name>, the fictional patient in the <case title> case`. Never empty: a portrait is content.
+- **Where:** the case library card (full card width, 4:3 crop), the home plate (fills the frame), the encounter header (48×48px, beside the case title), and the voice history presence (96×96px). Nowhere else: never on dashboard, review or analytics screens.
+
+**Voice presence.** The portrait in the voice panel during voice history. Its border colour and a Label-role word carry the state; nothing moves.
+
+| State | Border (2px) | Label |
+|---|---|---|
+| Waiting (not connected, or connected and quiet) | `--grid-strong` | `WAITING` |
+| Listening (student speaking) | `--ink` | `LISTENING` |
+| Thinking (student finished, no reply yet) | `--label` | `THINKING` |
+| Speaking (patient speaking) | `--carbon` | `SPEAKING` |
+
+- The only motion is `border-color` at 100ms linear (§7). No glow, shadow or scale (§9, §7). Under reduced motion the change is instant.
+
 ### Images (clinical findings)
 
 - 1px `--grid-strong` border, 0 radius, never cropped to decorative shapes.

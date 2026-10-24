@@ -6,13 +6,21 @@ import type {
   TranscriptSegment,
   VoiceConnectionState,
   VoiceError,
+  VoicePresence,
 } from './types'
+
+// Student speech arrives as transcript deltas; this long without one ends "listening".
+const STUDENT_SPEAKING_IDLE_MS = 900
+// After the student stops, "thinking" lasts until the patient replies or this long passes.
+const REPLY_WAIT_MS = 8_000
 
 export interface VoiceEncounter {
   state: VoiceConnectionState
   transcript: TranscriptSegment[]
   error: VoiceError | null
   patientSpeaking: boolean
+  /** Portrait presence: listening, thinking or speaking while live, otherwise idle. */
+  presence: VoicePresence
   muted: boolean
   usage: SessionUsage | null
   /** When the session became live (billing starts), or null when not connected. */
@@ -40,6 +48,9 @@ export function useVoiceEncounter(attemptId: string | null, onToolRejected?: (re
   const [deadlineAt, setDeadlineAt] = useState<number | null>(null)
   const [lastSpeechAt, setLastSpeechAt] = useState<number | null>(null)
   const [endedByServer, setEndedByServer] = useState<string | null>(null)
+  const [studentSpeaking, setStudentSpeaking] = useState(false)
+  const [awaitingReply, setAwaitingReply] = useState(false)
+  const speechTimers = useRef<{ student?: ReturnType<typeof setTimeout>; reply?: ReturnType<typeof setTimeout> }>({})
   const clientRef = useRef<LiveVoiceClient | null>(null)
   const rejectedRef = useRef(onToolRejected)
   useEffect(() => {
@@ -60,7 +71,16 @@ export function useVoiceEncounter(attemptId: string | null, onToolRejected?: (re
             setDeadlineAt(null)
           }
         },
-        onStudentSpeech: () => setLastSpeechAt(Date.now()),
+        onStudentSpeech: () => {
+          setLastSpeechAt(Date.now())
+          setStudentSpeaking(true)
+          setAwaitingReply(true)
+          const timers = speechTimers.current
+          clearTimeout(timers.student)
+          clearTimeout(timers.reply)
+          timers.student = setTimeout(() => setStudentSpeaking(false), STUDENT_SPEAKING_IDLE_MS)
+          timers.reply = setTimeout(() => setAwaitingReply(false), REPLY_WAIT_MS)
+        },
         onSessionOver: (reason) => {
           setEndedByServer(reason)
           void clientRef.current?.stop().catch(() => undefined)
@@ -69,7 +89,10 @@ export function useVoiceEncounter(attemptId: string | null, onToolRejected?: (re
         onTranscript: setTranscript,
         onError: setError,
         onUsage: setUsage,
-        onPatientSpeakingChange: setPatientSpeaking,
+        onPatientSpeakingChange: (speaking) => {
+          setPatientSpeaking(speaking)
+          if (speaking) setAwaitingReply(false)
+        },
       })
     }
     return clientRef.current
@@ -105,18 +128,25 @@ export function useVoiceEncounter(attemptId: string | null, onToolRejected?: (re
   // A session is billed for as long as it is open, so leaving the encounter or
   // switching cases must close it rather than let it linger.
   useEffect(() => {
+    const timers = speechTimers.current
     return () => {
+      clearTimeout(timers.student)
+      clearTimeout(timers.reply)
       const client = clientRef.current
       clientRef.current = null
       void client?.stop().catch(() => undefined)
     }
   }, [attemptId])
 
+  const presence: VoicePresence =
+    state !== 'live' ? 'idle' : patientSpeaking ? 'speaking' : studentSpeaking ? 'listening' : awaitingReply ? 'thinking' : 'idle'
+
   return {
     state,
     transcript,
     error,
     patientSpeaking,
+    presence,
     muted,
     usage,
     connectedAt,
