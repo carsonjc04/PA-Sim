@@ -9,11 +9,11 @@ import sharp from 'sharp'
 
 const SCENARIOS = 'content/scenarios'
 const OUT = 'public/portraits'
-const MODEL = 'gpt-image-1'
+const MODEL = 'gpt-image-1.5'
 const QUALITY = 'medium'
 const SIZE = 512
-// gpt-image-1 list prices, USD per token.
-const PRICE = { textIn: 5 / 1e6, imageIn: 10 / 1e6, imageOut: 40 / 1e6 }
+// gpt-image-1.5 list prices, USD per token (verify against the billing dashboard).
+const PRICE = { textIn: 5 / 1e6, imageIn: 8 / 1e6, imageOut: 32 / 1e6 }
 const STYLE =
   'Square head-and-shoulders editorial portrait photograph, centered, looking at the camera, calm neutral expression, ' +
   'soft neutral light-grey seamless background, natural soft window lighting, realistic skin texture, no text, no logos, ' +
@@ -55,6 +55,6 @@ for (const s of cases) {
       u.output_tokens * PRICE.imageOut
     : Number.NaN
   total += cost
-  console.log(`${s.id}: ${out} ($${cost.toFixed(4)})`)
+  console.log(`${s.id}: ${out} ($${cost.toFixed(4)}; tokens in ${u?.input_tokens} out ${u?.output_tokens})`)
 }
 console.log(`total: $${total.toFixed(4)}`)
