@@ -1,4 +1,3 @@
-import { Check } from 'lucide-react'
 import { useRef, useState, type KeyboardEvent } from 'react'
 import { annotationMarks, type AnnotationMark, type AnnotationTargetKind, type PublicAnnotation } from '../../api/contracts'
 import { MARK_ACTION, MARK_KEY, marksFor, type OptionData } from './encounterModel'
@@ -80,9 +79,7 @@ export function OptionList({ label, options, selected, single, readOnly, readOnl
               aria-describedby={`option-${o.id}-hint option-${o.id}-state`}
               onClick={() => !readOnly && onChoose(o.id)}
             >
-              <span className="option-check" aria-hidden="true">
-                {isSelected ? <Check size={15} /> : null}
-              </span>
+              <span className="option-check" aria-hidden="true" />
               <span className="option-text">
                 <strong id={`option-${o.id}-label`}>{o.label}</strong>{' '}
                 <small id={`option-${o.id}-hint`}>{o.hint}</small>
