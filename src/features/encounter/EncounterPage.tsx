@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowRight, Check, ChevronLeft, Keyboard, Lock, NotebookPen, WifiOff } from 'lucide-react'
+import { ArrowLeft, ArrowRight, ChevronLeft, Keyboard, Lock, NotebookPen, WifiOff } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { phaseOrder, type PhaseId } from '../../domain/types'
@@ -226,7 +226,8 @@ export function EncounterPage() {
                   {isLocked || isCurrent ? (
                     <button type="button" aria-current={isCurrent ? 'step' : undefined} onClick={() => setViewPhase(isCurrent ? null : p)}>
                       <span className="phase-step-num" aria-hidden="true">
-                        {isLocked ? <Check size={13} /> : i + 1}
+                        {String.fromCharCode(65 + i)}
+                        {isLocked ? ' ✕' : ''}
                       </span>
                       <span className="phase-step-name">{def?.label}</span>{' '}
                       <span className="phase-step-state">{p === shown && reviewing ? 'Viewing' : state}</span>
@@ -234,7 +235,7 @@ export function EncounterPage() {
                   ) : (
                     <span className="phase-step-future">
                       <span className="phase-step-num" aria-hidden="true">
-                        {i + 1}
+                        {String.fromCharCode(65 + i)}
                       </span>
                       <span className="phase-step-name">{def?.label}</span>{' '}
                       <span className="phase-step-state">{state}</span>
