@@ -300,7 +300,7 @@ Each item is a section with the standard section header.
 - **Source:** static committed files at `public/portraits/<caseId>.webp`, resolved by case ID through `src/features/patient/portrait.ts`. A case without a file, or a file that fails to load, renders no image and no placeholder box.
 - **Treatment:** square photo, 1px `--grid-strong` border (2px on the voice presence), 0 radius, `object-fit: cover`, never stretched, never filtered or inverted in dark theme.
 - **Alt text:** `<Patient name>, the fictional patient in the <case title> case`. Never empty: a portrait is content.
-- **Where:** the case library card (full card width, 4:3 crop), the home plate (fills the frame), the encounter header (48×48px, beside the case title), and the voice history presence (96×96px). Nowhere else: never on dashboard, review or analytics screens.
+- **Where:** the case library card (full card width, 4:3 crop), the home plate (fills the frame), the encounter header (48×48px, beside the case title), the sidebar "Patient and clinician" disclosure (44×44px; falls back to the authored initials), and the voice history presence (96×96px). Nowhere else: never on dashboard, review or analytics screens.
 
 **Voice presence.** The portrait in the voice panel during voice history. Its border colour and a Label-role word carry the state; nothing moves.
 

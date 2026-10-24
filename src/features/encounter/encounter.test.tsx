@@ -232,10 +232,21 @@ describe('guided encounter, keyboard only', () => {
 
 describe('case surface', () => {
   it('shows the patient portrait beside the case title at the door', async () => {
-    renderEncounter()
+    const { container } = renderEncounter()
     await ready()
-    const img = screen.getByRole('img', { name: `${def.patient.name}, the fictional patient in the ${def.summary.title.toLowerCase()} case` })
+    const header = container.querySelector('.phase-bar') as HTMLElement
+    const img = within(header).getByRole('img', { name: `${def.patient.name}, the fictional patient in the ${def.summary.title.toLowerCase()} case` })
     expect(img).toHaveAttribute('src', '/portraits/respiratory.webp')
+  })
+
+  it('uses the photo in the patient and clinician panel, and the initials if it fails', async () => {
+    const { container } = renderEncounter()
+    await ready()
+    const side = container.querySelector('.side-portraits')!
+    const img = within(side as HTMLElement).getByRole('img', { name: new RegExp(`^${def.patient.name}, the fictional patient`) })
+    expect(img).toHaveAttribute('src', '/portraits/respiratory.webp')
+    act(() => void img.dispatchEvent(new Event('error')))
+    expect(within(side as HTMLElement).getByText(def.patient.portrait.fallback)).toBeInTheDocument()
   })
 
   it('labels patient statements, findings and results by text, and announces what was revealed', async () => {

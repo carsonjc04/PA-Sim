@@ -7,7 +7,7 @@ import { useDisplaySettings } from '../settings/displaySettings'
 import { VoicePanel } from './VoicePanel'
 import { CaseSurface, Portrait } from './CaseSurface'
 import { PatientPortrait } from '../patient/PatientPortrait'
-import { patientPortraitAlt } from '../patient/portrait'
+import { patientPortraitAlt, patientPortraitSrc } from '../patient/portrait'
 import { buildEntries, ENTRY_LABEL, optionsFor } from './encounterModel'
 import { phaseIndexOf, useAnnotations, useAttemptNotes, useEncounter, useOnline } from './hooks'
 import { HistoryHints, HistoryModeToggle } from './HistoryScaffold'
@@ -396,7 +396,8 @@ export function EncounterPage() {
               <summary>Patient and clinician</summary>
               <div className="side-portraits">
                 <figure>
-                  <Portrait config={scenario.patient.portrait} small />
+                  {/* Portrait falls back to the authored initials if the photo is missing or fails. */}
+                  <Portrait config={{ ...scenario.patient.portrait, src: patientPortraitSrc(scenario.id) ?? undefined, alt: portraitAlt }} small />
                   <figcaption>
                     {scenario.patient.name}
                     <small>Fictional patient</small>
