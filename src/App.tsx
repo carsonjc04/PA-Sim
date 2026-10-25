@@ -19,11 +19,7 @@ import {
   Stethoscope,
 } from "lucide-react";
 import { PatientPortrait } from "./features/patient/PatientPortrait";
-import {
-  FEATURED_CASE,
-  patientPortraitAlt,
-  usePatientPortrait,
-} from "./features/patient/portrait";
+import { patientPortraitAlt } from "./features/patient/portrait";
 import {
   api,
   ApiRequestError,
@@ -258,83 +254,59 @@ function LegacyNotice() {
   );
 }
 function Home() {
-  const plate = usePatientPortrait(FEATURED_CASE.id);
   return (
     <div className="home">
       <Header showIdentity={false} />
       <main className="home-main">
-        <div className="home-columns">
-          <div className="home-copy">
-            <p className="home-kicker">
-              <span>ClinicSim field guide</span>
-              <i aria-hidden="true" />
-              <span>Practice edition</span>
-            </p>
-            <h1 className="home-headline">
-              Turn knowledge into clinical conversation.
-            </h1>
-            <p className="home-lede">
-              Choose the kind of encounter you want to practice. Speak
-              naturally, reason aloud, and learn by doing.
-            </p>
-            <ol className="home-actions">
-              <li>
-                <span className="home-numeral" aria-hidden="true">
-                  I
-                </span>
-                <div className="home-action-copy">
-                  <h2>
-                    <Link to="/cases" className="home-action-link">
-                      Start OSCE Practice
-                    </Link>
-                  </h2>
-                  <p>
-                    Interview a patient, examine, and commit to an assessment
-                    and plan, then review your debrief.
-                  </p>
-                </div>
-                <span className="home-action-tag">Conduct an encounter</span>
-                <span className="home-action-arrow" aria-hidden="true">
-                  <ArrowUpRight size={17} />
-                </span>
-              </li>
-              <li className="home-action--unavailable">
-                <span className="home-numeral" aria-hidden="true">
-                  II
-                </span>
-                <div className="home-action-copy">
-                  <h2>Start Clinical Sim</h2>
-                  <p>
-                    Take responsibility for workup, treatment, and disposition
-                    as the patient evolves.
-                  </p>
-                </div>
-                <span className="home-action-tag">Manage a patient</span>
-                <span className="home-action-badge">Coming soon</span>
-              </li>
-            </ol>
-          </div>
-          {plate && (
-            <figure className="home-figure">
-              <div className="home-plate">
-                <span className="home-plate-label" aria-hidden="true">
-                  Plate 01
-                </span>
-                <img
-                  className="home-plate-portrait"
-                  src={plate.src}
-                  alt={patientPortraitAlt(FEATURED_CASE.patient, FEATURED_CASE.title)}
-                  width={512}
-                  height={512}
-                  onError={plate.onError}
-                />
+        <div className="home-copy">
+          <p className="home-kicker">
+            <span>ClinicSim field guide</span>
+            <i aria-hidden="true" />
+            <span>Practice edition</span>
+          </p>
+          <h1 className="home-headline">
+            Turn knowledge into clinical conversation.
+          </h1>
+          <p className="home-lede">
+            Choose the kind of encounter you want to practice. Speak
+            naturally, reason aloud, and learn by doing.
+          </p>
+          <ol className="home-actions">
+            <li>
+              <span className="home-numeral" aria-hidden="true">
+                I
+              </span>
+              <div className="home-action-copy">
+                <h2>
+                  <Link to="/cases" className="home-action-link">
+                    Start OSCE Practice
+                  </Link>
+                </h2>
+                <p>
+                  Interview a patient, examine, and commit to an assessment
+                  and plan, then review your debrief.
+                </p>
               </div>
-              <figcaption>
-                <em>Fig. A</em> The featured case:{" "}
-                {FEATURED_CASE.title.toLowerCase()}. Patient is fictional.
-              </figcaption>
-            </figure>
-          )}
+              <span className="home-action-tag">Conduct an encounter</span>
+              <span className="home-action-arrow" aria-hidden="true">
+                <ArrowUpRight size={17} />
+              </span>
+            </li>
+            <li className="home-action--unavailable">
+              <span className="home-numeral" aria-hidden="true">
+                II
+              </span>
+              <div className="home-action-copy">
+                <h2>Start Clinical Sim</h2>
+                <p>
+                  Take responsibility for workup, treatment, and disposition
+                  as the patient evolves.
+                </p>
+              </div>
+              <span className="home-action-tag">Manage a patient</span>
+              <span className="home-action-badge">Coming soon</span>
+            </li>
+          </ol>
         </div>
       </main>
       <div className="home-banner">
@@ -577,11 +549,6 @@ function Cases() {
           const status = statusById[s.id];
           return (
             <article className="case-card" key={s.id}>
-              <PatientPortrait
-                caseId={s.id}
-                alt={patientPortraitAlt(s.patient.name, s.summary.title)}
-                className="case-card-portrait"
-              />
               <div className="case-card-top">
                 <span className={`tag ${s.summary.urgent ? "tag-amber" : ""}`}>
                   {s.summary.urgent ? "Urgent decision" : "Routine visit"}
@@ -594,7 +561,14 @@ function Cases() {
                       : "Not started"}
                 </span>
               </div>
-              <h2>{s.summary.title}</h2>
+              <div className="case-card-head">
+                <PatientPortrait
+                  caseId={s.id}
+                  alt={patientPortraitAlt(s.patient.name, s.summary.title)}
+                  className="case-card-portrait"
+                />
+                <h2>{s.summary.title}</h2>
+              </div>
               <p>{s.summary.complaint}</p>
               <div className="case-meta">
                 <span>

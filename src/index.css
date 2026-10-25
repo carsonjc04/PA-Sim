@@ -18,8 +18,8 @@ code,kbd,samp{font-family:var(--mono)}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 
 /* Type roles shared across screens (§2) */
-.eyebrow,.tag,.home-kicker,.home-action-tag,.home-action-badge,.home-plate-label,.voice-speaker,.timeline-kind,.review-why span,.phase-step-state,.progress-tier,.mark-badge,.debrief-badge,.phase-locked-tag,.checklist-state,.option-selected-text,.study-missing,.difficulty,.case-status,.identity-form label,.study-select,.study-findings dt,.review-rating legend,.confidence-toggle legend,.settings-group legend,.study-sprint legend,.entry-label,.brand small,.identity-chip small,.voice-status,.voice-presence-state,.review-state{font-family:var(--sans);font-size:0.6875rem;line-height:1;font-weight:600;font-stretch:75%;letter-spacing:.1em;text-transform:uppercase}
-.timeline-time,.notes-meta,.voice-timer [role=timer],.phase-bar-meta,.attempt-copy span,.progress-basis,.review-card-top small,.study-weight,.library-count,.voice-meter,.home-figure figcaption,footer{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.eyebrow,.tag,.home-kicker,.home-action-tag,.home-action-badge,.voice-speaker,.timeline-kind,.review-why span,.phase-step-state,.progress-tier,.mark-badge,.debrief-badge,.phase-locked-tag,.checklist-state,.option-selected-text,.study-missing,.difficulty,.case-status,.identity-form label,.study-select,.study-findings dt,.review-rating legend,.confidence-toggle legend,.settings-group legend,.study-sprint legend,.entry-label,.brand small,.identity-chip small,.voice-status,.voice-presence-state,.review-state{font-family:var(--sans);font-size:0.6875rem;line-height:1;font-weight:600;font-stretch:75%;letter-spacing:.1em;text-transform:uppercase}
+.timeline-time,.notes-meta,.voice-timer [role=timer],.phase-bar-meta,.attempt-copy span,.progress-basis,.review-card-top small,.study-weight,.library-count,.voice-meter,footer{font-family:var(--mono);font-variant-numeric:tabular-nums}
 .tag,.home-action-badge,.mark-badge,.debrief-badge,.phase-locked-tag,.progress-tier,.study-missing{display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border:1px solid var(--grid-strong);background:var(--form);color:var(--ink);white-space:nowrap}
 
 /* Buttons (§5) */
@@ -86,7 +86,9 @@ h1 em{font-weight:inherit;color:inherit}
 .tag-amber{color:var(--ink)}
 .case-status{color:var(--label)}
 .patient-portrait{display:block;object-fit:cover;object-position:50% 30%;border:1px solid var(--grid-strong);background:var(--form)}
-.case-card-portrait{width:calc(100% + 32px);height:auto;aspect-ratio:4/3;margin:-16px -16px 16px;border:0;border-bottom:1px solid var(--grid)}
+.case-card-head{display:flex;align-items:center;gap:12px;margin:20px 0 8px}
+.case-card-head h2{margin:0}
+.case-card-portrait{width:64px;height:64px;flex-shrink:0}
 .phase-bar-portrait{width:48px;height:48px;align-self:center}
 .voice-presence{display:flex;align-items:center;gap:12px;margin:0 0 12px}
 .voice-presence .patient-portrait{width:96px;height:96px;border:2px solid var(--grid-strong);transition:border-color 100ms linear}
@@ -159,7 +161,6 @@ h1 em{font-weight:inherit;color:inherit}
 /* Home screen */
 .home{display:flex;flex-direction:column;min-height:100vh;background:var(--bg);color:var(--ink)}
 .home-main{max-width:1120px;margin:0 auto;padding:48px 16px 64px;width:100%}
-.home-columns{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:48px;align-items:start}
 .home-kicker{display:flex;align-items:center;gap:12px;margin:0 0 20px;color:var(--label)}
 .home-kicker i{flex:0 0 64px;height:1px;background:var(--grid-strong)}
 .home-headline{font-size:2rem;line-height:1.1;font-weight:700;letter-spacing:-.01em;margin:0 0 16px;max-width:24ch}
@@ -181,12 +182,6 @@ h1 em{font-weight:inherit;color:inherit}
 .home-actions li:has(.home-action-link:hover) .home-action-arrow{background:var(--stamp);border-color:var(--stamp);color:var(--on-stamp)}
 .home-action--unavailable .home-action-copy h2,.home-action--unavailable .home-numeral{color:var(--label)}
 .home-action-badge{border-style:dashed;color:var(--label)}
-.home-figure{margin:0}
-.home-plate{position:relative;border:1px solid var(--grid-strong);background:var(--form);aspect-ratio:5/4;overflow:hidden}
-.home-plate-label{position:absolute;top:12px;left:12px;padding:4px 8px;background:var(--form);border:1px solid var(--grid-strong);color:var(--label);z-index:1}
-.home-plate-portrait{position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:cover;object-position:50% 30%}
-.home-figure figcaption{display:flex;gap:12px;margin-top:12px;font-size:0.75rem;line-height:1.4;color:var(--label)}
-.home-figure figcaption em{font-family:var(--sans);font-weight:600;color:var(--ink);white-space:nowrap}
 .home-banner{background:var(--form);border-top:1px solid var(--grid-strong);display:flex;align-items:center;justify-content:space-between;gap:24px;padding:20px max(16px,calc((100vw - 1120px)/2))}
 .home-banner p{margin:0;font-size:1.0625rem;line-height:1.3;font-weight:600}
 .home-banner-actions{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
@@ -195,7 +190,7 @@ h1 em{font-weight:inherit;color:inherit}
 .home-banner-link{color:var(--ink);font-size:0.8125rem;font-weight:600;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}
 .home-banner-link:hover{color:var(--stamp)}
 .home footer{margin-top:0}
-@media(max-width:860px){.home-main{padding:32px 16px 48px}.home-columns{grid-template-columns:1fr;gap:32px}.home-figure{order:2}.home-copy{order:1}.home-actions li{gap:12px;flex-wrap:wrap}.home-action-copy{flex:1 1 calc(100% - 96px)}.home-action-tag{order:3;margin-left:36px;flex:1}.home-action-badge{order:4}.home-banner{flex-direction:column;align-items:flex-start}}
+@media(max-width:860px){.home-main{padding:32px 16px 48px}.home-actions li{gap:12px;flex-wrap:wrap}.home-action-copy{flex:1 1 calc(100% - 96px)}.home-action-tag{order:3;margin-left:36px;flex:1}.home-action-badge{order:4}.home-banner{flex-direction:column;align-items:flex-start}}
 
 /* Identity and server-state notices */
 .identity-chip,.identity-form{display:flex;align-items:center;gap:8px;font-size:0.8125rem;font-weight:600}
