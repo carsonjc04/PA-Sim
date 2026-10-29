@@ -58,6 +58,29 @@ export function EncounterPage() {
   const online = useOnline()
   const [settings, updateSettings] = useDisplaySettings()
   const { annotations, toggle, error: markError, clearError } = useAnnotations(enc.attempt?.id)
+  // The sidebar sticks below the phase bar at its measured height (it changes with wrapping and the phase steps),
+  // and is no taller than the viewport left below the bar minus the page that follows the layout (the footer):
+  // a sticky element is dragged up by its container's end, so without that allowance the bottom of the page
+  // would push the sidebar, and the avatar video in it, under the bar.
+  const encounterRoot = useRef<HTMLDivElement>(null)
+  const phaseBar = useRef<HTMLElement>(null)
+  const hasLayout = Boolean(enc.attempt)
+  useEffect(() => {
+    const bar = phaseBar.current
+    const root = encounterRoot.current
+    if (!bar || !root || typeof ResizeObserver === 'undefined') return
+    const layout = root.querySelector('.encounter-layout')
+    const sync = () => {
+      root.style.setProperty('--phase-bar-h', `${Math.ceil(bar.getBoundingClientRect().height)}px`)
+      const after = layout ? document.documentElement.scrollHeight - (layout.getBoundingClientRect().bottom + window.scrollY) : 0
+      root.style.setProperty('--encounter-tail', `${Math.max(0, Math.ceil(after))}px`)
+    }
+    sync()
+    const observer = new ResizeObserver(sync)
+    observer.observe(bar)
+    observer.observe(document.body)
+    return () => observer.disconnect()
+  }, [hasLayout])
   const notes = useAttemptNotes(enc.attempt?.id)
   const [viewPhase, setViewPhase] = useState<PhaseId | null>(null)
   const [confirm, setConfirm] = useState(false)
@@ -197,12 +220,12 @@ export function EncounterPage() {
   const downtime = settings.downtime
 
   return (
-    <div className={`encounter${downtime ? ' encounter--downtime' : ''}`} onKeyDown={onRootKeyDown}>
+    <div ref={encounterRoot} className={`encounter${downtime ? ' encounter--downtime' : ''}`} onKeyDown={onRootKeyDown}>
       <p className="sr-only" aria-live="polite" aria-atomic="true">
         {announcement}
       </p>
 
-      <header className="phase-bar">
+      <header className="phase-bar" ref={phaseBar}>
         <div className="phase-bar-top">
           <Link to="/cases" className="back-link">
             <ChevronLeft size={15} aria-hidden="true" /> Exit encounter
@@ -417,6 +440,7 @@ export function EncounterPage() {
             <summary>Voice conversation (optional)</summary>
             <VoicePanel
               attemptId={attempt.id}
+              caseId={scenario.id}
               onActivity={enc.refresh}
               onToolRejected={onToolRejected}
               patient={voiceHistory ? { caseId: scenario.id, name: scenario.patient.name, alt: portraitAlt } : undefined}

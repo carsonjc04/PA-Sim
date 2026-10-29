@@ -1,5 +1,6 @@
 import type {
   AttemptSummary,
+  LiveUsage,
   PublicAttempt,
   PublicDebrief,
   PublicEvent,
@@ -102,6 +103,7 @@ export function toPublicAttempt(
   scenario: ScenarioDefinition,
   events: EventRow[],
   result: ResultRow | null,
+  liveUsage: LiveUsage | null = null,
 ): PublicAttempt {
   return {
     id: attempt.id,
@@ -114,6 +116,7 @@ export function toPublicAttempt(
     events: events.map((e) => toPublicEvent(e, scenario)).filter((e): e is PublicEvent => e !== null),
     historyMode: historyModeOf(events),
     hints: hintsOf(scenario, events),
+    liveUsage,
     createdAt: attempt.createdAt,
     submittedAt: attempt.submittedAt,
     debrief: attempt.status === 'submitted' && result ? toPublicDebrief(scenario, result, events, attempt.createdAt) : null,

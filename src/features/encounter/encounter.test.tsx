@@ -60,7 +60,7 @@ vi.mock('../../api/client', () => ({ api: mocks.api, ApiRequestError: mocks.ApiR
 vi.mock('./VoicePanel', () => ({ VoicePanel: () => <p>Voice mode is not configured. Guided mode works without it.</p> }))
 
 function reset() {
-  attempt = { id: '00000000-0000-4000-8000-000000000001', scenarioId: 'respiratory', contentVersionId: 'respiratory@x', status: 'active', currentPhase: 'history', lockedPhases: [], scenario, events: [], historyMode: 'guided', hints: [], createdAt: new Date().toISOString(), submittedAt: null, debrief: null }
+  attempt = { id: '00000000-0000-4000-8000-000000000001', scenarioId: 'respiratory', contentVersionId: 'respiratory@x', status: 'active', currentPhase: 'history', lockedPhases: [], scenario, events: [], historyMode: 'guided', hints: [], liveUsage: null, createdAt: new Date().toISOString(), submittedAt: null, debrief: null }
   notes = { body: '', version: 0, updatedAt: null }
   annotations = []
   offline = false

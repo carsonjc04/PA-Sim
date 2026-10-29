@@ -17,6 +17,7 @@ const markers = [
   'You are speaking with a physician assistant',
   'Hard limits',
   'OPENAI_API_KEY',
+  'LIVEAVATAR_API_KEY',
   'criticalWaivers',
   'spoilerTerms',
   'nextReviewDue',

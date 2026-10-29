@@ -1,7 +1,7 @@
 {
   "_note": "Portrait-only appearance briefs, keyed by case ID. Not case content: nothing here is clinical or shown to students. Age comes from the scenario file; each brief must stay consistent with the authored pronouns.",
   "asthma": "young adult with an androgynous presentation, West African heritage, short natural hair, wearing a plain grey crewneck sweatshirt",
-  "chest-pressure": "man with fair skin, short grey hair, light stubble, wearing a navy quarter-zip pullover",
+  "chest-pressure": "man with fair skin, short ash-blond greying hair, clean-shaven, wearing a blue button-up shirt (still of the LiveAvatar stock avatar; not generated)",
   "dysuria": "woman with light-brown skin, shoulder-length dark wavy hair, wearing a simple olive t-shirt",
   "metabolic": "Hispanic man with medium-brown skin, short dark hair greying at the temples, wearing a light blue button-up shirt",
   "respiratory": "East Asian woman, straight black hair tied back, wearing a cream knit cardigan"

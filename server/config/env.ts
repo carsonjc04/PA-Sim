@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { avatarCaseIds } from '../avatar/pilot'
 
 const blankAsUnset = (value: unknown) => (value === '' ? undefined : value)
 
@@ -36,6 +37,15 @@ const schema = z.object({
   LIVE_SWEEP_INTERVAL_MS: z.coerce.number().int().min(1_000).default(30_000),
   STORE_TRANSCRIPTS: z.stringbool().default(false),
   LIVE_VOICE_RATE_PER_MINUTE_USD: z.coerce.number().nonnegative().default(0.05),
+
+  /** LiveAvatar (HeyGen) LITE: renders a face for the voice session's audio. Server-side only. */
+  LIVEAVATAR_API_KEY: z.preprocess(blankAsUnset, z.string().min(1).optional()),
+  /** Sandbox sessions are free but last about a minute and use LiveAvatar's one sandbox face. */
+  LIVEAVATAR_SANDBOX: z.stringbool().default(false),
+  /** The plan's per-session ceiling (the free plan allows 120 s). The avatar never outlives the voice deadline either. */
+  LIVEAVATAR_MAX_SESSION_SECONDS: z.coerce.number().int().min(30).max(3600).default(120),
+  /** LITE uses 1 credit per minute, prorated; about $0.09–0.10 per credit on paid plans. */
+  LIVEAVATAR_RATE_PER_MINUTE_USD: z.coerce.number().nonnegative().default(0.1),
 })
 
 export type Env = z.infer<typeof schema>
@@ -72,6 +82,9 @@ export const insecureAuth = env.AUTH_PROVIDER === 'dev' && env.NODE_ENV === 'pro
 /** Indicates whether an API key was configured without exposing its value. */
 export const aiEnabled = Boolean(env.OPENAI_API_KEY)
 
+/** The avatar is a layer over voice, so it needs both keys. */
+export const avatarEnabled = aiEnabled && Boolean(env.LIVEAVATAR_API_KEY)
+
 /** Returns the API key or throws when it has not been configured. */
 export function requireApiKey(): string {
   if (!env.OPENAI_API_KEY) {
@@ -93,6 +106,9 @@ export function publicCapabilities() {
     idleTimeoutSeconds: env.LIVE_IDLE_TIMEOUT_SECONDS,
     storeTranscripts: env.STORE_TRANSCRIPTS,
     estimatedVoiceRatePerMinuteUsd: env.LIVE_VOICE_RATE_PER_MINUTE_USD,
+    avatarCaseIds: avatarEnabled ? avatarCaseIds() : [],
+    estimatedAvatarRatePerMinuteUsd: env.LIVEAVATAR_RATE_PER_MINUTE_USD,
+    avatarMaxSeconds: env.LIVEAVATAR_MAX_SESSION_SECONDS,
     setupHint: aiEnabled
       ? null
       : 'Set OPENAI_API_KEY on the server to enable AI voice mode. Guided mode works without it.',

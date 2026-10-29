@@ -2,8 +2,12 @@ import { Router, type Request } from 'express'
 import { z } from 'zod'
 import { authOf, requireAuth } from '../auth/context'
 import { getOwnedAttemptWithScenario, recordEvent, recordLiveStarted } from '../attempts/service'
-import { aiEnabled, env } from '../config/env'
+import { endAvatar } from '../avatar/guard'
+import { AVATAR_PILOT, SANDBOX_AVATAR_ID } from '../avatar/pilot'
+import { avatarProvider } from '../avatar/provider'
+import { aiEnabled, avatarEnabled, env } from '../config/env'
 import { ApiError } from '../http/errors'
+import { now } from '../lib/clock'
 import * as ledger from '../live/ledger'
 import { closeSession, onSessionStarted, verifyServable } from '../live/sessionGuard'
 import { openaiClient } from '../openai/client'
@@ -236,4 +240,66 @@ liveRouter.post('/end', async (req, res) => {
   if (!session || session.attemptId !== parsed.data.attemptId) throw new ApiError('Unknown voice session', 404, 'live_session_not_found')
   const confirmed = session.endedAt ? true : await closeSession(session.sessionId, 'client_end')
   res.json({ ok: true, confirmed })
+})
+
+const avatarEndBody = sessionCall.extend({ reason: z.enum(['client_end', 'failed']) })
+
+/**
+ * Avatar + Voice (pilot cases only): starts a LiveAvatar LITE session for an open voice session. One per voice
+ * session, requested right after it connects. Its provider-side maximum is the plan ceiling or the voice
+ * session's remaining time, whichever is shorter, so the avatar can never run past the voice cap. Only the
+ * session's own LiveKit token and event socket URL reach the browser.
+ */
+liveRouter.post('/avatar', async (req, res) => {
+  const parsed = sessionCall.safeParse(req.body ?? {})
+  if (!parsed.success) throw new ApiError('Invalid avatar request', 400, 'invalid_body')
+  if (!avatarEnabled) throw new ApiError('The avatar is not set up on this server. Voice continues without it.', 503, 'avatar_unavailable')
+  const { attempt } = await getOwnedAttemptWithScenario(authOf(req), parsed.data.attemptId)
+  const pilot = AVATAR_PILOT[attempt.scenarioId]
+  if (!pilot) throw new ApiError('This case is voice-only.', 409, 'avatar_not_offered')
+  const verdict = await verifyServable(parsed.data.sessionId, parsed.data.attemptId)
+  if (!verdict.ok) throw sessionOver(verdict.code)
+
+  const remainingSeconds = Math.floor((verdict.session.deadlineAt.getTime() - now().getTime()) / 1000)
+  const maxSeconds = Math.min(env.LIVEAVATAR_MAX_SESSION_SECONDS, remainingSeconds)
+  if (maxSeconds < 30) throw new ApiError('Too little voice time is left for the avatar. Voice continues without it.', 409, 'avatar_no_time')
+  if (!(await ledger.claimAvatar(parsed.data.sessionId, parsed.data.attemptId))) {
+    throw new ApiError('The avatar was already started for this voice session.', 409, 'avatar_already_started')
+  }
+
+  let grant
+  try {
+    grant = await avatarProvider().start({ avatarId: env.LIVEAVATAR_SANDBOX ? SANDBOX_AVATAR_ID : pilot.avatarId, sandbox: env.LIVEAVATAR_SANDBOX, maxSeconds })
+  } catch (cause) {
+    console.error('[avatar] start failed', { attemptId: attempt.id, status: (cause as { status?: number })?.status ?? 'unknown' })
+    await ledger.markAvatarEnded(parsed.data.sessionId, 'failed')
+    throw new ApiError('The avatar could not start. Voice continues without it.', 502, 'avatar_provider_unavailable')
+  }
+  const deadline = new Date(Math.min(now().getTime() + grant.maxSeconds * 1000, verdict.session.deadlineAt.getTime()))
+  await ledger.recordAvatarStart(parsed.data.sessionId, grant.avatarSessionId, deadline)
+  // The voice session may have closed while the provider was starting; never leave an avatar billing alone.
+  const after = await ledger.getSession(parsed.data.sessionId)
+  if (after?.endedAt) {
+    await endAvatar(parsed.data.sessionId, 'voice_ended')
+    throw sessionOver('live_session_ended')
+  }
+
+  res.json({
+    avatarSessionId: grant.avatarSessionId,
+    livekitUrl: grant.livekitUrl,
+    livekitClientToken: grant.livekitClientToken,
+    wsUrl: grant.wsUrl,
+    deadlineAt: deadline.toISOString(),
+  })
+})
+
+/** The browser stopped the avatar (Stop avatar, or it failed and degraded to voice-only). Voice is untouched. */
+liveRouter.post('/avatar/end', async (req, res) => {
+  const parsed = avatarEndBody.safeParse(req.body ?? {})
+  if (!parsed.success) throw new ApiError('Invalid avatar end request', 400, 'invalid_body')
+  await getOwnedAttemptWithScenario(authOf(req), parsed.data.attemptId)
+  const avatar = await ledger.getAvatar(parsed.data.sessionId)
+  if (!avatar || avatar.attemptId !== parsed.data.attemptId) throw new ApiError('No avatar for this voice session', 404, 'avatar_not_found')
+  await endAvatar(parsed.data.sessionId, parsed.data.reason)
+  res.json({ ok: true })
 })

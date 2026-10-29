@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 import { env } from '../config/env'
-import { getPool } from '../db/pool'
+import { getPool, type Queryable } from '../db/pool'
 import { ApiError } from '../http/errors'
 import { now } from '../lib/clock'
 
@@ -203,6 +203,95 @@ export function judge(session: LedgerSession | null, at = now()): SessionVerdict
   if (at.getTime() >= session.deadlineAt.getTime()) return { ok: false, code: 'live_session_expired', session }
   if (at.getTime() - session.lastActivityAt.getTime() > idleMs()) return { ok: false, code: 'live_session_idle', session }
   return { ok: true, session }
+}
+
+// ---- Avatar layer (one per voice session at most) ----
+
+export type AvatarEndReason = 'client_end' | 'failed' | 'voice_ended' | 'limit'
+
+export interface LedgerAvatar {
+  sessionId: string
+  attemptId: string
+  avatarSessionId: string | null
+  startedAt: Date
+  deadlineAt: Date | null
+  endedAt: Date | null
+}
+
+/**
+ * Claims the voice session's one avatar slot. False when it was already claimed (an avatar is chosen before the
+ * session, never added again later), so parallel requests can never start two billed avatars.
+ */
+export async function claimAvatar(sessionId: string, attemptId: string): Promise<boolean> {
+  const { rowCount } = await getPool().query(
+    'UPDATE live_sessions SET avatar_started_at = $3 WHERE session_id = $1 AND attempt_id = $2 AND avatar_started_at IS NULL AND ended_at IS NULL',
+    [sessionId, attemptId, now()],
+  )
+  return (rowCount ?? 0) > 0
+}
+
+/** Records the started avatar; its minutes count from now. */
+export async function recordAvatarStart(sessionId: string, avatarSessionId: string, deadline: Date): Promise<void> {
+  await getPool().query('UPDATE live_sessions SET avatar_session_id = $2, avatar_started_at = $3, avatar_deadline_at = $4 WHERE session_id = $1', [sessionId, avatarSessionId, now(), deadline])
+}
+
+/** Ends the avatar on the ledger. A claim the provider never started ends with zero minutes. */
+export async function markAvatarEnded(sessionId: string, reason: AvatarEndReason): Promise<boolean> {
+  const { rowCount } = await getPool().query(
+    `UPDATE live_sessions SET avatar_ended_at = CASE WHEN avatar_session_id IS NULL THEN avatar_started_at ELSE least($2, coalesce(avatar_deadline_at, $2)) END,
+       avatar_end_reason = $3
+     WHERE session_id = $1 AND avatar_started_at IS NOT NULL AND avatar_ended_at IS NULL`,
+    [sessionId, now(), reason],
+  )
+  return (rowCount ?? 0) > 0
+}
+
+export async function setAvatarCredits(sessionId: string, credits: number): Promise<void> {
+  await getPool().query('UPDATE live_sessions SET avatar_credits = $2 WHERE session_id = $1', [sessionId, credits])
+}
+
+const toAvatar = (r: { session_id: string; attempt_id: string; avatar_session_id: string | null; avatar_started_at: Date; avatar_deadline_at: Date | null; avatar_ended_at: Date | null }): LedgerAvatar => ({
+  sessionId: r.session_id,
+  attemptId: r.attempt_id,
+  avatarSessionId: r.avatar_session_id,
+  startedAt: r.avatar_started_at,
+  deadlineAt: r.avatar_deadline_at,
+  endedAt: r.avatar_ended_at,
+})
+
+export async function getAvatar(sessionId: string): Promise<LedgerAvatar | null> {
+  const { rows } = await getPool().query('SELECT * FROM live_sessions WHERE session_id = $1 AND avatar_started_at IS NOT NULL', [sessionId])
+  return rows[0] ? toAvatar(rows[0]) : null
+}
+
+/** Avatars still open on the ledger, with whether their voice session has ended. */
+export async function openAvatars(): Promise<(LedgerAvatar & { voiceEnded: boolean })[]> {
+  const { rows } = await getPool().query('SELECT * FROM live_sessions WHERE avatar_started_at IS NOT NULL AND avatar_ended_at IS NULL')
+  return rows.map((r) => ({ ...toAvatar(r), voiceEnded: r.ended_at !== null }))
+}
+
+/** Billed time on this attempt: voice and avatar, summed across sessions. Open ones count up to now. */
+export async function usageOf(attemptId: string, q: Queryable = getPool()): Promise<{ sessions: number; voiceMs: number; avatarMs: number; avatarCredits: number | null; avatarSessions: number }> {
+  const { rows } = await q.query<{ sessions: number; voice: string | null; avatar: string | null; credits: string | null; avatars: number; unreported: number }>(
+    `SELECT count(*)::int AS sessions,
+       sum(extract(epoch FROM (least(coalesce(ended_at, $2), deadline_at) - started_at)) * 1000) AS voice,
+       sum(extract(epoch FROM (least(coalesce(avatar_ended_at, $2), coalesce(avatar_deadline_at, $2)) - avatar_started_at)) * 1000)
+         FILTER (WHERE avatar_session_id IS NOT NULL) AS avatar,
+       sum(avatar_credits) AS credits,
+       count(*) FILTER (WHERE avatar_session_id IS NOT NULL)::int AS avatars,
+       count(*) FILTER (WHERE avatar_session_id IS NOT NULL AND avatar_credits IS NULL)::int AS unreported
+     FROM live_sessions WHERE attempt_id = $1`,
+    [attemptId, now()],
+  )
+  const r = rows[0]
+  return {
+    sessions: r.sessions,
+    voiceMs: Math.max(0, Number(r.voice ?? 0)),
+    avatarMs: Math.max(0, Number(r.avatar ?? 0)),
+    // Only a full report is a reported total; a partial one would understate.
+    avatarCredits: r.avatars > 0 && r.unreported === 0 ? Number(r.credits) : null,
+    avatarSessions: r.avatars,
+  }
 }
 
 /** Test seam. */
