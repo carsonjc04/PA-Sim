@@ -417,6 +417,7 @@ export function EncounterPage() {
             <summary>Voice conversation (optional)</summary>
             <VoicePanel
               attemptId={attempt.id}
+              caseId={scenario.id}
               onActivity={enc.refresh}
               onToolRejected={onToolRejected}
               patient={voiceHistory ? { caseId: scenario.id, name: scenario.patient.name, alt: portraitAlt } : undefined}

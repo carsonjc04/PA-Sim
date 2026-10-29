@@ -4,6 +4,7 @@ import type {
   EventResult,
   HistoryPage,
   HistoryQuery,
+  LiveUsage,
   PublicAttempt,
   StartAttemptResponse,
 } from '../../src/api/contracts'
@@ -12,7 +13,9 @@ import { phaseOrder, type Attempt, type PhaseId, type ScenarioDefinition } from 
 import type { AuthContext } from '../auth/context'
 import { GRADING_VERSION, canonicalJson, currentContent, sha256 } from '../content/versions'
 import { getPool, withTransaction, type Queryable } from '../db/pool'
+import { env } from '../config/env'
 import { ApiError } from '../http/errors'
+import * as ledger from '../live/ledger'
 import { now } from '../lib/clock'
 import { confidenceOf, deriveRemediationSafely } from '../review/derive'
 import { planTool } from '../tools/execute'
@@ -26,7 +29,26 @@ async function snapshot(q: Queryable, attempt: repo.AttemptRow): Promise<PublicA
   const scenario = await repo.getContentDefinition(q, attempt.contentVersionId)
   const events = await repo.listLiveEvents(q, attempt.id)
   const result = attempt.status === 'submitted' ? await repo.getResult(q, attempt.id) : null
-  return toPublicAttempt(attempt, scenario, events, result)
+  return toPublicAttempt(attempt, scenario, events, result, liveUsageOf(await ledger.usageOf(attempt.id, q)))
+}
+
+const cents = (usd: number) => Math.round(usd * 100) / 100
+const tenths = (ms: number) => Math.round(ms / 6_000) / 10
+
+/** Plain-language usage for the attempt record. LiveAvatar prorates credits (observed: 110 s billed 1.9 credits). */
+export function liveUsageOf(u: Awaited<ReturnType<typeof ledger.usageOf>>): LiveUsage | null {
+  if (u.sessions === 0) return null
+  return {
+    voiceMinutes: tenths(u.voiceMs),
+    voiceEstimatedUsd: cents((u.voiceMs / 60_000) * env.LIVE_VOICE_RATE_PER_MINUTE_USD),
+    avatar: u.avatarSessions === 0
+      ? null
+      : {
+          minutes: tenths(u.avatarMs),
+          credits: u.avatarCredits,
+          estimatedUsd: cents((u.avatarCredits ?? u.avatarMs / 60_000) * env.LIVEAVATAR_RATE_PER_MINUTE_USD),
+        },
+  }
 }
 
 function isUniqueViolation(error: unknown): boolean {

@@ -42,6 +42,7 @@ export class LiveVoiceClient {
   private channel: RTCDataChannel | null = null
   private micStream: MediaStream | null = null
   private audioEl: HTMLAudioElement | null = null
+  private remoteStream: MediaStream | null = null
   private state: VoiceConnectionState = 'idle'
   private aggregator = new TranscriptAggregator()
   private attemptId = ''
@@ -127,7 +128,8 @@ export class LiveVoiceClient {
     this.audioEl = document.createElement('audio')
     this.audioEl.autoplay = true
     peer.ontrack = (event) => {
-      if (this.audioEl) this.audioEl.srcObject = event.streams[0] ?? null
+      this.remoteStream = event.streams[0] ?? null
+      if (this.audioEl) this.audioEl.srcObject = this.remoteStream
     }
 
     peer.onconnectionstatechange = () => {
@@ -369,6 +371,19 @@ export class LiveVoiceClient {
     for (const track of this.micStream?.getAudioTracks() ?? []) track.enabled = !muted
   }
 
+  /** The patient's audio from the voice session, for the avatar layer to render. */
+  getRemoteStream(): MediaStream | null {
+    return this.remoteStream
+  }
+
+  /**
+   * Silences the patient's voice locally while the avatar plays it (the avatar's audio is the same speech, kept
+   * in sync with its face). The track keeps flowing, so unmuting restores voice-only at once.
+   */
+  setRemoteAudioMuted(muted: boolean): void {
+    if (this.audioEl) this.audioEl.muted = muted
+  }
+
   isMuted(): boolean {
     const track = this.micStream?.getAudioTracks()[0]
     return track ? !track.enabled : false
@@ -445,6 +460,7 @@ export class LiveVoiceClient {
       this.audioEl.srcObject = null
       this.audioEl = null
     }
+    this.remoteStream = null
     this.pendingToolCalls = 0
   }
 }

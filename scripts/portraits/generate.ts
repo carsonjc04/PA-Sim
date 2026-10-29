@@ -1,11 +1,13 @@
 // Generates one static patient portrait per case: public/portraits/<caseId>.webp.
 // Offline only (never called by the app). Reads OPENAI_API_KEY from the environment or .env.
 // Usage: tsx scripts/portraits/generate.ts [caseId ...]   (default: every case missing a portrait)
+// Avatar pilot cases are skipped: their portrait is a cropped still of the case's LiveAvatar stock avatar.
 import 'dotenv/config'
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import OpenAI from 'openai'
 import sharp from 'sharp'
+import { AVATAR_PILOT } from '../../server/avatar/pilot'
 
 const SCENARIOS = 'content/scenarios'
 const OUT = 'public/portraits'
@@ -36,6 +38,11 @@ mkdirSync(OUT, { recursive: true })
 let total = 0
 
 for (const s of cases) {
+  // Avatar pilot cases use a still of their LiveAvatar face, so voice-only and Avatar + Voice show one patient.
+  if (AVATAR_PILOT[s.id]) {
+    console.warn(`skip ${s.id}: portrait is a still of its LiveAvatar avatar (server/avatar/pilot.ts)`)
+    continue
+  }
   const brief = briefs[s.id]
   const age = Number.parseInt(s.summary.age, 10)
   if (!brief || !Number.isFinite(age)) {

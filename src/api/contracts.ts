@@ -106,6 +106,12 @@ export type ApiErrorCode =
   | 'live_session_ended'
   | 'live_session_idle'
   | 'live_session_not_found'
+  | 'avatar_unavailable'
+  | 'avatar_not_offered'
+  | 'avatar_no_time'
+  | 'avatar_already_started'
+  | 'avatar_provider_unavailable'
+  | 'avatar_not_found'
   | 'live_session_unresolved'
   | 'live_budget_spent'
   | 'live_client_limit'
@@ -284,9 +290,24 @@ export interface PublicAttempt {
   historyMode: HistoryMode
   /** Hints revealed so far, oldest first. */
   hints: PublicHint[]
+  /** Billed voice and avatar time on this attempt, from the server's session ledger; null when voice was never used. */
+  liveUsage: LiveUsage | null
   createdAt: string
   submittedAt: string | null
   debrief: PublicDebrief | null
+}
+
+/** Estimates in plain language, not bills: minutes from the server clock, dollars at the configured rates. */
+export interface LiveUsage {
+  voiceMinutes: number
+  voiceEstimatedUsd: number
+  /** Null when the avatar was never used on this attempt. */
+  avatar: {
+    minutes: number
+    /** Credits LiveAvatar reported for every avatar session; null until all have reported (minutes are used instead). */
+    credits: number | null
+    estimatedUsd: number
+  } | null
 }
 
 export interface StartAttemptResponse {
@@ -567,6 +588,12 @@ export interface AiStatus {
   /** Estimate shown to learners in plain language; not a bill. */
   estimatedVoiceRatePerMinuteUsd: number
   storeTranscripts: boolean
+  /** Cases that offer Avatar + Voice on this server (empty when the avatar is not set up). */
+  avatarCaseIds: string[]
+  /** Estimate shown to learners in plain language; not a bill. */
+  estimatedAvatarRatePerMinuteUsd: number
+  /** Longest single avatar session the server's LiveAvatar plan allows. */
+  avatarMaxSeconds: number
 }
 
 // ---- Learning analytics ----

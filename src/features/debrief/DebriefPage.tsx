@@ -307,6 +307,8 @@ export function DebriefPage() {
         </ul>
       </section>
 
+      {attempt.liveUsage && <LiveUsageNote usage={attempt.liveUsage} />}
+
       <nav className="debrief-next" aria-label="Next steps">
         <Link className="button button-primary" to={`/encounter/${attempt.scenarioId}`}>
           <RotateCcw size={16} aria-hidden="true" /> Replay this case
@@ -319,6 +321,30 @@ export function DebriefPage() {
         </Link>
       </nav>
     </article>
+  )
+}
+
+const usdText = (n: number) => `$${n.toFixed(2)}`
+const minText = (n: number) => `${n} ${n === 1 ? 'minute' : 'minutes'}`
+
+/** Paid AI time on this attempt, from the server's session ledger. Estimates at the server's rates, not a bill. */
+export function LiveUsageNote({ usage }: { usage: NonNullable<PublicAttempt['liveUsage']> }) {
+  const a = usage.avatar
+  return (
+    <section className="debrief-section debrief-usage" aria-labelledby="usage-title">
+      <h2 id="usage-title">Paid AI time on this attempt</h2>
+      <p>
+        Voice: {minText(usage.voiceMinutes)}, about {usdText(usage.voiceEstimatedUsd)}.
+        {a && (
+          <>
+            {' '}
+            Avatar: {minText(a.minutes)}, about {usdText(a.estimatedUsd)}
+            {a.credits !== null ? ` (${a.credits} LiveAvatar ${a.credits === 1 ? 'credit' : 'credits'} reported).` : ' (estimated from minutes; LiveAvatar has not reported its total yet).'}
+          </>
+        )}{' '}
+        These are estimates, not a bill.
+      </p>
+    </section>
   )
 }
 

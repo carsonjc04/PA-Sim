@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { api } from '../../api/client'
 import type { AiStatus } from '../../api/contracts'
-import { useVoiceEncounter } from '../../voice/useVoiceEncounter'
+import { useVoiceEncounter, type VoiceMode } from '../../voice/useVoiceEncounter'
 import type { VoiceConnectionState, VoicePresence } from '../../voice/types'
 import { PatientPortrait } from '../patient/PatientPortrait'
 
@@ -32,11 +32,14 @@ const clock = (ms: number) => {
  */
 export function VoicePanel({
   attemptId,
+  caseId,
   onActivity,
   onToolRejected,
   patient,
 }: {
   attemptId: string
+  /** Decides whether Avatar + Voice is offered (pilot cases only). */
+  caseId: string
   onActivity?: () => void
   onToolRejected?: (reason: string) => void
   /** Shown as the voice presence portrait during voice history. */
@@ -46,7 +49,12 @@ export function VoicePanel({
   const [unreachable, setUnreachable] = useState(false)
   const [now, setNow] = useState(() => Date.now())
   const [autoEnded, setAutoEnded] = useState<'limit' | 'idle' | null>(null)
-  const voice = useVoiceEncounter(attemptId, onToolRejected)
+  const [mode, setMode] = useState<VoiceMode>('voice')
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const avatarAudioRef = useRef<HTMLAudioElement>(null)
+  const voice = useVoiceEncounter(attemptId, onToolRejected, () =>
+    videoRef.current && avatarAudioRef.current ? { video: videoRef.current, audio: avatarAudioRef.current } : null,
+  )
   const errorRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -133,6 +141,11 @@ export function VoicePanel({
   const estimate = connectedAt === null ? 0 : (minutes + 1) * rate
   const remainingMs = connectedAt === null || deadline === null ? null : deadline - now
   const dropped = voice.error?.code === 'webrtc_failed'
+  const avatarOffered = status.avatarCaseIds.includes(caseId)
+  const avatarRate = status.estimatedAvatarRatePerMinuteUsd
+  const avatarMinutes = Math.max(1, Math.floor(status.avatarMaxSeconds / 60))
+  const avatarShown = voice.avatar === 'starting' || voice.avatar === 'live'
+  const caption = [...voice.transcript].reverse().find((t) => t.speaker === 'patient')?.text ?? ''
 
   return (
     <section className="voice-panel" aria-labelledby="voice-title">
@@ -141,7 +154,7 @@ export function VoicePanel({
         <span className={`voice-status voice-status--${state}`}>{state === 'live' && voice.patientSpeaking ? 'Patient speaking' : statusLabel[state]}</span>
       </header>
 
-      {patient && (
+      {patient && voice.avatar !== 'live' && (
         <figure className={`voice-presence voice-presence--${voice.presence}`}>
           <PatientPortrait caseId={patient.caseId} alt={patient.alt} />
           <figcaption>
@@ -149,6 +162,51 @@ export function VoicePanel({
             {patient.name}
           </figcaption>
         </figure>
+      )}
+
+      {avatarOffered && (
+        <figure className="voice-avatar" hidden={!avatarShown} aria-labelledby="voice-avatar-caption">
+          {/* Muted video: the avatar's voice plays from its own audio element, in sync with the face. */}
+          <video ref={videoRef} autoPlay playsInline muted aria-label={`Animated ${patient?.name ?? 'patient'}`} />
+          <audio ref={avatarAudioRef} autoPlay />
+          {voice.avatar === 'starting' && <p className="voice-hint">Starting the avatar. You hear the patient's voice meanwhile.</p>}
+          {/* Visual captions; the transcript below is the accessible record, so these are not announced twice. */}
+          {voice.avatar === 'live' && caption && (
+            <p className="voice-avatar-caption" aria-hidden="true">
+              {caption}
+            </p>
+          )}
+          <figcaption id="voice-avatar-caption">
+            {patient?.name ?? 'Patient'}: a fictional patient, animated by an AI avatar service. Not a real person.
+          </figcaption>
+          <button type="button" className="button button-quiet button-small" onClick={voice.stopAvatar}>
+            Stop avatar (keep voice)
+          </button>
+        </figure>
+      )}
+
+      {voice.avatarNotice && (
+        <p className="voice-hint" role="status">
+          {voice.avatarNotice}
+        </p>
+      )}
+
+      {avatarOffered && !active && (
+        <fieldset className="voice-mode">
+          <legend>Choose before you connect</legend>
+          <label>
+            <input type="radio" name="voice-mode" value="voice" checked={mode === 'voice'} onChange={() => setMode('voice')} /> Voice only
+          </label>
+          <label>
+            <input type="radio" name="voice-mode" value="avatar" checked={mode === 'avatar'} onChange={() => setMode('avatar')} /> Avatar + Voice
+          </label>
+          {mode === 'avatar' && (
+            <p className="voice-hint">
+              The avatar shows the patient's face speaking the same voice. It adds about {usd(avatarRate)} per minute while it runs, for up to {avatarMinutes}{' '}
+              {avatarMinutes === 1 ? 'minute' : 'minutes'} per session; then the patient continues as voice only. You can stop it at any time and keep voice.
+            </p>
+          )}
+        </fieldset>
       )}
 
       <p className="voice-cost">
@@ -166,6 +224,11 @@ export function VoicePanel({
       {connectedAt !== null && (
         <p className="voice-meter" role="status">
           Connected {minutes} {minutes === 1 ? 'minute' : 'minutes'}, about {usd(estimate)} so far (an estimate, not a bill).
+          {voice.avatarSince !== null && (() => {
+            const avatarMin = minutesBetween(voice.avatarSince, voice.avatarUntil ?? now)
+            // Counts the current minute as used, like the voice estimate, so it errs high.
+            return ` Avatar ${avatarMin} ${avatarMin === 1 ? 'minute' : 'minutes'}, about ${usd((avatarMin + 1) * avatarRate)} so far.`
+          })()}
           {remainingMs !== null && remainingMs <= 2 * 60_000 && ` Wrapping up: summarize and close. The session ends in ${remainingMs < 60_000 ? 'under a minute' : `${Math.ceil(remainingMs / 60_000)} minutes`}.`}
         </p>
       )}
@@ -177,8 +240,8 @@ export function VoicePanel({
       )}
 
       {!active && !dropped && (
-        <button type="button" onClick={voice.connect}>
-          {state === 'closed' ? 'Start a new voice session' : 'Connect voice'}
+        <button type="button" onClick={() => voice.connect(avatarOffered ? mode : 'voice')}>
+          {state === 'closed' ? 'Start a new voice session' : avatarOffered && mode === 'avatar' ? 'Connect avatar and voice' : 'Connect voice'}
         </button>
       )}
 

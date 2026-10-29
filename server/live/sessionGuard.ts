@@ -1,4 +1,5 @@
 import { SidebandWS } from 'openai/resources/live/sideband/ws'
+import { endAvatar, sweepAvatars } from '../avatar/guard'
 import { env } from '../config/env'
 import { now } from '../lib/clock'
 import { openaiClient } from '../openai/client'
@@ -80,6 +81,9 @@ export function closeSession(sessionId: string, reason: ledger.EndReason): Promi
   const running = inflight.get(sessionId)
   if (running) return running
   const attempt = (async () => {
+    // The avatar layer never outlives its voice session, whether or not the voice close is confirmed. It is
+    // stopped alongside, so the voice close never waits on the avatar provider.
+    void endAvatar(sessionId, reason === 'limit' ? 'limit' : 'voice_ended').catch(() => console.error('[avatar] could not end with its voice session', { sessionId }))
     try {
       const confirmed = (await closer.close(sessionId)) !== false
       if (confirmed) await ledger.markEnded(sessionId, reason)
@@ -153,6 +157,7 @@ export async function sweep(): Promise<{ expired: number; idle: number; assumed:
       await closeSession(s.sessionId, 'idle')
     }
   }
+  await sweepAvatars()
   return result
 }
 
