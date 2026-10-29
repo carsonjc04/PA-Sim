@@ -588,12 +588,12 @@ export interface AiStatus {
   /** Estimate shown to learners in plain language; not a bill. */
   estimatedVoiceRatePerMinuteUsd: number
   storeTranscripts: boolean
-  /** Cases that offer Avatar + Voice on this server (empty when the avatar is not set up). */
-  avatarCaseIds: string[]
+  /** Cases that offer Avatar + Voice on this server (empty when the avatar is not set up; absent from older servers). */
+  avatarCaseIds?: string[]
   /** Estimate shown to learners in plain language; not a bill. */
-  estimatedAvatarRatePerMinuteUsd: number
+  estimatedAvatarRatePerMinuteUsd?: number
   /** Longest single avatar session the server's LiveAvatar plan allows. */
-  avatarMaxSeconds: number
+  avatarMaxSeconds?: number
 }
 
 // ---- Learning analytics ----

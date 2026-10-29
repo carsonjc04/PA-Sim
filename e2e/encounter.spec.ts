@@ -132,3 +132,20 @@ test('reduced motion is honored', async ({ page }) => {
   const durations = await page.evaluate(() => [...document.querySelectorAll('button, a')].map((el) => getComputedStyle(el).transitionDuration))
   expect(durations.every((d) => d.split(',').every((x) => parseFloat(x) === 0))).toBe(true)
 })
+
+test('the sidebar never slides under the sticky phase bar at desktop width', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await useIdentity(page, 'e2e-sidebar-overlap')
+  await page.goto('/encounter/chest-pressure')
+  await expect(page.locator('.phase-bar')).toBeVisible()
+  for (const y of [0, 300, 99999]) {
+    await page.evaluate((to) => scrollTo(0, to), y)
+    const { bar, side, viewport } = await page.evaluate(() => {
+      const b = document.querySelector('.phase-bar')!.getBoundingClientRect()
+      const s = document.querySelector('.encounter-side')!.getBoundingClientRect()
+      return { bar: { bottom: b.bottom }, side: { top: s.top, bottom: s.bottom }, viewport: innerHeight }
+    })
+    expect(side.top).toBeGreaterThanOrEqual(bar.bottom)
+    expect(side.bottom).toBeLessThanOrEqual(viewport)
+  }
+})

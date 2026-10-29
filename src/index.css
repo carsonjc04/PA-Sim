@@ -104,7 +104,9 @@ h1 em{font-weight:inherit;color:inherit}
 .voice-mode label{display:flex;align-items:center;gap:8px;font-size:0.875rem;color:var(--ink)}
 .voice-avatar{margin:0 0 12px;display:grid;gap:8px}
 .voice-avatar[hidden]{display:none}
-.voice-avatar video{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;object-position:50% 20%;background:var(--form);border:2px solid var(--grid-strong)}
+/* Square head-and-shoulders window on the 16:9 feed: the same crop as the case's static portrait (x 620–1300, y 40–720 of 1920×1080). */
+.voice-avatar-frame{position:relative;aspect-ratio:1/1;overflow:hidden;background:var(--form);border:2px solid var(--grid-strong)}
+.voice-avatar-frame video{position:absolute;width:282.35%;height:auto;left:-91.18%;top:-5.88%;max-width:none}
 .voice-avatar-caption{margin:0;padding:8px 12px;background:var(--form);border-top:1px solid var(--grid);font-size:0.875rem;line-height:1.45;color:var(--ink)}
 .voice-avatar figcaption{font-family:var(--mono);font-size:0.75rem;line-height:1.4;color:var(--label)}
 .voice-panel .voice-avatar button{justify-self:start;min-height:32px;padding:8px 12px;background:var(--form);color:var(--ink);border-color:var(--ink)}
@@ -428,7 +430,7 @@ h1 em{font-weight:inherit;color:inherit}
 .encounter-banner--info{color:var(--ink)}
 .encounter-layout{display:grid;grid-template-columns:minmax(0,8fr) minmax(260px,4fr);gap:24px;align-items:start}
 .encounter-main{display:grid;gap:20px;min-width:0}
-.encounter-side{display:grid;gap:12px;position:sticky;top:180px;min-width:0}
+.encounter-side{display:grid;gap:12px;align-content:start;position:sticky;top:calc(var(--phase-bar-h,200px) + 12px);max-height:calc(100vh - var(--phase-bar-h,200px) - var(--encounter-tail,0px) - 24px);overflow-y:auto;overscroll-behavior:contain;min-width:0}
 .case-surface,.phase-panel,.notes-panel{background:var(--form);border:1px solid var(--grid-strong);padding:16px}
 .surface-title{display:flex;align-items:center;gap:8px;font-size:0.6875rem;line-height:1;font-weight:600;font-stretch:75%;letter-spacing:.1em;text-transform:uppercase;margin:0 0 12px;color:var(--label)}
 .surface-more{margin:0 0 12px;width:auto}
@@ -521,14 +523,14 @@ h1 em{font-weight:inherit;color:inherit}
 .shortcut-list{display:grid;gap:8px;margin:0 0 8px}
 .shortcut-list div{display:grid;grid-template-columns:8.5rem 1fr;gap:12px;font-size:0.9375rem}
 .shortcut-list dd{margin:0}
-@media(max-width:860px){.encounter-layout{grid-template-columns:minmax(0,1fr)}.encounter-side{position:static}.phase-steps{display:flex;overflow-x:auto}.phase-step{flex:0 0 auto}.phase-step-state{display:none}.phase-step>button,.phase-step-future{white-space:nowrap;padding:12px}}
+@media(max-width:860px){.encounter-layout{grid-template-columns:minmax(0,1fr)}.encounter-side{position:static;max-height:none;overflow:visible}.phase-steps{display:flex;overflow-x:auto}.phase-step{flex:0 0 auto}.phase-step-state{display:none}.phase-step>button,.phase-step-future{white-space:nowrap;padding:12px}}
 @media(max-width:520px){.phase-bar{margin-top:-16px}.phase-bar-title h1{font-size:1.375rem}.case-surface,.phase-panel,.notes-panel{padding:12px}.option-row{grid-template-columns:1fr}.option-mark-toggle{min-height:40px;border-left:0;border-top:1px solid var(--grid);text-align:left}.option-marks{padding-left:16px}.phase-footer .button{width:100%;justify-content:center}.phase-footer-actions{width:100%}}
 
 /* Downtime mode: compact, one-handed. Primary actions sit in a bottom bar within thumb reach. */
 .encounter--downtime .phase-bar{position:static}
 .encounter--downtime .phase-bar-meta,.encounter--downtime .phase-description,.encounter--downtime .option-text small{display:none}
 .encounter--downtime .encounter-layout{grid-template-columns:minmax(0,1fr)}
-.encounter--downtime .encounter-side{position:static}
+.encounter--downtime .encounter-side{position:static;max-height:none;overflow:visible}
 .encounter--downtime .option-choose{min-height:56px;padding:16px}
 .encounter--downtime .option-text strong{font-size:1rem}
 .encounter--downtime{padding-bottom:96px}

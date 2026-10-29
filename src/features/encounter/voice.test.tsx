@@ -175,6 +175,14 @@ describe('Avatar + Voice toggle (pilot)', () => {
     expect(mocks.voice.connect).toHaveBeenCalledWith('avatar')
   })
 
+  it('stays voice-only, without crashing, against a server older than the avatar pilot', async () => {
+    const { avatarCaseIds: _a, estimatedAvatarRatePerMinuteUsd: _r, avatarMaxSeconds: _m, ...older } = status
+    mocks.api.aiStatus.mockResolvedValue(older)
+    await renderPanel('chest-pressure')
+    expect(screen.queryByRole('radio')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Connect voice' })).toBeInTheDocument()
+  })
+
   it('cannot be changed mid-session', async () => {
     mocks.voice = voice({ state: 'live', connectedAt: Date.now() })
     await renderPanel('chest-pressure')

@@ -107,6 +107,12 @@ export function VoicePanel({
     return () => clearTimeout(t)
   }, [connectedAt, idleSeconds, voice.lastSpeechAt, disconnect])
 
+  // Bring the avatar into view inside the sidebar when it goes live (the sidebar scrolls on its own).
+  const avatarLive = voice.avatar === 'live'
+  useEffect(() => {
+    if (avatarLive) videoRef.current?.closest('figure')?.scrollIntoView?.({ block: 'nearest' })
+  }, [avatarLive])
+
   // Move focus to a new error (for example a blocked microphone) so it is read out and actionable.
   const errorCode = voice.error?.code
   const ready = status !== null
@@ -141,9 +147,10 @@ export function VoicePanel({
   const estimate = connectedAt === null ? 0 : (minutes + 1) * rate
   const remainingMs = connectedAt === null || deadline === null ? null : deadline - now
   const dropped = voice.error?.code === 'webrtc_failed'
-  const avatarOffered = status.avatarCaseIds.includes(caseId)
-  const avatarRate = status.estimatedAvatarRatePerMinuteUsd
-  const avatarMinutes = Math.max(1, Math.floor(status.avatarMaxSeconds / 60))
+  // A server older than the avatar pilot sends no avatar fields: voice-only, never a crash (the web app and API deploy separately).
+  const avatarOffered = status.avatarCaseIds?.includes(caseId) ?? false
+  const avatarRate = status.estimatedAvatarRatePerMinuteUsd ?? 0
+  const avatarMinutes = Math.max(1, Math.floor((status.avatarMaxSeconds ?? 60) / 60))
   const avatarShown = voice.avatar === 'starting' || voice.avatar === 'live'
   const caption = [...voice.transcript].reverse().find((t) => t.speaker === 'patient')?.text ?? ''
 
@@ -167,7 +174,9 @@ export function VoicePanel({
       {avatarOffered && (
         <figure className="voice-avatar" hidden={!avatarShown} aria-labelledby="voice-avatar-caption">
           {/* Muted video: the avatar's voice plays from its own audio element, in sync with the face. */}
-          <video ref={videoRef} autoPlay playsInline muted aria-label={`Animated ${patient?.name ?? 'patient'}`} />
+          <div className="voice-avatar-frame">
+            <video ref={videoRef} autoPlay playsInline muted aria-label={`Animated ${patient?.name ?? 'patient'}`} />
+          </div>
           <audio ref={avatarAudioRef} autoPlay />
           {voice.avatar === 'starting' && <p className="voice-hint">Starting the avatar. You hear the patient's voice meanwhile.</p>}
           {/* Visual captions; the transcript below is the accessible record, so these are not announced twice. */}
