@@ -104,10 +104,11 @@ h1 em{font-weight:inherit;color:inherit}
 .voice-mode label{display:flex;align-items:center;gap:8px;font-size:0.875rem;color:var(--ink)}
 .voice-avatar{margin:0 0 12px;display:grid;gap:8px}
 .voice-avatar[hidden]{display:none}
-.voice-avatar video{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;background:var(--form);border:2px solid var(--grid-strong)}
+.voice-avatar video{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;object-position:50% 20%;background:var(--form);border:2px solid var(--grid-strong)}
 .voice-avatar-caption{margin:0;padding:8px 12px;background:var(--form);border-top:1px solid var(--grid);font-size:0.875rem;line-height:1.45;color:var(--ink)}
 .voice-avatar figcaption{font-family:var(--mono);font-size:0.75rem;line-height:1.4;color:var(--label)}
-.voice-avatar .button{justify-self:start}
+.voice-panel .voice-avatar button{justify-self:start;min-height:32px;padding:8px 12px;background:var(--form);color:var(--ink);border-color:var(--ink)}
+.voice-panel .voice-avatar button:hover{background:var(--carbon-wash);border-color:var(--ink)}
 .case-card h2{font-size:1.0625rem;line-height:1.3;font-weight:600;margin:24px 0 8px}
 .case-card>p{color:var(--label);font-size:0.8125rem;line-height:1.45;margin:0}
 .case-meta{font-family:var(--mono);font-size:0.75rem;color:var(--label);margin-top:auto;padding:20px 0 12px}

@@ -46,6 +46,9 @@ export interface AvatarMedia {
 
 export const AVATAR_RATE = 24_000
 const CHUNK_SAMPLES = AVATAR_RATE / 5 // 200 ms per agent.speak
+// The first chunk of an utterance carries a 500 ms lead, so network jitter does not drain the avatar's buffer
+// mid-sentence (observed: the avatar went idle and restarted within one reply at a 200 ms lead).
+const LEAD_SAMPLES = AVATAR_RATE / 2
 const SILENCE_END_MS = 600
 const SPEECH_RMS = 0.004
 const CONNECT_TIMEOUT_MS = 15_000
@@ -147,6 +150,8 @@ export class AvatarLayer {
   interrupt(): void {
     if (this.done || (!this.utterance && !this.talking)) return
     this.utterance = null
+    // Until the provider reports talking again; repeated student speech then sends no further interrupts.
+    this.talking = false
     this.pending = []
     this.pendingSamples = 0
     this.silentMs = 0
@@ -226,7 +231,7 @@ export class AvatarLayer {
     if (this.silentMs >= SILENCE_END_MS) {
       this.flush('agent.speak_end')
       this.utterance = null
-    } else if (this.pendingSamples >= CHUNK_SAMPLES) {
+    } else if (this.pendingSamples >= (this.first ? LEAD_SAMPLES : CHUNK_SAMPLES)) {
       this.flush('agent.speak')
     }
   }

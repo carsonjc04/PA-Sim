@@ -316,7 +316,7 @@ Each item is a section with the standard section header.
 **Avatar + Voice (pilot cases only).** An optional animated face over the same voice session, chosen before connecting.
 
 - **Mode choice:** a fieldset of two native radios, `Voice only` (default) and `Avatar + Voice`, legend in Label role. Shown only on cases the server lists as avatar-enabled, and only before a session; it never appears mid-session. Choosing Avatar + Voice states its extra cost and per-session limit in Body text before the connect button.
-- **Video:** replaces the presence portrait while the avatar is live (the portrait returns when it ends). 16:9 frame, full panel width, 2px `--grid-strong` border, 0 radius, `object-fit: cover`, `--form` background while loading. Never filtered or inverted in dark theme. No overlays on the face.
+- **Video:** replaces the presence portrait while the avatar is live (the portrait returns when it ends). 4:3 frame, full panel width, cropped toward the face (`object-position: 50% 20%`), 2px `--grid-strong` border, 0 radius, `object-fit: cover`, `--form` background while loading. Never filtered or inverted in dark theme. No overlays on the face.
 - **Captions:** the patient's latest line in Body text on a `--form` strip below the video, 1px `--grid` top border. Visual only (the transcript below is the accessible record).
 - **Disclosure:** a Meta caption under the video naming the patient as fictional and animated by an AI avatar service, not a real person.
 - **Stop avatar (keep voice):** a small quiet button under the caption. Stopping or any failure returns to the portrait, with a plain notice in the voice hint style; voice continues.

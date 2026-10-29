@@ -52,7 +52,7 @@ beforeEach(() => vi.useRealTimers())
 afterEach(() => vi.useRealTimers())
 
 describe('utterance framing', () => {
-  it('streams voice audio as 200 ms chunks, the first carrying the utterance id, and ends on silence', async () => {
+  it('streams voice audio with a 500 ms lead then 200 ms chunks, the first carrying the utterance id, and ends on silence', async () => {
     const r = rig()
     await started(r)
     expect(r.events.onReady).toHaveBeenCalledOnce()
@@ -60,17 +60,21 @@ describe('utterance framing', () => {
     expect(r.sent).toEqual([])
     r.audio(200, true)
     r.audio(200, true)
+    expect(r.sent).toEqual([]) // still building the lead
+    r.audio(200, true)
+    r.audio(200, true)
     r.audio(700, false)
     const speaks = r.sent.filter((e) => e.type === 'agent.speak')
     expect(speaks.length).toBeGreaterThanOrEqual(2)
     expect(r.sent.at(-1)?.type).toBe('agent.speak_end')
     expect(new Set(r.sent.map((e) => e.event_id)).size).toBe(r.sent.length)
-    // 200 ms of PCM16 at 24 kHz is 9600 bytes.
-    expect(atob(speaks[0].audio!).length).toBe(9600)
+    // 600 ms of PCM16 at 24 kHz (the lead, reached on the third frame) is 28800 bytes; later chunks 200 ms, 9600 bytes.
+    expect(atob(speaks[0].audio!).length).toBe(28800)
+    expect(atob(speaks[1].audio!).length).toBe(9600)
 
     // The next utterance starts with a new id.
     const firstId = speaks[0].event_id
-    r.audio(200, true)
+    r.audio(600, true)
     const next = r.sent.at(-1)!
     expect(next.type).toBe('agent.speak')
     expect(next.event_id).not.toBe(firstId)
@@ -86,6 +90,8 @@ describe('barge-in', () => {
     r.audio(200, true)
     r.layer.interrupt()
     expect(r.sent.at(-1)?.type).toBe('agent.interrupt')
+    r.layer.interrupt() // more student speech: nothing left to interrupt
+    expect(r.sent.filter((e) => e.type === 'agent.interrupt')).toHaveLength(1)
     r.emit({ type: 'agent.state_updated', new_state: 'talking' })
     r.layer.interrupt()
     expect(r.sent.filter((e) => e.type === 'agent.interrupt')).toHaveLength(2)
