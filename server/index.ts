@@ -1,7 +1,7 @@
 import 'dotenv/config'
 import './content/startup-check'
 import { createApp } from './app'
-import { aiEnabled, env, insecureAuth } from './config/env'
+import { aiEnabled, avatarEnabled, env, insecureAuth } from './config/env'
 import { migrate } from './db/migrate'
 import { getPool } from './db/pool'
 import { startSessionGuards } from './live/sessionGuard'
@@ -26,6 +26,7 @@ if (insecureAuth) {
 const server = createApp().listen(port, '0.0.0.0', () => {
   console.log(`[server] listening on port ${port}`)
   console.log(`[server] AI voice mode: ${aiEnabled ? 'enabled' : 'disabled (no OPENAI_API_KEY)'}`)
+  console.log(`[server] avatar mode: ${avatarEnabled ? 'enabled' : env.LIVEAVATAR_API_KEY ? 'disabled (no OPENAI_API_KEY)' : 'disabled (no LIVEAVATAR_API_KEY)'}`)
   console.log(`[server] auth provider: ${env.AUTH_PROVIDER}`)
 })
 
