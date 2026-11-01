@@ -1,4 +1,4 @@
-import type { HistoryMode, PublicHint } from '../../src/api/contracts'
+import type { HistoryMode, PublicHint, PublicHistoryProgress } from '../../src/api/contracts'
 import type { Action, ScenarioDefinition } from '../../src/domain/types'
 import type { EventRow } from './repository'
 
@@ -24,4 +24,14 @@ export function hintsOf(s: ScenarioDefinition, events: EventRow[]): PublicHint[]
 export function nextHint(s: ScenarioDefinition, events: EventRow[]): Action | null {
   const used = new Set(events.filter((e) => (e.type === 'action' && e.phase === 'history') || e.type === 'hint_used').map((e) => e.actionId))
   return keyHistoryActions(s).find((a) => !used.has(a.id)) ?? null
+}
+
+/** Counts only, never which items are key: asked by either mode feeds one history rubric. */
+export function historyProgressOf(s: ScenarioDefinition, events: EventRow[]): PublicHistoryProgress {
+  const key = new Set(keyHistoryActions(s).map((a) => a.id))
+  const asked = events.filter((e) => e.type === 'action' && e.phase === 'history' && e.confirmed && e.actionId)
+  return {
+    keyAsked: new Set(asked.filter((e) => key.has(e.actionId as string)).map((e) => e.actionId)).size,
+    keyTotal: key.size,
+  }
 }

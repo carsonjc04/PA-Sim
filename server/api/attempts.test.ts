@@ -386,6 +386,17 @@ describe('voice history scaffolding', () => {
   const history = scenario.phases.find((p) => p.id === 'history')!.actions
   const key = history.filter((a) => (a.effects ?? []).reduce((n, e) => n + e.points, 0) > 0 && !a.unsafeReason)
 
+  it('counts key history items asked in either mode, without naming which are key', async () => {
+    const client = as('progress')
+    const id = (await client.start()).body.attempt.id as string
+    expect((await client.get(id)).body.historyProgress).toEqual({ keyAsked: 0, keyTotal: key.length })
+    const distractor = history.find((a) => !key.includes(a))
+    await client.event(id, { type: 'action', tool: 'record_history_topics', actionIds: [key[0].id, ...(distractor ? [distractor.id] : [])] })
+    await client.event(id, { type: 'set_mode', mode: 'voice' })
+    const res = await client.event(id, { type: 'action', tool: 'record_history_topics', actionIds: [key[0].id, key[1].id] })
+    expect(res.body.attempt.historyProgress).toEqual({ keyAsked: 2, keyTotal: key.length })
+  })
+
   it('serves hints only in voice history: one key question at a time, in authored order, never a distractor', async () => {
     const client = as('hinter')
     const id = (await client.start()).body.attempt.id as string

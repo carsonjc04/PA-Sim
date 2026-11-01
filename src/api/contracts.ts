@@ -277,6 +277,12 @@ export interface PublicChecklistItem {
   source: 'guided' | 'voice' | null
 }
 
+/** Counts only: which items are key stays server-side. Both input modes feed the same history rubric. */
+export interface PublicHistoryProgress {
+  keyAsked: number
+  keyTotal: number
+}
+
 export interface PublicAttempt {
   id: string
   scenarioId: string
@@ -288,6 +294,8 @@ export interface PublicAttempt {
   events: PublicEvent[]
   /** History-phase mode; guided unless the learner chose voice. */
   historyMode: HistoryMode
+  /** History counts across both input modes; absent from servers older than the one-mode history screen. */
+  historyProgress?: PublicHistoryProgress
   /** Hints revealed so far, oldest first. */
   hints: PublicHint[]
   /** Billed voice and avatar time on this attempt, from the server's session ledger; null when voice was never used. */

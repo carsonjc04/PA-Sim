@@ -233,8 +233,11 @@ Load them with:
 
 ### History mode and hints
 
-- **History mode control:** a segmented row of 2 cells (`VOICE, NO LIST` / `GUIDED LIST`), built like the confidence control (§5, Review cards). It shows only during the history phase. Under it, 1 Label-role line says what the selected mode does, and that a switch is noted in the debrief.
-- **Voice history:** no choice rows are rendered: not hidden by CSS, absent from the DOM. The screen holds the chief complaint, the exchange log, voice status and the hint block.
+- **One input mode at a time.** During the history phase exactly one input surface is on screen: the voice panel (Talk) or the choice rows (Checklist). The other is not rendered at all. The exchange log stays in both, since it is the student's record, not an input.
+- **History progress line:** 1 Body line above the mode control, plain text, never a bar or percentage: `History: N of M key items asked. Your history score counts everything you asked, however you asked it.` N counts key items asked in either mode.
+- **History mode control:** a segmented row of 2 cells (`TALK TO THE PATIENT` / `ASK BY CHECKLIST`), built like the confidence control (§5, Review cards). It shows only during the history phase and is keyboard-operable (native buttons, `aria-pressed`). Under it, 1 Label-role line says what the selected mode does. Talk is the default on a student's first history phase when voice is available; after that the student's last choice is remembered on this device. Switching keeps everything already asked: voice-asked items show as selected in the checklist.
+- **Talk (voice history):** no choice rows are rendered: not hidden by CSS, absent from the DOM. The main surface holds the chief complaint, the exchange log, the voice panel (with the avatar video as its lead visual when live) and the hint block. Leaving Talk ends any live voice session.
+- **After history:** the voice panel is gone. The sidebar shows 1 Body line as a read-only record, `You asked N history items by voice.` No connect control is offered; voice owns history only.
 - **Hint block:** a section with the standard section header (`HINTS`), 1 line of Label-role text stating that hints are scaffolding, don't record a question or change the score, and are reported in the debrief. It also holds 1 quiet button (`Show one suggested question`) and a mono `Hints used · n` count. Revealed suggestions form an ordered list, quoted in Value small. A press never moves focus.
 
 ### Dialog
@@ -317,7 +320,7 @@ Each item is a section with the standard section header.
 
 - **Mode choice:** a fieldset of two native radios, `Voice only` (default) and `Avatar + Voice`, legend in Label role. Shown only on cases the server lists as avatar-enabled, and only before a session; it never appears mid-session. Choosing Avatar + Voice states its extra cost and per-session limit in Body text before the connect button.
 - **Video:** replaces the presence portrait while the avatar is live (the portrait returns when it ends). Square frame, full panel width, showing the same head-and-shoulders window as the static portrait (face and mouth in view; the 16:9 feed is scaled and offset inside the frame), 2px `--grid-strong` border, 0 radius, `--form` background while loading. Never filtered or inverted in dark theme. No overlays on the face.
-- **Never under the phase bar:** the encounter sidebar sticks below the phase bar at the bar's measured height and scrolls within itself, so the video cannot pass beneath the bar. When the avatar goes live, the sidebar scrolls it into view.
+- **Placement:** in the main surface, inside the voice panel, during Talk history. Max-width 480px so the face stays the lead visual without pushing the controls off screen. When the avatar goes live, it scrolls into view.
 - **Captions:** the patient's latest line in Body text on a `--form` strip below the video, 1px `--grid` top border. Visual only (the transcript below is the accessible record).
 - **Disclosure:** a Meta caption under the video naming the patient as fictional and animated by an AI avatar service, not a real person.
 - **Stop avatar (keep voice):** a small quiet button under the caption. Stopping or any failure returns to the portrait, with a plain notice in the voice hint style; voice continues.

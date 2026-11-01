@@ -39,6 +39,7 @@ let attempt: PublicAttempt
 let notes: PublicNotes
 let annotations: PublicAnnotation[]
 let offline = false
+let voiceEnabled = false
 const calls: AttemptEventBody[] = []
 const net = <T,>(fn: () => T): Promise<T> => (offline ? Promise.reject(new (mocks.ApiRequestError as unknown as typeof NetError)('Could not reach the ClinicSim server.')) : Promise.resolve().then(() => structuredClone(fn())))
 
@@ -57,16 +58,26 @@ const mocks = vi.hoisted(() => {
   return { ApiRequestError, api: {} as Record<string, unknown> }
 })
 vi.mock('../../api/client', () => ({ api: mocks.api, ApiRequestError: mocks.ApiRequestError, apiBaseUrl: 'http://test', newKey: () => 'k' }))
-vi.mock('./VoicePanel', () => ({ VoicePanel: () => <p>Voice mode is not configured. Guided mode works without it.</p> }))
+vi.mock('./VoicePanel', () => ({ VoicePanel: () => <section aria-label="Voice panel">Voice mode is not configured. Guided mode works without it.</section> }))
 
 function reset() {
   attempt = { id: '00000000-0000-4000-8000-000000000001', scenarioId: 'respiratory', contentVersionId: 'respiratory@x', status: 'active', currentPhase: 'history', lockedPhases: [], scenario, events: [], historyMode: 'guided', hints: [], liveUsage: null, createdAt: new Date().toISOString(), submittedAt: null, debrief: null }
+  // Same counts as server/attempts/history.ts historyProgressOf: key items asked in either mode.
+  Object.defineProperty(attempt, 'historyProgress', {
+    enumerable: true,
+    get: () => {
+      const asked = new Set(attempt.events.filter((e) => e.phase === 'history' && e.confirmed).map((e) => e.actionId))
+      return { keyAsked: keyHistory().filter((a) => asked.has(a.id)).length, keyTotal: keyHistory().length }
+    },
+  })
   notes = { body: '', version: 0, updatedAt: null }
   annotations = []
   offline = false
+  voiceEnabled = false
   calls.length = 0
   let seq = 0
   Object.assign(mocks.api, {
+    aiStatus: vi.fn(() => Promise.resolve({ aiEnabled: voiceEnabled, setupHint: voiceEnabled ? null : 'Not set up', maxSessionMinutes: 2, estimatedVoiceRatePerMinuteUsd: 0.1, storeTranscripts: false })),
     startAttempt: vi.fn(() => net(() => ({ attempt, resumed: false }))),
     attempt: vi.fn(() => net(() => attempt)),
     event: vi.fn((_id: string, body: AttemptEventBody) =>
@@ -400,14 +411,14 @@ describe('voice history scaffolding', () => {
   const histActions = def.phases.find((p) => p.id === 'history')!.actions
   const anyQuestionOnScreen = () => histActions.filter((a) => screen.queryAllByText(a.label, { exact: false }).length + screen.queryAllByText(a.paText, { exact: false }).length > 0)
   const toVoice = async (user: ReturnType<typeof userEvent.setup>) => {
-    await user.click(screen.getByRole('button', { name: 'Voice, no list' }))
+    await user.click(screen.getByRole('button', { name: 'Talk to the patient' }))
     await waitFor(() => expect(screen.queryByRole('group', { name: /choices$/ })).not.toBeInTheDocument())
   }
 
   it('shows the option list in guided mode exactly as before', async () => {
     renderEncounter()
     await ready()
-    expect(screen.getByRole('button', { name: 'Guided list' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: 'Ask by checklist' })).toHaveAttribute('aria-pressed', 'true')
     expect(within(choices()).getAllByRole('button', { pressed: false }).length).toBeGreaterThanOrEqual(histActions.length)
     expect(screen.queryByRole('button', { name: /suggested question/ })).not.toBeInTheDocument()
   })
@@ -454,7 +465,7 @@ describe('voice history scaffolding', () => {
     renderEncounter()
     await ready()
     await toVoice(user)
-    await user.click(screen.getByRole('button', { name: 'Guided list' }))
+    await user.click(screen.getByRole('button', { name: 'Ask by checklist' }))
     await waitFor(() => expect(choices()).toBeInTheDocument())
     expect(screen.queryByRole('button', { name: 'Show one suggested question' })).not.toBeInTheDocument()
     await toVoice(user)
@@ -468,5 +479,102 @@ describe('voice history scaffolding', () => {
     await ready()
     expect(screen.queryByRole('group', { name: /choices$/ })).not.toBeInTheDocument()
     expect(anyQuestionOnScreen()).toEqual([])
+  })
+})
+
+describe('one history input at a time', () => {
+  const histActions = def.phases.find((p) => p.id === 'history')!.actions
+  const voicePanel = () => screen.queryByRole('region', { name: 'Voice panel' })
+  const progress = (n: number) => `History: ${n} of ${keyHistory().length} key items asked. Your history score counts everything you asked, however you asked it.`
+  const row = (label: string) => within(choices()).getAllByRole('button').find((b) => b.textContent?.startsWith(label))!
+  /** What the voice tool records server-side; the page sees it on its next refresh. */
+  const askByVoice = (id: string) => attempt.events.push({ seq: 900 + attempt.events.length, phase: 'history', actionId: id, kind: 'action', confirmed: true, revealed: responseOf(id), source: 'voice', at: new Date().toISOString() })
+
+  it('renders exactly one input surface per mode, with a keyboard-operable switch', async () => {
+    const user = userEvent.setup()
+    renderEncounter()
+    await ready()
+    expect(screen.queryByText(/optional/i)).not.toBeInTheDocument()
+    expect(choices()).toBeInTheDocument()
+    expect(voicePanel()).not.toBeInTheDocument()
+    screen.getByRole('button', { name: 'Talk to the patient' }).focus()
+    await user.keyboard('{Enter}')
+    await waitFor(() => expect(voicePanel()).toBeInTheDocument())
+    expect(screen.queryByRole('group', { name: /choices$/ })).not.toBeInTheDocument()
+    // The case-so-far record stays in both modes.
+    expect(screen.getByText(def.opening)).toBeInTheDocument()
+    screen.getByRole('button', { name: 'Ask by checklist' }).focus()
+    await user.keyboard(' ')
+    await waitFor(() => expect(choices()).toBeInTheDocument())
+    expect(voicePanel()).not.toBeInTheDocument()
+  })
+
+  it('voice-asked items show as asked in the checklist, and the shared count includes them', async () => {
+    const user = userEvent.setup()
+    attempt.historyMode = 'voice'
+    const [first] = keyHistory()
+    askByVoice(first.id)
+    renderEncounter()
+    await ready()
+    expect(screen.getByText(progress(1))).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Ask by checklist' }))
+    await waitFor(() => expect(choices()).toBeInTheDocument())
+    expect(row(first.label)).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByText(progress(1))).toBeInTheDocument()
+  })
+
+  it('checklist-asked items keep counting after a switch to voice', async () => {
+    const user = userEvent.setup()
+    renderEncounter()
+    await ready()
+    const [first] = keyHistory()
+    await user.click(row(first.label))
+    await screen.findByText(progress(1))
+    await user.click(screen.getByRole('button', { name: 'Talk to the patient' }))
+    await waitFor(() => expect(voicePanel()).toBeInTheDocument())
+    expect(screen.getByText(progress(1))).toBeInTheDocument()
+    expect(histActions.filter((a) => screen.queryAllByText(a.paText, { exact: false }).length > 0)).toEqual([])
+  })
+
+  it('defaults to Talk when voice is available, then remembers the last choice', async () => {
+    voiceEnabled = true
+    const user = userEvent.setup()
+    renderEncounter()
+    await ready()
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Talk to the patient' })).toHaveAttribute('aria-pressed', 'true'))
+    expect(calls).toContainEqual({ type: 'set_mode', mode: 'voice' })
+    await user.click(screen.getByRole('button', { name: 'Ask by checklist' }))
+    await waitFor(() => expect(choices()).toBeInTheDocument())
+    cleanup()
+    reset()
+    voiceEnabled = true
+    renderEncounter()
+    await ready()
+    await waitFor(() => expect(mocks.api.aiStatus).toHaveBeenCalled())
+    expect(choices()).toBeInTheDocument()
+    expect(calls.some((c) => c.type === 'set_mode')).toBe(false)
+  })
+
+  it('stays on the checklist when voice is not available', async () => {
+    renderEncounter()
+    await ready()
+    await waitFor(() => expect(mocks.api.aiStatus).toHaveBeenCalled())
+    expect(choices()).toBeInTheDocument()
+    expect(calls.some((c) => c.type === 'set_mode')).toBe(false)
+  })
+
+  it('after history, voice is a read-only record: no panel, no connect, the voice count', async () => {
+    const key = keyHistory()
+    askByVoice(key[0].id)
+    askByVoice(key[1].id)
+    attempt.lockedPhases = ['history', 'exam']
+    attempt.currentPhase = 'diagnostics'
+    renderEncounter()
+    await ready()
+    expect(screen.getByText('You asked 2 history items by voice.')).toBeInTheDocument()
+    expect(voicePanel()).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /connect/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Talk to the patient' })).not.toBeInTheDocument()
+    expect(screen.queryByText(/key items asked/)).not.toBeInTheDocument()
   })
 })

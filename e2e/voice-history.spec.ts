@@ -25,7 +25,7 @@ test('voice history gives nothing away, hints one question at a time, and the de
   await page.goto('/encounter/chest-pressure')
   await page.getByRole('heading', { level: 1 }).waitFor()
   await expect(page.locator('.option-choose').first()).toBeVisible()
-  await page.getByRole('button', { name: 'Voice, no list' }).click()
+  await page.getByRole('button', { name: 'Talk to the patient' }).click()
   await expect(page.locator('.option-choose')).toHaveCount(0)
   expect(await questionsOnPage(page)).toEqual([])
   await expect(page.getByText(def.opening)).toBeVisible()

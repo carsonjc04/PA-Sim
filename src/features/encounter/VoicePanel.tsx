@@ -25,7 +25,7 @@ const clock = (ms: number) => {
 }
 
 /**
- * Optional voice layer over the same attempt as guided mode. Cost is stated in plain language before and during
+ * Talk-mode history: voice over the same attempt as the checklist, feeding the same rubric. Cost is stated in plain language before and during
  * a session, End session is always beside Mute (muting does not stop billing), and the session ends itself at
  * the server's deadline. The server enforces the same deadline and an idle timeout on its own (see
  * server/live/sessionGuard.ts); the browser ends first so the learner sees why.
@@ -107,7 +107,7 @@ export function VoicePanel({
     return () => clearTimeout(t)
   }, [connectedAt, idleSeconds, voice.lastSpeechAt, disconnect])
 
-  // Bring the avatar into view inside the sidebar when it goes live (the sidebar scrolls on its own).
+  // Bring the avatar into view when it goes live.
   const avatarLive = voice.avatar === 'live'
   useEffect(() => {
     if (avatarLive) videoRef.current?.closest('figure')?.scrollIntoView?.({ block: 'nearest' })
@@ -124,7 +124,7 @@ export function VoicePanel({
     return (
       <section className="voice-panel voice-panel--setup" aria-labelledby="voice-title">
         <h2 id="voice-title">Voice is unavailable</h2>
-        <p>The ClinicSim server could not be reached, so voice cannot start. Guided mode works without voice.</p>
+        <p>The ClinicSim server could not be reached, so voice cannot start. Ask by checklist works without voice.</p>
       </section>
     )
   if (!status) return <section className="voice-panel">Checking voice availability…</section>
@@ -134,7 +134,7 @@ export function VoicePanel({
       <section className="voice-panel voice-panel--setup" aria-labelledby="voice-title">
         <h2 id="voice-title">Voice is not set up</h2>
         <p>{status.setupHint}</p>
-        <p className="voice-fallback">Guided mode is complete without voice, a microphone or an AI key.</p>
+        <p className="voice-fallback">Ask by checklist is complete without voice, a microphone or an AI key.</p>
       </section>
     )
 
@@ -289,7 +289,7 @@ export function VoicePanel({
           {dropped ? (
             <>
               <p>
-                <strong>Connection lost.</strong> You are not billed while disconnected, and your guided progress is saved.
+                <strong>Connection lost.</strong> You are not billed while disconnected, and what you asked is saved.
               </p>
               <button type="button" onClick={voice.retry}>
                 Reconnect voice
@@ -306,7 +306,7 @@ export function VoicePanel({
               )}
             </>
           )}
-          <p className="voice-fallback">You can continue in guided mode instead.</p>
+          <p className="voice-fallback">You can continue by checklist instead; what you asked stays asked.</p>
         </div>
       )}
 

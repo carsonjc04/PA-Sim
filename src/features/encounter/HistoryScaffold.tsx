@@ -2,9 +2,19 @@ import { Lightbulb } from 'lucide-react'
 import { useState } from 'react'
 import type { HistoryMode, PublicHint } from '../../api/contracts'
 
+/** One history rubric, fed by both modes: the count includes key items asked by voice and by checklist. */
+export function HistoryProgress({ asked, total }: { asked: number; total: number }) {
+  return (
+    <p className="history-progress">
+      History: {asked} of {total} key items asked. Your history score counts everything you asked, however you asked it.
+    </p>
+  )
+}
+
 /**
- * History-phase mode. Voice hides the question list so the student generates the history (recall); guided shows
- * it (recognition). The choice is server-side, so a reload keeps it and the debrief reports every switch.
+ * History-phase input mode: exactly one input surface at a time. Talk hides the question list so the student
+ * generates the history (recall); Checklist shows it (recognition). The choice is server-side, so a reload keeps
+ * it and the debrief reports every switch. What was asked carries across a switch.
  */
 export function HistoryModeToggle({ mode, onChange, disabled }: { mode: HistoryMode; onChange: (mode: HistoryMode) => void; disabled?: boolean }) {
   const option = (id: HistoryMode, label: string) => (
@@ -16,13 +26,13 @@ export function HistoryModeToggle({ mode, onChange, disabled }: { mode: HistoryM
     <fieldset className="confidence-toggle history-mode">
       <legend>How will you take the history?</legend>
       <div className="confidence-options">
-        {option('voice', 'Voice, no list')}
-        {option('guided', 'Guided list')}
+        {option('voice', 'Talk to the patient')}
+        {option('guided', 'Ask by checklist')}
       </div>
       <p>
         {mode === 'voice'
-          ? 'Ask the patient aloud, without a question list. Switching to guided shows the list, and your debrief notes the switch.'
-          : 'Choose questions from the list. Voice mode hides it so you practice without prompts.'}
+          ? 'Ask the patient aloud, with no question list. Switching to the checklist ends a live voice session; what you asked stays asked.'
+          : 'Choose questions from the list. Anything you already asked by voice shows as asked.'}
       </p>
     </fieldset>
   )
