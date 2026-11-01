@@ -134,6 +134,13 @@ async function applyEvent(
     if (attempt.currentPhase !== 'history') throw new ApiError('Voice history and hints apply only to the history phase.', 409, 'wrong_phase')
     const live = await repo.listLiveEvents(q, attempt.id)
     if (body.type === 'set_mode') {
+      // An initial mode is the client's default, recorded so the mode survives a reload but never counted as a
+      // switch; once any mode is set, a default must not override the student's choice.
+      if (body.initial) {
+        if (!live.some((e) => e.type === 'mode_changed') && historyModeOf(live) !== body.mode)
+          await repo.insertEvent(q, attempt.id, { type: 'mode_changed', phase: 'history', source, detail: { mode: body.mode, initial: true } })
+        return result
+      }
       if (historyModeOf(live) !== body.mode) await repo.insertEvent(q, attempt.id, { type: 'mode_changed', phase: 'history', source, detail: { mode: body.mode } })
       return result
     }

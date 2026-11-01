@@ -84,7 +84,8 @@ export function buildReasoningDebrief(s: ScenarioDefinition, events: EventRow[],
     return { actionId: a.id, label: a.label, question: a.paText, status: hinted ? 'asked_with_hint' : 'asked', offsetMs: Math.max(0, Date.parse(asked.createdAt) - start), source: asked.source === 'voice' ? 'voice' : 'guided' }
   })
   const modeChanges = events
-    .filter((e) => e.type === 'mode_changed')
+    // Student switches only: the client's initial default is not a switch.
+    .filter((e) => e.type === 'mode_changed' && !(e.detail as { initial?: unknown } | null)?.initial)
     .map((e) => ({ offsetMs: Math.max(0, Date.parse(e.createdAt) - start), mode: (e.detail as { mode?: unknown } | null)?.mode === 'voice' ? ('voice' as const) : ('guided' as const) }))
 
   return { misses, timeline, differential, keyFindingsBeforeDiagnosis, missedEvidence, historyChecklist, hintsUsed: hints.length, modeChanges, provenance: REASONING_PROVENANCE }

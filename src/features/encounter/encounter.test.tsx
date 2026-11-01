@@ -542,7 +542,7 @@ describe('one history input at a time', () => {
     renderEncounter()
     await ready()
     await waitFor(() => expect(screen.getByRole('button', { name: 'Talk to the patient' })).toHaveAttribute('aria-pressed', 'true'))
-    expect(calls).toContainEqual({ type: 'set_mode', mode: 'voice' })
+    expect(calls).toContainEqual({ type: 'set_mode', mode: 'voice', initial: true })
     await user.click(screen.getByRole('button', { name: 'Ask by checklist' }))
     await waitFor(() => expect(choices()).toBeInTheDocument())
     cleanup()

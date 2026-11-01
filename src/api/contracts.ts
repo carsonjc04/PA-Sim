@@ -44,7 +44,12 @@ export const attemptEventBody = z.discriminatedUnion('type', [
   /** Voice history only: reveal one suggested key question. Logged, never graded. */
   z.object({ type: z.literal('hint') }).strict(),
   /** History phase only: voice hides the option list, guided shows it. Logged so the debrief can report switches. */
-  z.object({ type: z.literal('set_mode'), mode: z.enum(['voice', 'guided']) }).strict(),
+  z.object({
+    type: z.literal('set_mode'),
+    mode: z.enum(['voice', 'guided']),
+    /** The client's default for a fresh attempt: initialization, not a student switch. Ignored once a mode is set. */
+    initial: z.boolean().optional(),
+  }).strict(),
 ]).refine((b) => b.type !== 'action' || b.confidence === undefined || b.tool === 'propose_diagnosis', {
   message: 'confidence is only recorded with propose_diagnosis',
   path: ['confidence'],

@@ -116,7 +116,7 @@ export function EncounterPage() {
   useEffect(() => {
     if (!attempt || voiceAvailable === null || defaultedFor.current === attempt.id) return
     defaultedFor.current = attempt.id
-    if (attempt.status === 'active' && attempt.currentPhase === 'history' && voiceAvailable && readHistoryPreference() === 'voice' && attempt.historyMode !== 'voice') setHistoryMode('voice')
+    if (attempt.status === 'active' && attempt.currentPhase === 'history' && voiceAvailable && readHistoryPreference() === 'voice' && attempt.historyMode !== 'voice') setHistoryMode('voice', true)
   }, [attempt, voiceAvailable, setHistoryMode])
   const chooseHistoryMode = (mode: HistoryMode) => {
     writeHistoryPreference(mode)

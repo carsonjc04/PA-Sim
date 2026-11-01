@@ -48,7 +48,7 @@ export function useEncounter(scenarioId: string | undefined, onNotFound: () => v
     stateRef.current = state
   })
   // Retries call the latest handlers through a ref, so a failed action can be repeated without stale closures.
-  const handlers = useRef<{ choose: (id: string) => void; advance: () => Promise<boolean>; submit: () => Promise<boolean>; setHistoryMode: (mode: HistoryMode) => void } | null>(null)
+  const handlers = useRef<{ choose: (id: string) => void; advance: () => Promise<boolean>; submit: () => Promise<boolean>; setHistoryMode: (mode: HistoryMode, initial?: boolean) => void } | null>(null)
 
   useEffect(() => {
     if (!scenarioId) return
@@ -142,10 +142,11 @@ export function useEncounter(scenarioId: string | undefined, onNotFound: () => v
   }, [commitDrafts, run])
 
   const setHistoryMode = useCallback(
-    (mode: HistoryMode) => {
+    (mode: HistoryMode, initial = false) => {
       const { attempt, busy } = stateRef.current
       if (!attempt || busy || attempt.historyMode === mode) return
-      void run(async () => (await api.event(attempt.id, { type: 'set_mode', mode })).attempt, () => handlers.current?.setHistoryMode(mode))
+      const body = initial ? { type: 'set_mode' as const, mode, initial } : { type: 'set_mode' as const, mode }
+      void run(async () => (await api.event(attempt.id, body)).attempt, () => handlers.current?.setHistoryMode(mode, initial))
     },
     [run],
   )
