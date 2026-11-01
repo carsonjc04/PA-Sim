@@ -127,6 +127,15 @@ describe('POST /api/live/session with a key', () => {
     expect(params.session.delegation.responses.parallel_tool_calls).toBe(false)
   })
 
+  it('voices each patient as authored, and leaves cases without a voice on the provider default', async () => {
+    await session(app, { sdp: validSdp, attemptId: await newEncounter(app) })
+    expect(create.mock.calls[0][0].session.audio).toEqual({ output: { voice: 'echo' } })
+
+    const dysuria = (await request(app).post('/api/attempts').set('X-Dev-User', USER).send({ scenarioId: 'dysuria' })).body.attempt.id
+    await session(app, { sdp: validSdp, attemptId: dysuria })
+    expect(create.mock.calls[1][0].session.audio).toBeUndefined()
+  })
+
   it('keeps the answer key out of the patient prompt', async () => {
     const id = await newEncounter(app)
     await session(app, { sdp: validSdp, attemptId: id })

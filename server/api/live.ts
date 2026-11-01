@@ -10,6 +10,7 @@ import { ApiError } from '../http/errors'
 import { now } from '../lib/clock'
 import * as ledger from '../live/ledger'
 import { closeSession, onSessionStarted, verifyServable } from '../live/sessionGuard'
+import { patientVoiceFor } from '../live/voices'
 import { openaiClient } from '../openai/client'
 import { PATIENT_PROMPT_VERSION, buildDelegateInstructions, buildPatientInstructions } from '../prompts/patient'
 import { isToolName } from '../tools/contracts'
@@ -79,12 +80,14 @@ liveRouter.post('/session', async (req, res) => {
   const clientKey = ledger.clientKeyOf(req.ip)
   const reservation = await ledger.reserveMint({ userId: auth.userId, clientKey, attemptId: attempt.id })
 
+  const voice = patientVoiceFor(scenario.id)
   let result
   try {
     result = await openaiClient().live.create({
       session: {
         model: env.OPENAI_LIVE_MODEL,
         instructions: buildPatientInstructions(scenario),
+        ...(voice ? { audio: { output: { voice } } } : {}),
         delegation: {
           type: 'responses',
           responses: {
