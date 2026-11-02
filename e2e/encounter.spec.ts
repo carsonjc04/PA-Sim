@@ -71,7 +71,7 @@ test.describe('keyboard-only guided encounter', () => {
   })
 })
 
-test('microphone denial explains the problem and guided mode still works', async ({ page }) => {
+test('microphone denial explains the problem and the checklist still works', async ({ page }) => {
   await useIdentity(page)
   // Pretend voice is configured so the panel offers Connect; the browser then refuses the microphone.
   await page.route('**/api/ai/status', (route) => route.fulfill({ json: { aiEnabled: true, setupHint: null, maxSessionMinutes: 20, estimatedVoiceRatePerMinuteUsd: 0.05, storeTranscripts: false } }))
@@ -80,10 +80,13 @@ test('microphone denial explains the problem and guided mode still works', async
   })
   await page.goto('/encounter/respiratory')
   await page.getByRole('heading', { level: 1 }).waitFor()
-  await page.getByText('Voice conversation (optional)').click()
+  // Voice is available, so history opens in Talk mode: the voice panel is the only input on screen.
+  await expect(page.getByRole('button', { name: 'Talk to the patient' })).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.locator('.option-choose')).toHaveCount(0)
   await page.getByRole('button', { name: /Connect voice/ }).click()
   await expect(page.getByRole('alert').filter({ hasText: 'Microphone access was blocked' })).toBeVisible()
-  await expect(page.getByText(/continue in guided mode/)).toBeVisible()
+  await expect(page.getByText(/continue by checklist/)).toBeVisible()
+  await page.getByRole('button', { name: 'Ask by checklist' }).click()
   await page.locator('.option-choose').first().click()
   await expect(page.locator('.option-row.is-selected')).toHaveCount(1)
 })

@@ -11,7 +11,7 @@ import { canonicalTags } from '../../src/domain/study/taxonomy'
 import type { GradingResult, ScenarioDefinition } from '../../src/domain/types'
 import { contentPackage } from '../content/scenarios'
 import { buildReasoningDebrief } from './debrief'
-import { historyModeOf, hintsOf } from './history'
+import { historyModeOf, historyProgressOf, hintsOf } from './history'
 import type { AttemptRow, EventRow, HistoryRow, ResultRow } from './repository'
 
 // Every browser payload is built by allowlist, so a field added to ScenarioDefinition cannot leak by being forgotten.
@@ -115,6 +115,7 @@ export function toPublicAttempt(
     scenario: toPublicScenario(scenario),
     events: events.map((e) => toPublicEvent(e, scenario)).filter((e): e is PublicEvent => e !== null),
     historyMode: historyModeOf(events),
+    historyProgress: historyProgressOf(scenario, events),
     hints: hintsOf(scenario, events),
     liveUsage,
     createdAt: attempt.createdAt,

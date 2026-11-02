@@ -102,7 +102,7 @@ h1 em{font-weight:inherit;color:inherit}
 .voice-mode{border:1px solid var(--grid-strong);padding:12px 16px;margin:0 0 12px;display:grid;gap:8px}
 .voice-mode legend{font-family:var(--sans);font-size:0.6875rem;line-height:1;font-weight:600;font-stretch:75%;letter-spacing:.1em;text-transform:uppercase;color:var(--label);padding:0 4px}
 .voice-mode label{display:flex;align-items:center;gap:8px;font-size:0.875rem;color:var(--ink)}
-.voice-avatar{margin:0 0 12px;display:grid;gap:8px}
+.voice-avatar{margin:0 0 12px;display:grid;gap:8px;max-width:480px}
 .voice-avatar[hidden]{display:none}
 /* Square head-and-shoulders window on the 16:9 feed: the same crop as the case's static portrait (x 620–1300, y 40–720 of 1920×1080). */
 .voice-avatar-frame{position:relative;aspect-ratio:1/1;overflow:hidden;background:var(--form);border:2px solid var(--grid-strong)}
@@ -283,6 +283,7 @@ h1 em{font-weight:inherit;color:inherit}
 .confidence-option.selected,.confidence-option[aria-pressed=true],.confidence-option[aria-checked=true]{background:var(--carbon);color:var(--form)}
 .confidence-toggle p{margin:8px 0 0;font-size:0.8125rem;color:var(--label)}
 .history-mode{margin:0 0 12px}
+.history-progress{margin:0 0 12px;font-size:0.875rem;line-height:1.45;color:var(--ink);max-width:72ch}
 .history-hints{border:1px solid var(--grid-strong);background:var(--form);padding:12px 16px;margin:12px 0 0}
 .history-hints h3{margin:0 0 8px;font-size:0.6875rem;line-height:1;font-weight:600;font-stretch:75%;letter-spacing:.1em;text-transform:uppercase;color:var(--label)}
 .history-hints-note{margin:0 0 12px;font-size:0.8125rem;color:var(--label);line-height:1.45}
@@ -513,7 +514,7 @@ h1 em{font-weight:inherit;color:inherit}
 .side-disclosure{background:var(--form);border:1px solid var(--grid-strong);padding:12px 16px}
 .side-disclosure summary{cursor:pointer;font-size:0.6875rem;line-height:1;font-weight:600;font-stretch:75%;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);min-height:28px;display:flex;align-items:center}
 .side-disclosure[open] summary{margin-bottom:12px}
-.voice-disclosure .voice-panel{margin:0;border:0;padding:0;background:transparent}
+.voice-record{margin:0;font-size:0.875rem;line-height:1.45;color:var(--ink)}
 .side-portraits{display:flex;gap:16px}
 .side-portraits figure{margin:0;display:flex;gap:8px;align-items:center;font-size:0.8125rem}
 .side-portraits figcaption small{display:block;color:var(--label);font-family:var(--mono)}

@@ -386,6 +386,17 @@ describe('voice history scaffolding', () => {
   const history = scenario.phases.find((p) => p.id === 'history')!.actions
   const key = history.filter((a) => (a.effects ?? []).reduce((n, e) => n + e.points, 0) > 0 && !a.unsafeReason)
 
+  it('counts key history items asked in either mode, without naming which are key', async () => {
+    const client = as('progress')
+    const id = (await client.start()).body.attempt.id as string
+    expect((await client.get(id)).body.historyProgress).toEqual({ keyAsked: 0, keyTotal: key.length })
+    const distractor = history.find((a) => !key.includes(a))
+    await client.event(id, { type: 'action', tool: 'record_history_topics', actionIds: [key[0].id, ...(distractor ? [distractor.id] : [])] })
+    await client.event(id, { type: 'set_mode', mode: 'voice' })
+    const res = await client.event(id, { type: 'action', tool: 'record_history_topics', actionIds: [key[0].id, key[1].id] })
+    expect(res.body.attempt.historyProgress).toEqual({ keyAsked: 2, keyTotal: key.length })
+  })
+
   it('serves hints only in voice history: one key question at a time, in authored order, never a distractor', async () => {
     const client = as('hinter')
     const id = (await client.start()).body.attempt.id as string
@@ -444,5 +455,27 @@ describe('voice history scaffolding', () => {
     expect(plain.debrief!.reasoning.historyChecklist[1].status).toBe('asked')
     expect(hinted.debrief!.finalScore).toBe(plain.debrief!.finalScore)
     expect(hinted.debrief!.categoryScores).toEqual(plain.debrief!.categoryScores)
+  })
+
+  it('does not count the initial default mode as a switch; genuine switches still count', async () => {
+    const finish = async (client: ReturnType<typeof as>, id: string) => {
+      for (const phase of ['history', 'exam', 'diagnostics']) await client.event(id, { type: 'lock_phase', phase })
+      await client.event(id, { type: 'action', tool: 'propose_diagnosis', actionIds: [scenario.correctPrimary], confirmed: true })
+      await client.event(id, { type: 'lock_phase', phase: 'diagnosis' })
+      return (await client.submit(id)).body as PublicAttempt
+    }
+    const quiet = as('talk-default')
+    const a = (await quiet.start()).body.attempt.id as string
+    expect((await quiet.event(a, { type: 'set_mode', mode: 'voice', initial: true })).body.attempt.historyMode).toBe('voice')
+    expect((await finish(quiet, a)).debrief!.reasoning.modeChanges).toEqual([])
+
+    const switcher = as('talk-then-switch')
+    const b = (await switcher.start()).body.attempt.id as string
+    await switcher.event(b, { type: 'set_mode', mode: 'voice', initial: true })
+    await switcher.event(b, { type: 'set_mode', mode: 'guided' })
+    // A late default never overrides the student's choice.
+    expect((await switcher.event(b, { type: 'set_mode', mode: 'voice', initial: true })).body.attempt.historyMode).toBe('guided')
+    await switcher.event(b, { type: 'set_mode', mode: 'voice' })
+    expect((await finish(switcher, b)).debrief!.reasoning.modeChanges.map((m) => m.mode)).toEqual(['guided', 'voice'])
   })
 })

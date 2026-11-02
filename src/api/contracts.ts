@@ -44,7 +44,12 @@ export const attemptEventBody = z.discriminatedUnion('type', [
   /** Voice history only: reveal one suggested key question. Logged, never graded. */
   z.object({ type: z.literal('hint') }).strict(),
   /** History phase only: voice hides the option list, guided shows it. Logged so the debrief can report switches. */
-  z.object({ type: z.literal('set_mode'), mode: z.enum(['voice', 'guided']) }).strict(),
+  z.object({
+    type: z.literal('set_mode'),
+    mode: z.enum(['voice', 'guided']),
+    /** The client's default for a fresh attempt: initialization, not a student switch. Ignored once a mode is set. */
+    initial: z.boolean().optional(),
+  }).strict(),
 ]).refine((b) => b.type !== 'action' || b.confidence === undefined || b.tool === 'propose_diagnosis', {
   message: 'confidence is only recorded with propose_diagnosis',
   path: ['confidence'],
@@ -277,6 +282,12 @@ export interface PublicChecklistItem {
   source: 'guided' | 'voice' | null
 }
 
+/** Counts only: which items are key stays server-side. Both input modes feed the same history rubric. */
+export interface PublicHistoryProgress {
+  keyAsked: number
+  keyTotal: number
+}
+
 export interface PublicAttempt {
   id: string
   scenarioId: string
@@ -288,6 +299,8 @@ export interface PublicAttempt {
   events: PublicEvent[]
   /** History-phase mode; guided unless the learner chose voice. */
   historyMode: HistoryMode
+  /** History counts across both input modes; absent from servers older than the one-mode history screen. */
+  historyProgress?: PublicHistoryProgress
   /** Hints revealed so far, oldest first. */
   hints: PublicHint[]
   /** Billed voice and avatar time on this attempt, from the server's session ledger; null when voice was never used. */

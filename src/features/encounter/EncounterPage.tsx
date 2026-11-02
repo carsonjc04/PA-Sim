@@ -1,6 +1,8 @@
 import { ArrowLeft, ArrowRight, ChevronLeft, Keyboard, Lock, NotebookPen, WifiOff } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
+import { api } from '../../api/client'
+import type { HistoryMode } from '../../api/contracts'
 import { phaseOrder, type PhaseId } from '../../domain/types'
 import { ConfidenceToggle } from '../review/ConfidenceToggle'
 import { useDisplaySettings } from '../settings/displaySettings'
@@ -10,7 +12,8 @@ import { PatientPortrait } from '../patient/PatientPortrait'
 import { patientPortraitAlt, patientPortraitSrc } from '../patient/portrait'
 import { buildEntries, ENTRY_LABEL, optionsFor } from './encounterModel'
 import { phaseIndexOf, useAnnotations, useAttemptNotes, useEncounter, useOnline } from './hooks'
-import { HistoryHints, HistoryModeToggle } from './HistoryScaffold'
+import { HistoryHints, HistoryModeToggle, HistoryProgress } from './HistoryScaffold'
+import { readHistoryPreference, writeHistoryPreference } from './historyPreference'
 import { NotesPanel } from './NotesPanel'
 import { OptionList } from './OptionList'
 
@@ -102,6 +105,24 @@ export function EncounterPage() {
   const attempt = enc.attempt
   const entries = useMemo(() => (attempt ? buildEntries(attempt) : []), [attempt])
 
+  // Talk is the default history mode when voice is available; after that the student's last choice applies.
+  // Applied once per attempt, on the history phase only.
+  const [voiceAvailable, setVoiceAvailable] = useState<boolean | null>(null)
+  useEffect(() => {
+    api.aiStatus().then((s) => setVoiceAvailable(s.aiEnabled), () => setVoiceAvailable(false))
+  }, [])
+  const defaultedFor = useRef<string | null>(null)
+  const { setHistoryMode } = enc
+  useEffect(() => {
+    if (!attempt || voiceAvailable === null || defaultedFor.current === attempt.id) return
+    defaultedFor.current = attempt.id
+    if (attempt.status === 'active' && attempt.currentPhase === 'history' && voiceAvailable && readHistoryPreference() === 'voice' && attempt.historyMode !== 'voice') setHistoryMode('voice', true)
+  }, [attempt, voiceAvailable, setHistoryMode])
+  const chooseHistoryMode = (mode: HistoryMode) => {
+    writeHistoryPreference(mode)
+    setHistoryMode(mode)
+  }
+
   // Announce new case entries by their content, and phase changes. Tracked against the previous render
   // (React's "adjusting state when a prop changes" pattern) rather than in an effect.
   const [seen, setSeen] = useState<{ entries: number; phase: PhaseId } | null>(null)
@@ -177,9 +198,11 @@ export function EncounterPage() {
       ? 'You are offline. Choices are paused until the connection returns; notes keep saving on this device.'
       : undefined
   const lastPhase = index === phaseOrder.length - 1
-  // Voice history: the question list is never rendered, only the door note, voice and hints.
+  // One history input at a time. Talk: the question list is never rendered, only the record, voice and hints.
+  // Checklist: the list, with voice-asked items already selected. Voice owns history only.
   const historyNow = shown === 'history' && current === 'history'
   const voiceHistory = historyNow && attempt.historyMode === 'voice'
+  const askedByVoice = new Set(attempt.events.filter((e) => e.phase === 'history' && e.source === 'voice' && e.confirmed).map((e) => e.actionId)).size
   const portraitAlt = patientPortraitAlt(scenario.patient.name, scenario.summary.title)
 
   const stepPhase = (dir: -1 | 1) => {
@@ -327,7 +350,8 @@ export function EncounterPage() {
                 </div>
               </div>
             )}
-            {historyNow && <HistoryModeToggle mode={attempt.historyMode} onChange={enc.setHistoryMode} disabled={enc.busy || offlineBlocks} />}
+            {historyNow && attempt.historyProgress && <HistoryProgress asked={attempt.historyProgress.keyAsked} total={attempt.historyProgress.keyTotal} />}
+            {historyNow && <HistoryModeToggle mode={attempt.historyMode} onChange={chooseHistoryMode} disabled={enc.busy || offlineBlocks} />}
 
             {voiceNotices.map((n) => (
               <div key={n.id} className="entry entry--system entry--warning system-message" role="alert">
@@ -349,7 +373,16 @@ export function EncounterPage() {
             )}
 
             {voiceHistory ? (
-              <HistoryHints hints={attempt.hints} onHint={enc.requestHint} disabled={offlineBlocks} />
+              <>
+                <VoicePanel
+                  attemptId={attempt.id}
+                  caseId={scenario.id}
+                  onActivity={enc.refresh}
+                  onToolRejected={onToolRejected}
+                  patient={{ caseId: scenario.id, name: scenario.patient.name, alt: portraitAlt }}
+                />
+                <HistoryHints hints={attempt.hints} onHint={enc.requestHint} disabled={offlineBlocks} />
+              </>
             ) : (
               <OptionList
                 key={shown}
@@ -376,7 +409,7 @@ export function EncounterPage() {
                     : current === 'treatment'
                       ? 'Choose every plan element. They are saved when you submit.'
                       : voiceHistory
-                        ? 'Ask the patient aloud in the voice panel. What you ask is recorded as you go.'
+                        ? 'Ask the patient aloud. What you ask is recorded as you go.'
                         : 'Each choice is saved as you make it.'}{' '}
                   {enc.busy && <span>Saving…</span>}
                 </p>
@@ -404,6 +437,11 @@ export function EncounterPage() {
 
         <aside className="encounter-side" aria-label="Notes and tools">
           <NotesPanel ref={notesField} attemptReady body={notes.body} status={notes.status} conflictBody={notes.conflict?.body ?? null} onChange={notes.change} onResolve={notes.resolve} />
+          {current !== 'history' && (
+            <p className="voice-record">
+              {askedByVoice === 0 ? 'You asked no history items by voice.' : `You asked ${askedByVoice} history ${askedByVoice === 1 ? 'item' : 'items'} by voice.`}
+            </p>
+          )}
           <div className="side-tools">
             <button type="button" className="button button-quiet button-small" onClick={() => updateSettings({ downtime: !downtime })} aria-pressed={downtime}>
               Downtime mode: {downtime ? 'on' : 'off'}
@@ -436,16 +474,6 @@ export function EncounterPage() {
               </div>
             </details>
           )}
-          <details className="side-disclosure voice-disclosure" open={voiceHistory || undefined}>
-            <summary>Voice conversation (optional)</summary>
-            <VoicePanel
-              attemptId={attempt.id}
-              caseId={scenario.id}
-              onActivity={enc.refresh}
-              onToolRejected={onToolRejected}
-              patient={voiceHistory ? { caseId: scenario.id, name: scenario.patient.name, alt: portraitAlt } : undefined}
-            />
-          </details>
         </aside>
       </div>
 

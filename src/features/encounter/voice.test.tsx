@@ -112,14 +112,14 @@ describe('voice cost and session state', () => {
     const alert = screen.getByRole('alert')
     expect(alert).toHaveFocus()
     expect(alert).toHaveTextContent(/address bar/)
-    expect(alert).toHaveTextContent('You can continue in guided mode instead.')
+    expect(alert).toHaveTextContent('You can continue by checklist instead; what you asked stays asked.')
   })
 
   it('explains when voice is not set up, without blocking guided mode', async () => {
     mocks.api.aiStatus.mockResolvedValue({ ...status, aiEnabled: false, setupHint: 'Set OPENAI_API_KEY on the server.' })
     await renderPanel()
     expect(screen.getByRole('heading', { name: 'Voice is not set up' })).toBeInTheDocument()
-    expect(screen.getByText(/Guided mode is complete without voice/)).toBeInTheDocument()
+    expect(screen.getByText(/Ask by checklist is complete without voice/)).toBeInTheDocument()
     expect(screen.queryByRole('button')).not.toBeInTheDocument()
   })
 })
