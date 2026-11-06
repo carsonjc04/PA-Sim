@@ -15,7 +15,7 @@ export interface AttemptRow {
   userId: string
   scenarioId: string
   contentVersionId: string
-  status: 'active' | 'submitted'
+  status: 'active' | 'submitted' | 'abandoned'
   currentPhase: PhaseId
   lockedPhases: PhaseId[]
   createdAt: string
@@ -117,14 +117,19 @@ export async function findActiveAttempt(q: Queryable, userId: string, scenarioId
 
 export async function insertAttempt(
   q: Queryable,
-  input: { userId: string; scenarioId: string; contentVersionId: string; firstPhase: PhaseId },
+  input: { userId: string; scenarioId: string; contentVersionId: string; firstPhase: PhaseId; restartedFrom?: string },
 ): Promise<AttemptRow> {
   const { rows } = await q.query(
-    `INSERT INTO attempts (id, user_id, scenario_id, content_version_id, status, current_phase, created_at, updated_at)
-     VALUES ($1, $2, $3, $4, 'active', $5, $6, $6) RETURNING ${attemptColumns}`,
-    [randomUUID(), input.userId, input.scenarioId, input.contentVersionId, input.firstPhase, now()],
+    `INSERT INTO attempts (id, user_id, scenario_id, content_version_id, status, current_phase, restarted_from, created_at, updated_at)
+     VALUES ($1, $2, $3, $4, 'active', $5, $6, $7, $7) RETURNING ${attemptColumns}`,
+    [randomUUID(), input.userId, input.scenarioId, input.contentVersionId, input.firstPhase, input.restartedFrom ?? null, now()],
   )
   return toAttempt(rows[0])
+}
+
+/** Restart: the active attempt is kept but never graded. Only an active attempt can be abandoned. */
+export async function abandonAttempt(q: Queryable, attemptId: string): Promise<void> {
+  await q.query(`UPDATE attempts SET status = 'abandoned', abandoned_at = $2, updated_at = $2 WHERE id = $1 AND status = 'active'`, [attemptId, now()])
 }
 
 /** Ownership is part of the WHERE clause, so another user's attempt is indistinguishable from a missing one. */
@@ -317,7 +322,8 @@ export async function listHistory(
   options: { limit: number; status?: 'active' | 'submitted'; after?: { createdAt: string; id: string } },
 ): Promise<HistoryRow[]> {
   const params: unknown[] = [userId, options.limit]
-  let where = 'a.user_id = $1'
+  // Abandoned attempts (restarted cases) are not part of the student's history.
+  let where = "a.user_id = $1 AND a.status <> 'abandoned'"
   if (options.status) {
     params.push(options.status)
     where += ` AND a.status = $${params.length}`

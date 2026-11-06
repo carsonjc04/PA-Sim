@@ -104,8 +104,9 @@ export const api = {
   authStatus: () => request<AuthStatus>('/api/auth/status'),
   aiStatus: () => request<AiStatus>('/api/ai/status', { retry: true }),
   scenarios: () => request<PublicScenario[]>('/api/scenarios', { retry: true }),
-  startAttempt: (scenarioId: string) =>
-    request<StartAttemptResponse>('/api/attempts', { method: 'POST', body: JSON.stringify({ scenarioId }), retry: true }),
+  // A restart is not retried: a repeat would abandon the attempt the first one created.
+  startAttempt: (scenarioId: string, restart = false) =>
+    request<StartAttemptResponse>('/api/attempts', { method: 'POST', body: JSON.stringify(restart ? { scenarioId, restart } : { scenarioId }), retry: !restart }),
   attempt: (id: string) => request<PublicAttempt>(`/api/attempts/${encodeURIComponent(id)}`, { retry: true }),
   history: (params: { cursor?: string; limit?: number; status?: 'active' | 'submitted' } = {}) => {
     const query = new URLSearchParams()

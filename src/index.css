@@ -29,6 +29,8 @@ code,kbd,samp{font-family:var(--mono)}
 .button-primary:hover{background:var(--stamp-hover);border-color:var(--stamp-hover)}
 .button-quiet{background:var(--form);color:var(--ink)}
 .button-small{min-height:32px;padding:8px 12px}
+.button-danger{background:var(--form);color:var(--alert);border-color:var(--alert)}
+.button-danger:hover{background:var(--alert-wash);border-color:var(--alert)}
 .button:disabled,.button[aria-disabled=true]{background:var(--form);color:var(--label);border:1px dashed var(--grid-strong);cursor:not-allowed}
 .text-link{display:inline-flex;align-items:center;gap:4px;color:var(--ink);font-size:0.8125rem;font-weight:600;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px;transition:color 100ms linear}
 .text-link:hover{color:var(--stamp)}
@@ -409,6 +411,7 @@ h1 em{font-weight:inherit;color:inherit}
 .phase-bar{position:sticky;top:0;z-index:5;background:var(--bg);padding:12px 0;margin:-20px 0 20px}
 .phase-bar-top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
 .phase-bar-meta{font-size:0.75rem;color:var(--label)}
+.phase-bar-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .phase-bar-title{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:8px 0 12px}
 .phase-bar-title h1{font-size:2rem;line-height:1.1;letter-spacing:-.01em;margin:0}
 .phase-bar-patient{margin:0;color:var(--label);font-family:var(--mono);font-size:0.8125rem}

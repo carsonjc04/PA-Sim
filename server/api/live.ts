@@ -76,6 +76,9 @@ liveRouter.post('/session', async (req, res) => {
   if (attempt.status === 'submitted') {
     throw new ApiError('This attempt is already submitted.', 409, 'attempt_submitted')
   }
+  if (attempt.status === 'abandoned') {
+    throw new ApiError('This attempt was restarted. Reload the case to continue the new attempt.', 409, 'attempt_abandoned')
+  }
   enforceRateLimit(req)
   const clientKey = ledger.clientKeyOf(req.ip)
   const reservation = await ledger.reserveMint({ userId: auth.userId, clientKey, attemptId: attempt.id })

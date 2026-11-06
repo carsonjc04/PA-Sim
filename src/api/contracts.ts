@@ -25,7 +25,13 @@ export const toolNameSchema = z.enum(toolNames)
 
 const stableId = z.string().min(1).max(64).regex(/^[A-Za-z0-9._-]+$/)
 
-export const startAttemptBody = z.object({ scenarioId: stableId }).strict()
+export const startAttemptBody = z
+  .object({
+    scenarioId: stableId,
+    /** Abandon the active attempt (kept, never graded) and start a new one; the voice time used carries over. */
+    restart: z.boolean().optional(),
+  })
+  .strict()
 export type StartAttemptBody = z.infer<typeof startAttemptBody>
 
 export const attemptEventBody = z.discriminatedUnion('type', [
@@ -80,6 +86,7 @@ export type ApiErrorCode =
   | 'scenario_not_found' | 'scenario_retired'
   | 'attempt_not_found'
   | 'attempt_submitted'
+  | 'attempt_abandoned'
   | 'unknown_tool'
   | 'unknown_action'
   | 'invalid_tool_arguments'
@@ -292,7 +299,7 @@ export interface PublicAttempt {
   id: string
   scenarioId: string
   contentVersionId: string
-  status: 'active' | 'submitted'
+  status: 'active' | 'submitted' | 'abandoned'
   currentPhase: PhaseId
   lockedPhases: PhaseId[]
   scenario: PublicScenario

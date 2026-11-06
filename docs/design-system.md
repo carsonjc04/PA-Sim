@@ -150,7 +150,7 @@ Load them with:
 | Primary | `--stamp` | `--on-stamp` | none | fill `--stamp-hover` | The 1 forward action per view (advance phase, submit, start case) |
 | Secondary | `--form` | `--ink` | 1px `--ink` | fill `--carbon-wash` | Alternatives to the primary action |
 | Plain | none | `--ink` | none | text `--stamp` | Header actions (Theme, Exit), inline actions in rows |
-| Destructive | `--form` | `--alert` | 1px `--alert` | fill `--alert-wash` | End case, discard notes. Always opens a confirm dialog |
+| Destructive | `--form` | `--alert` | 1px `--alert` | fill `--alert-wash` | End case, discard notes, Restart case (inside its confirm dialog). Always opens a confirm dialog |
 
 - **Sizes:** default min-height 40px, padding 12px 20px; small min-height 32px, padding 8px 12px. Under `@media (pointer: coarse)`, every button is min-height 44px.
 - **Disabled:** fill `--form`, text `--label`, 1px dashed `--grid-strong`, `cursor: not-allowed`. The reason appears as Meta text beside the button.
@@ -207,6 +207,12 @@ Load them with:
 - **Semantics:** `aria-current="step"` on the current cell.
 - **Mobile (≤ 860px):** cells become `auto` width, the bar scrolls horizontally inside itself (the page never does), and the current cell is scrolled into view on load.
 - **No progress indicators:** no percentage and no fill bar. Phases are named, not measured.
+
+### Restart case
+
+- A quiet small button (`RESTART CASE`, with a restart icon) at the right of the phase bar's top row, beside the setting and elapsed time. It stays visible in downtime mode. Disabled while saving or offline.
+- It always opens a confirm dialog (`Restart this case?`) that says, in Body: the student starts again from the presentation; this attempt is not graded and does not appear in history; choices, notes and marks start fresh; any live voice session ends; voice time already used on the case still counts toward its limit. Actions: `Keep working` (quiet), then `Restart case` (destructive) last.
+- After a restart, focus moves to the phase heading and the live region announces the restart.
 
 ### Chief complaint (display block)
 

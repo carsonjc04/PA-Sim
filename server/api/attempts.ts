@@ -38,7 +38,7 @@ attemptsRouter.use(requireAuth)
 
 attemptsRouter.post('/', async (req, res) => {
   const body = parse(startAttemptBody, req.body ?? {}, 'invalid_body')
-  const started = await service.startAttempt(authOf(req), body.scenarioId)
+  const started = await service.startAttempt(authOf(req), body.scenarioId, { restart: body.restart })
   res.status(started.resumed ? 200 : 201).json(started)
 })
 

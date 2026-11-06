@@ -1,5 +1,5 @@
-import { ArrowLeft, ArrowRight, ChevronLeft, Keyboard, Lock, NotebookPen, WifiOff } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
+import { ArrowLeft, ArrowRight, ChevronLeft, Keyboard, Lock, NotebookPen, RotateCcw, WifiOff } from 'lucide-react'
+import { useCallback, useEffect, useId, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../../api/client'
 import type { HistoryMode } from '../../api/contracts'
@@ -22,6 +22,7 @@ const isTyping = (el: EventTarget | null) => el instanceof HTMLElement && (el.is
 /** Native modal dialog: the browser provides the focus trap, Escape and focus return. */
 function ConfirmDialog({ open, title, children, onClose }: { open: boolean; title: string; children: ReactNode; onClose: () => void }) {
   const ref = useRef<HTMLDialogElement>(null)
+  const titleId = useId()
   useEffect(() => {
     const d = ref.current
     if (!d) return
@@ -29,8 +30,8 @@ function ConfirmDialog({ open, title, children, onClose }: { open: boolean; titl
     if (!open && d.open) d.close()
   }, [open])
   return (
-    <dialog ref={ref} className="confirm-dialog" aria-labelledby="confirm-title" onClose={onClose}>
-      <h2 id="confirm-title">{title}</h2>
+    <dialog ref={ref} className="confirm-dialog" aria-labelledby={titleId} onClose={onClose}>
+      <h2 id={titleId}>{title}</h2>
       {children}
     </dialog>
   )
@@ -87,6 +88,7 @@ export function EncounterPage() {
   const notes = useAttemptNotes(enc.attempt?.id)
   const [viewPhase, setViewPhase] = useState<PhaseId | null>(null)
   const [confirm, setConfirm] = useState(false)
+  const [restarting, setRestarting] = useState(false)
   const [help, setHelp] = useState(false)
   const [announcement, setAnnouncement] = useState('')
   const [voiceNotices, setVoiceNotices] = useState<{ id: number; text: string }[]>([])
@@ -125,10 +127,13 @@ export function EncounterPage() {
 
   // Announce new case entries by their content, and phase changes. Tracked against the previous render
   // (React's "adjusting state when a prop changes" pattern) rather than in an effect.
-  const [seen, setSeen] = useState<{ entries: number; phase: PhaseId } | null>(null)
-  if (attempt && (!seen || seen.entries !== entries.length || seen.phase !== attempt.currentPhase)) {
+  const [seen, setSeen] = useState<{ id: string; entries: number; phase: PhaseId } | null>(null)
+  if (attempt && (!seen || seen.id !== attempt.id || seen.entries !== entries.length || seen.phase !== attempt.currentPhase)) {
     if (!seen) {
       if (enc.resumedFindings) setAnnouncement(`Resumed encounter: ${enc.resumedFindings} findings so far.`)
+    } else if (seen.id !== attempt.id) {
+      setAnnouncement('Case restarted from the presentation.')
+      setViewPhase(null)
     } else if (seen.phase !== attempt.currentPhase) {
       setAnnouncement(`Phase locked. Now in ${attempt.scenario.phases.find((p) => p.id === attempt.currentPhase)?.label}.`)
       setViewPhase(null)
@@ -136,7 +141,7 @@ export function EncounterPage() {
       const e = entries[entries.length - 1]
       setAnnouncement(`${e.label ?? ENTRY_LABEL[e.kind]}: ${e.text}`)
     }
-    setSeen({ entries: entries.length, phase: attempt.currentPhase })
+    setSeen({ id: attempt.id, entries: entries.length, phase: attempt.currentPhase })
   }
 
   // Move focus to the new phase heading. If the confirmation dialog is open, the browser returns focus to its
@@ -215,7 +220,7 @@ export function EncounterPage() {
   }
 
   const onRootKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-    if (!settings.shortcuts || e.altKey || e.ctrlKey || e.metaKey || isTyping(e.target) || confirm || help) return
+    if (!settings.shortcuts || e.altKey || e.ctrlKey || e.metaKey || isTyping(e.target) || confirm || restarting || help) return
     if (e.key === 'n') {
       e.preventDefault()
       notesField.current?.focus()
@@ -240,6 +245,14 @@ export function EncounterPage() {
     } else if (await enc.advance()) setConfirm(false)
   }
 
+  const doRestart = async () => {
+    if (await enc.restart()) {
+      headingFocusPending.current = true
+      setRestarting(false)
+      setVoiceNotices([])
+    }
+  }
+
   const downtime = settings.downtime
 
   return (
@@ -253,9 +266,14 @@ export function EncounterPage() {
           <Link to="/cases" className="back-link">
             <ChevronLeft size={15} aria-hidden="true" /> Exit encounter
           </Link>
-          <span className="phase-bar-meta">
-            {scenario.summary.setting} · {elapsedText(attempt.createdAt, now)} elapsed
-          </span>
+          <div className="phase-bar-actions">
+            <span className="phase-bar-meta">
+              {scenario.summary.setting} · {elapsedText(attempt.createdAt, now)} elapsed
+            </span>
+            <button type="button" className="button button-quiet button-small" onClick={() => setRestarting(true)} disabled={enc.busy || !online}>
+              <RotateCcw size={14} aria-hidden="true" /> Restart case
+            </button>
+          </div>
         </div>
         <div className="phase-bar-title">
           <PatientPortrait caseId={scenario.id} alt={portraitAlt} className="phase-bar-portrait" />
@@ -504,6 +522,36 @@ export function EncounterPage() {
           </button>
           <button type="button" className="button button-primary" disabled={enc.busy || !online} onClick={() => void doConfirm()}>
             {enc.busy ? 'Saving…' : lastPhase ? 'Submit encounter' : 'Lock and continue'}
+          </button>
+        </div>
+      </ConfirmDialog>
+
+      <ConfirmDialog
+        open={restarting}
+        title="Restart this case?"
+        onClose={() => {
+          setRestarting(false)
+          if (headingFocusPending.current) {
+            headingFocusPending.current = false
+            setTimeout(() => phaseHeading.current?.focus(), 0)
+          }
+        }}
+      >
+        <p>
+          You start again from the presentation. This attempt is not graded and does not appear in your history. Choices, notes and marks start fresh.
+        </p>
+        <p>Any live voice session ends. Voice time you have already used on this case still counts toward its limit.</p>
+        {enc.actionError && (
+          <p className="voice-error" role="alert">
+            {enc.actionError.text}
+          </p>
+        )}
+        <div className="modal-actions">
+          <button type="button" className="button button-quiet" onClick={() => setRestarting(false)}>
+            Keep working
+          </button>
+          <button type="button" className="button button-danger" disabled={enc.busy || !online} onClick={() => void doRestart()}>
+            {enc.busy ? 'Restarting…' : 'Restart case'}
           </button>
         </div>
       </ConfirmDialog>

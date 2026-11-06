@@ -31,6 +31,7 @@ beforeEach(async () => {
 
 const as = (user: string) => ({
   start: (scenarioId = 'chest-pressure') => request(app).post('/api/attempts').set('X-Dev-User', user).send({ scenarioId }),
+  restart: (scenarioId = 'chest-pressure') => request(app).post('/api/attempts').set('X-Dev-User', user).send({ scenarioId, restart: true }),
   get: (id: string) => request(app).get(`/api/attempts/${id}`).set('X-Dev-User', user),
   history: (query = '') => request(app).get(`/api/attempts${query}`).set('X-Dev-User', user),
   event: (id: string, body: object, key = nextKey()) =>
@@ -379,6 +380,40 @@ describe('hidden content never reaches the browser', () => {
     for (const option of scenario.planOptions.filter((p) => p.unsafeReason)) {
       expect(after.includes(option.unsafeReason!), `post-submit leaked unchosen "${option.unsafeReason}"`).toBe(false)
     }
+  })
+})
+
+describe('restart', () => {
+  it('abandons the active attempt (never graded, out of history) and starts the case fresh', async () => {
+    const client = as('restarter')
+    const first = (await client.start()).body.attempt.id as string
+    await client.event(first, { type: 'action', tool: 'record_history_topics', actionIds: [scenario.phases[0].actions[0].id] })
+    await client.event(first, { type: 'lock_phase', phase: 'history' })
+
+    const res = await client.restart()
+    expect(res.status).toBe(201)
+    expect(res.body.resumed).toBe(false)
+    const next = res.body.attempt as PublicAttempt
+    expect(next.id).not.toBe(first)
+    expect(next.currentPhase).toBe('history')
+    expect(next.events).toEqual([])
+    expect(next.lockedPhases).toEqual([])
+
+    // A plain start resumes the new attempt, not the abandoned one.
+    expect((await client.start()).body.attempt.id).toBe(next.id)
+    expect((await client.get(first)).body.status).toBe('abandoned')
+    const late = await client.event(first, { type: 'action', tool: 'record_history_topics', actionIds: [scenario.phases[0].actions[1].id] })
+    expect(late.status).toBe(409)
+    expect(late.body.error.code).toBe('attempt_abandoned')
+    expect((await client.submit(first)).body.error.code).toBe('attempt_abandoned')
+    const history = (await client.history()).body.items as { id: string }[]
+    expect(history.map((h) => h.id)).toEqual([next.id])
+  })
+
+  it('with no active attempt, a restart simply starts one', async () => {
+    const res = await as('fresh-restart').restart()
+    expect(res.status).toBe(201)
+    expect(res.body.attempt.status).toBe('active')
   })
 })
 

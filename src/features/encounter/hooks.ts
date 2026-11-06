@@ -48,7 +48,7 @@ export function useEncounter(scenarioId: string | undefined, onNotFound: () => v
     stateRef.current = state
   })
   // Retries call the latest handlers through a ref, so a failed action can be repeated without stale closures.
-  const handlers = useRef<{ choose: (id: string) => void; advance: () => Promise<boolean>; submit: () => Promise<boolean>; setHistoryMode: (mode: HistoryMode, initial?: boolean) => void } | null>(null)
+  const handlers = useRef<{ choose: (id: string) => void; advance: () => Promise<boolean>; submit: () => Promise<boolean>; setHistoryMode: (mode: HistoryMode, initial?: boolean) => void; restart: () => Promise<boolean> } | null>(null)
 
   useEffect(() => {
     if (!scenarioId) return
@@ -163,8 +163,23 @@ export function useEncounter(scenarioId: string | undefined, onNotFound: () => v
     }
   }, [patch])
 
+  /** Abandons this attempt (kept, never graded) and starts the case again; the voice time used carries over. */
+  const restart = useCallback(async (): Promise<boolean> => {
+    const { attempt, busy } = stateRef.current
+    if (!attempt || busy) return false
+    patch({ busy: true, actionError: null })
+    try {
+      const res = await api.startAttempt(attempt.scenarioId, true)
+      patch({ attempt: res.attempt, resumed: false, resumedFindings: 0, busy: false, draft: { diagnosis: [], treatment: [] }, confidence: null })
+      return true
+    } catch (e) {
+      patch({ busy: false, actionError: { text: message(e), offline: isNetwork(e), retry: () => void handlers.current?.restart() } })
+      return false
+    }
+  }, [patch])
+
   useLayoutEffect(() => {
-    handlers.current = { choose, advance, submit, setHistoryMode }
+    handlers.current = { choose, advance, submit, setHistoryMode, restart }
   })
 
   return {
@@ -174,6 +189,7 @@ export function useEncounter(scenarioId: string | undefined, onNotFound: () => v
     advance,
     submit,
     setHistoryMode,
+    restart,
     requestHint,
     setConfidence: (confidence: Confidence | null) => patch({ confidence }),
     dismissError: () => patch({ actionError: null }),
