@@ -78,7 +78,12 @@ function reset() {
   let seq = 0
   Object.assign(mocks.api, {
     aiStatus: vi.fn(() => Promise.resolve({ aiEnabled: voiceEnabled, setupHint: voiceEnabled ? null : 'Not set up', maxSessionMinutes: 2, estimatedVoiceRatePerMinuteUsd: 0.1, storeTranscripts: false })),
-    startAttempt: vi.fn(() => net(() => ({ attempt, resumed: false }))),
+    startAttempt: vi.fn((_scenarioId: string, restart?: boolean) =>
+      net(() => {
+        if (restart) Object.assign(attempt, { id: '00000000-0000-4000-8000-000000000002', events: [], lockedPhases: [], currentPhase: 'history', hints: [], historyMode: 'guided' })
+        return { attempt, resumed: false }
+      }),
+    ),
     attempt: vi.fn(() => net(() => attempt)),
     event: vi.fn((_id: string, body: AttemptEventBody) =>
       net(() => {
@@ -578,3 +583,43 @@ describe('one history input at a time', () => {
     expect(screen.queryByText(/key items asked/)).not.toBeInTheDocument()
   })
 })
+
+describe('restart case', () => {
+  it('confirms, then starts the case fresh from the presentation with focus on the phase heading', async () => {
+    const user = userEvent.setup()
+    const [first] = keyHistory()
+    attempt.events.push({ seq: 1, phase: 'history', actionId: first.id, kind: 'action', confirmed: true, revealed: responseOf(first.id), source: 'guided', at: new Date().toISOString() })
+    attempt.lockedPhases = ['history']
+    attempt.currentPhase = 'exam'
+    renderEncounter()
+    await ready()
+
+    await user.click(screen.getByRole('button', { name: 'Restart case' }))
+    let dialog = await screen.findByRole('dialog', { name: 'Restart this case?' })
+    expect(dialog).toHaveTextContent('not graded and does not appear in your history')
+    expect(dialog).toHaveTextContent('Voice time you have already used on this case still counts toward its limit.')
+    await user.click(within(dialog).getByRole('button', { name: 'Keep working' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(mocks.api.startAttempt).toHaveBeenCalledTimes(1)
+
+    await user.click(screen.getByRole('button', { name: 'Restart case' }))
+    dialog = await screen.findByRole('dialog', { name: 'Restart this case?' })
+    await user.click(within(dialog).getByRole('button', { name: 'Restart case' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(mocks.api.startAttempt).toHaveBeenLastCalledWith('respiratory', true)
+    const heading = await screen.findByRole('heading', { level: 2, name: /^History/ })
+    await waitFor(() => expect(document.activeElement).toBe(heading))
+    expect(liveRegion()).toHaveTextContent('Case restarted from the presentation.')
+    expect(row(first.label)).toHaveAttribute('aria-pressed', 'false')
+  })
+
+  it('is unavailable offline', async () => {
+    renderEncounter()
+    await ready()
+    offline = true
+    act(() => void window.dispatchEvent(new Event('offline')))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Restart case' })).toBeDisabled())
+  })
+})
+
+const row = (label: string) => within(choices()).getAllByRole('button').find((b) => b.textContent?.startsWith(label))!

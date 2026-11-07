@@ -24,6 +24,7 @@ import { historyModeOf, nextHint } from './history'
 import * as repo from './repository'
 
 const notFound = () => new ApiError('Attempt not found.', 404, 'attempt_not_found')
+export const abandoned = () => new ApiError('This attempt was restarted. Reload the case to continue the new attempt.', 409, 'attempt_abandoned')
 
 async function snapshot(q: Queryable, attempt: repo.AttemptRow): Promise<PublicAttempt> {
   const scenario = await repo.getContentDefinition(q, attempt.contentVersionId)
@@ -56,19 +57,23 @@ function isUniqueViolation(error: unknown): boolean {
 }
 
 /** Returns the user's active attempt for the scenario, or creates one pinned to the current content version. */
-export async function startAttempt(auth: AuthContext, scenarioId: string): Promise<StartAttemptResponse> {
+export async function startAttempt(auth: AuthContext, scenarioId: string, options: { restart?: boolean } = {}): Promise<StartAttemptResponse> {
   const content = currentContent(scenarioId)
   const pool = getPool()
   try {
     return await withTransaction(pool, async (q) => {
       const existing = await repo.findActiveAttempt(q, auth.userId, scenarioId)
-      if (existing) return { attempt: await snapshot(q, existing), resumed: true }
+      if (existing && !options.restart) return { attempt: await snapshot(q, existing), resumed: true }
+      // Restart: the active attempt is abandoned (kept, never graded) and the new one links to it, so the voice
+      // budget carries over (see ledger.usedBudgetMs).
+      if (existing) await repo.abandonAttempt(q, existing.id)
       await repo.ensureContentVersion(q, content)
       const created = await repo.insertAttempt(q, {
         userId: auth.userId,
         scenarioId,
         contentVersionId: content.id,
         firstPhase: phaseOrder[0],
+        restartedFrom: existing?.id,
       })
       return { attempt: await snapshot(q, created), resumed: false }
     })
@@ -114,6 +119,7 @@ async function applyEvent(
   source: 'guided' | 'voice',
 ): Promise<EventResult> {
   const result: EventResult = { recorded: [], duplicates: [], pendingConfirmation: [], reveals: [] }
+  if (attempt.status === 'abandoned') throw abandoned()
   const submitted = attempt.status === 'submitted'
 
   if (body.type === 'lock_phase') {
@@ -253,6 +259,7 @@ export async function submitAttempt(auth: AuthContext, attemptId: string): Promi
     const attempt = await repo.getOwnedAttempt(q, auth.userId, attemptId, { forUpdate: true })
     if (!attempt) throw notFound()
     if (attempt.status === 'submitted') return snapshot(q, attempt)
+    if (attempt.status === 'abandoned') throw abandoned()
 
     const events = await repo.listLiveEvents(q, attempt.id)
     const selectedByPhase = selectionsOf(events)

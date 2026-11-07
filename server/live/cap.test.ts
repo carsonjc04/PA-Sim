@@ -170,6 +170,30 @@ describe('per-encounter budget', () => {
     expect(again.status).toBe(409)
     expect(again.body.error.code).toBe('live_budget_spent')
   })
+  it('carries over a restart: the new attempt gets only the time left, and restarting again never resets it', async () => {
+    rig = await boot()
+    const restart = async () => (await request(rig.app).post('/api/attempts').set('X-Dev-User', 'alice').send({ scenarioId: 'chest-pressure', restart: true })).body.attempt.id as string
+    const alice = as('alice')
+    const first = await alice.encounter()
+    const session = (await alice.mint(first)).body
+    await talkFor(15, first, session.sessionId)
+
+    const second = await restart()
+    expect(second).not.toBe(first)
+    // The abandoned attempt can no longer record or mint, even with its session still open.
+    expect((await alice.tool(first, session.sessionId)).body.output).toMatchObject({ ok: false })
+    expect((await alice.mint(first)).body.error.code).toBe('attempt_abandoned')
+    const next = (await alice.mint(second)).body
+    const left = Date.parse(next.deadlineAt) - (Date.now() + 15 * MIN)
+    expect(left).toBeGreaterThan(4.9 * MIN)
+    expect(left).toBeLessThanOrEqual(5 * MIN + 1000)
+
+    await talkFor(5, second, next.sessionId)
+    const third = await restart()
+    const refused = await alice.mint(third)
+    expect(refused.status).toBe(409)
+    expect(refused.body.error.code).toBe('live_budget_spent')
+  })
 })
 
 describe('ledger sweeper', () => {

@@ -64,11 +64,19 @@ const toSession = (r: Row): LedgerSession => ({
   endReason: r.end_reason,
 })
 
-/** Session time this attempt has already used. An unclosed session counts up to now (errs toward spending). */
+/**
+ * Session time this attempt has already used, including every attempt it was restarted from, so restarting a
+ * case never resets the voice budget. An unclosed session counts up to now (errs toward spending).
+ */
 export async function usedBudgetMs(attemptId: string): Promise<number> {
   const { rows } = await getPool().query<{ used: string | null }>(
-    `SELECT sum(extract(epoch FROM (least(coalesce(ended_at, $2), deadline_at) - started_at)) * 1000) AS used
-     FROM live_sessions WHERE attempt_id = $1`,
+    `WITH RECURSIVE chain (id) AS (
+       SELECT $1::uuid
+       UNION
+       SELECT a.restarted_from FROM attempts a JOIN chain c ON a.id = c.id WHERE a.restarted_from IS NOT NULL
+     )
+     SELECT sum(extract(epoch FROM (least(coalesce(ended_at, $2), deadline_at) - started_at)) * 1000) AS used
+     FROM live_sessions WHERE attempt_id IN (SELECT id FROM chain)`,
     [attemptId, now()],
   )
   return Math.max(0, Number(rows[0]?.used ?? 0))
