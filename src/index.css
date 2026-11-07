@@ -18,7 +18,7 @@ code,kbd,samp{font-family:var(--mono)}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 
 /* Type roles shared across screens (§2) */
-.eyebrow,.tag,.home-kicker,.home-action-tag,.home-action-badge,.voice-speaker,.timeline-kind,.review-why span,.phase-step-state,.progress-tier,.mark-badge,.debrief-badge,.phase-locked-tag,.checklist-state,.option-selected-text,.study-missing,.difficulty,.case-status,.identity-form label,.study-select,.study-findings dt,.review-rating legend,.confidence-toggle legend,.settings-group legend,.study-sprint legend,.entry-label,.brand small,.identity-chip small,.voice-status,.voice-presence-state,.review-state{font-family:var(--sans);font-size:0.6875rem;line-height:1;font-weight:600;font-stretch:75%;letter-spacing:.1em;text-transform:uppercase}
+.eyebrow,.tag,.home-kicker,.home-action-tag,.home-action-badge,.voice-speaker,.timeline-kind,.review-why span,.phase-step-state,.progress-tier,.mark-badge,.debrief-badge,.phase-locked-tag,.checklist-state,.option-selected-text,.study-missing,.difficulty,.case-status,.identity-form label,.study-select,.study-findings dt,.review-rating legend,.confidence-toggle legend,.settings-group legend,.study-sprint legend,.entry-label,.brand small,.identity-chip small,.voice-status,.voice-presence-state,.voice-avatar-strip,.review-state{font-family:var(--sans);font-size:0.6875rem;line-height:1;font-weight:600;font-stretch:75%;letter-spacing:.1em;text-transform:uppercase}
 .timeline-time,.notes-meta,.voice-timer [role=timer],.phase-bar-meta,.attempt-copy span,.progress-basis,.review-card-top small,.study-weight,.library-count,.voice-meter,footer{font-family:var(--mono);font-variant-numeric:tabular-nums}
 .tag,.home-action-badge,.mark-badge,.debrief-badge,.phase-locked-tag,.progress-tier,.study-missing{display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border:1px solid var(--grid-strong);background:var(--form);color:var(--ink);white-space:nowrap}
 
@@ -104,10 +104,17 @@ h1 em{font-weight:inherit;color:inherit}
 .voice-mode{border:1px solid var(--grid-strong);padding:12px 16px;margin:0 0 12px;display:grid;gap:8px}
 .voice-mode legend{font-family:var(--sans);font-size:0.6875rem;line-height:1;font-weight:600;font-stretch:75%;letter-spacing:.1em;text-transform:uppercase;color:var(--label);padding:0 4px}
 .voice-mode label{display:flex;align-items:center;gap:8px;font-size:0.875rem;color:var(--ink)}
-.voice-avatar{margin:0 0 12px;display:grid;gap:8px;max-width:480px}
+.voice-avatar{margin:0 auto 12px;display:grid;gap:8px;max-width:480px;scroll-margin-top:208px}
+.voice-avatar-plate{border:1px solid var(--grid-strong);padding:4px;background:var(--form)}
+.voice-avatar-inner{border:2px solid var(--grid-strong)}
+.voice-avatar-strip{display:flex;align-items:center;gap:8px;margin:0;padding:8px 12px;border-bottom:1px solid var(--grid);background:var(--form);color:var(--ink)}
+.voice-avatar-strip span{display:inline-flex;align-items:center;gap:8px}
+.voice-avatar-strip span::before{content:'';width:10px;height:10px;flex-shrink:0;background:var(--carbon);border:1.5px solid var(--carbon);box-sizing:border-box}
+.voice-avatar-strip--starting span{color:var(--label)}
+.voice-avatar-strip--starting span::before{background:none;border-color:var(--label)}
 .voice-avatar[hidden]{display:none}
 /* Square head-and-shoulders window on the 16:9 feed: the same crop as the case's static portrait (x 620–1300, y 40–720 of 1920×1080). */
-.voice-avatar-frame{position:relative;aspect-ratio:1/1;overflow:hidden;background:var(--form);border:2px solid var(--grid-strong)}
+.voice-avatar-frame{position:relative;aspect-ratio:1/1;overflow:hidden;background:var(--form)}
 .voice-avatar-frame video{position:absolute;width:282.35%;height:auto;left:-91.18%;top:-5.88%;max-width:none}
 .voice-avatar-caption{margin:0;padding:8px 12px;background:var(--form);border-top:1px solid var(--grid);font-size:0.875rem;line-height:1.45;color:var(--ink)}
 .voice-avatar figcaption{font-family:var(--mono);font-size:0.75rem;line-height:1.4;color:var(--label)}

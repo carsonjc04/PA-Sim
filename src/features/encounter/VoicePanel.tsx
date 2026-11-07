@@ -173,20 +173,28 @@ export function VoicePanel({
 
       {avatarOffered && (
         <figure className="voice-avatar" hidden={!avatarShown} aria-labelledby="voice-avatar-caption">
-          {/* Muted video: the avatar's voice plays from its own audio element, in sync with the face. */}
-          <div className="voice-avatar-frame">
-            <video ref={videoRef} autoPlay playsInline muted aria-label={`Animated ${patient?.name ?? 'patient'}`} />
+          {/* Video plate: double ruled frame, name strip above the video (never over the face), captions inside. */}
+          <div className="voice-avatar-plate">
+            <div className="voice-avatar-inner">
+              <p className={`voice-avatar-strip voice-avatar-strip--${voice.avatar}`}>
+                {patient?.name ?? 'Patient'} · <span>{voice.avatar === 'live' ? 'Live' : 'Starting'}</span>
+              </p>
+              {/* Muted video: the avatar's voice plays from its own audio element, in sync with the face. */}
+              <div className="voice-avatar-frame">
+                <video ref={videoRef} autoPlay playsInline muted aria-label={`Animated ${patient?.name ?? 'patient'}`} />
+              </div>
+              {/* Visual captions; the transcript below is the accessible record, so these are not announced twice. */}
+              {voice.avatar === 'live' && caption && (
+                <p className="voice-avatar-caption" aria-hidden="true">
+                  {caption}
+                </p>
+              )}
+            </div>
           </div>
           <audio ref={avatarAudioRef} autoPlay />
           {voice.avatar === 'starting' && <p className="voice-hint">Starting the avatar. You hear the patient's voice meanwhile.</p>}
-          {/* Visual captions; the transcript below is the accessible record, so these are not announced twice. */}
-          {voice.avatar === 'live' && caption && (
-            <p className="voice-avatar-caption" aria-hidden="true">
-              {caption}
-            </p>
-          )}
           <figcaption id="voice-avatar-caption">
-            {patient?.name ?? 'Patient'}: a fictional patient, animated by an AI avatar service. Not a real person.
+            Fig. 1 · {patient?.name ?? 'Patient'}: a fictional patient, animated by an AI avatar service. Not a real person.
           </figcaption>
           <button type="button" className="button button-quiet button-small" onClick={voice.stopAvatar}>
             Stop avatar (keep voice)
