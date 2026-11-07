@@ -325,11 +325,18 @@ Each item is a section with the standard section header.
 **Avatar + Voice (pilot cases only).** An optional animated face over the same voice session, chosen before connecting.
 
 - **Mode choice:** a fieldset of two native radios, `Voice only` (default) and `Avatar + Voice`, legend in Label role. Shown only on cases the server lists as avatar-enabled, and only before a session; it never appears mid-session. Choosing Avatar + Voice states its extra cost and per-session limit in Body text before the connect button.
-- **Video:** replaces the presence portrait while the avatar is live (the portrait returns when it ends). Square frame, full panel width, showing the same head-and-shoulders window as the static portrait (face and mouth in view; the 16:9 feed is scaled and offset inside the frame), 2px `--grid-strong` border, 0 radius, `--form` background while loading. Never filtered or inverted in dark theme. No overlays on the face.
-- **Placement:** in the main surface, inside the voice panel, during Talk history. Max-width 480px so the face stays the lead visual without pushing the controls off screen. When the avatar goes live, it scrolls into view.
-- **Captions:** the patient's latest line in Body text on a `--form` strip below the video, 1px `--grid` top border. Visual only (the transcript below is the accessible record).
-- **Disclosure:** a Meta caption under the video naming the patient as fictional and animated by an AI avatar service, not a real person.
-- **Stop avatar (keep voice):** a small quiet button under the caption. Stopping or any failure returns to the portrait, with a plain notice in the voice hint style; voice continues.
+- **Video:** replaces the presence portrait while the avatar is live (the portrait returns when it ends). Shown as a video plate (below). The square window shows the same head-and-shoulders crop as the static portrait (face and mouth in view; the 16:9 feed is scaled and offset inside the window), `--form` background while loading. Never filtered or inverted in dark theme. No overlays on the face.
+- **Placement:** in the main surface, inside the voice panel, during Talk history, centered in the panel (the transcript stays below the controls, so nothing sits beside the plate). Max-width 480px so the face stays the lead visual without pushing the controls off screen. When the avatar goes live, it scrolls into view, clear of the sticky phase bar so the name strip shows.
+- **Captions:** the patient's latest line in Body text on a `--form` strip below the video, inside the plate, 1px `--grid` top border. Visual only (the transcript below is the accessible record).
+- **Disclosure:** the plate's Fig. caption, naming the patient as fictional and animated by an AI avatar service, not a real person.
+- **Stop avatar (keep voice):** a small quiet button under the Fig. caption, left-aligned to the plate. Stopping or any failure returns to the portrait, with a plain notice in the voice hint style; voice continues.
+
+**Video plate.** A framed live-video surface, built like a figure plate in a field guide.
+
+- **Frame:** a double rule. The outer edge is 1px `--grid-strong`; 4px of `--form` inside it; the inner edge is 2px `--grid-strong` around the video window and its caption strip. The double rule is the plate's lift off the sheet: there is no shadow (§4, §9).
+- **Name strip:** a row on the frame above the video, never over it. Label role, `--ink`, 8px 12px padding, 1px `--grid` bottom border: the patient name, ` · `, then the state word after a 10×10px square indicator (as Voice status). `LIVE`: `--carbon` filled square. `STARTING`: empty 1.5px `--label` square, text in `--label`. The word is always present (Meaning rule).
+- **Fig. caption:** Meta role under the plate, `--label`, starting `Fig. 1 ·`, then the disclosure text.
+- **Responsive:** the plate fills the panel width below 480px; the double rule stays.
 
 ### Images (clinical findings)
 
