@@ -1,0 +1,83 @@
+{
+  "scenarioId": "metabolic",
+  "remediationVersion": "0.1.0",
+  "provenance": "author-proposed-unreviewed",
+  "mappings": {
+    "head-ct": { "kcIds": ["new-diabetes-focused-workup"] },
+    "omit-emergency": { "kcIds": ["hyperglycemic-emergency-screen"] },
+    "di": { "kcIds": ["type-2-diabetes-recognition"] },
+    "thyroid": { "kcIds": ["type-2-diabetes-recognition"] },
+    "guessed-correct": { "kcIds": ["type-2-diabetes-recognition"] },
+    "ignore": { "kcIds": ["new-diabetes-timely-management"] }
+  },
+  "prompts": [
+    {
+      "id": "hyperglycemic-screen-recall",
+      "kcId": "hyperglycemic-emergency-screen",
+      "type": "recall",
+      "front": "Before planning outpatient care for suspected new diabetes, which symptoms screen for urgent metabolic decompensation?",
+      "answer": "Vomiting, abdominal pain, confusion and inability to keep fluids down. When symptoms warrant, assess for ketones or acidosis.",
+      "explanation": "Urgent metabolic symptoms should be screened before outpatient planning. With a negative screen and no ketones or acidosis, the patient is stable for outpatient planning."
+    },
+    {
+      "id": "hyperglycemic-screen-next-step",
+      "kcId": "hyperglycemic-emergency-screen",
+      "type": "next-best-step",
+      "front": "A patient with two months of thirst, frequent urination and unintentional weight loss has an elevated A1c. What should you establish before arranging outpatient management?",
+      "choices": ["Whether they have vomiting, abdominal pain, confusion or trouble keeping fluids down", "Whether head imaging is needed for fatigue", "Nothing more; schedule a return in one year"],
+      "answer": "Whether they have vomiting, abdominal pain, confusion or trouble keeping fluids down.",
+      "explanation": "Urgent metabolic symptoms should be screened before outpatient planning, with ketone testing when symptoms warrant."
+    },
+    {
+      "id": "t2dm-differential",
+      "kcId": "type-2-diabetes-recognition",
+      "type": "differential",
+      "front": "A 52-year-old has two months of fatigue, thirst, nocturia and 12 pounds of unintentional weight loss. BMI 32, mother had type 2 diabetes, A1c 8.6%, fasting glucose 184 mg/dL. Which is most likely?",
+      "choices": ["Diabetes insipidus", "Newly recognized type 2 diabetes", "Thyroid disease"],
+      "answer": "Newly recognized type 2 diabetes.",
+      "explanation": "Progressive polyuria, polydipsia, elevated A1c and metabolic risk support type 2 diabetes. The A1c and glucose results confirm the hyperglycemia behind the symptoms."
+    },
+    {
+      "id": "t2dm-recall",
+      "kcId": "type-2-diabetes-recognition",
+      "type": "recall",
+      "front": "In an adult with polyuria and polydipsia, which findings support newly presenting type 2 diabetes?",
+      "answer": "Progressive polyuria and polydipsia, an elevated A1c or glucose, and metabolic risk such as an elevated BMI, family history, hypertension or a sedentary lifestyle.",
+      "explanation": "Symptoms raise the question, and A1c and glucose-based testing confirm glycemia. Metabolic risk factors add support."
+    },
+    {
+      "id": "new-diabetes-workup-recall",
+      "kcId": "new-diabetes-focused-workup",
+      "type": "recall",
+      "front": "After confirming glycemia in newly recognized type 2 diabetes, what baseline evaluation should follow?",
+      "answer": "Kidney function, urine albumin, lipids and related cardiovascular risk, plus a focused foot and peripheral neurovascular exam.",
+      "explanation": "Begin the baseline evaluation alongside confirming glycemia. Tests that do not address the leading metabolic concern, such as head imaging for fatigue, do not belong in this workup."
+    },
+    {
+      "id": "new-diabetes-workup-next-step",
+      "kcId": "new-diabetes-focused-workup",
+      "type": "next-best-step",
+      "front": "An adult reports fatigue along with constant thirst and frequent urination. Which test best addresses the leading concern?",
+      "choices": ["Head imaging", "A1c and glucose-based testing", "No testing; reassure"],
+      "answer": "A1c and glucose-based testing.",
+      "explanation": "With thirst and frequent urination the leading concern is metabolic. Head imaging for fatigue does not address it."
+    },
+    {
+      "id": "new-diabetes-management-recall",
+      "kcId": "new-diabetes-timely-management",
+      "type": "recall",
+      "front": "What does initial management of newly recognized type 2 diabetes include?",
+      "answer": "Patient-centered treatment based on severity, comorbidities, kidney function, preferences and access; specific nutrition, activity and weight goals; attention to blood pressure, lipids and smoking; and timely follow-up for response, education and complications screening.",
+      "explanation": "No single medication is universally correct; context and shared decision-making matter. Newly recognized diabetes needs timely education, management and monitoring."
+    },
+    {
+      "id": "new-diabetes-management-next-step",
+      "kcId": "new-diabetes-timely-management",
+      "type": "next-best-step",
+      "front": "A patient with newly recognized type 2 diabetes has no signs of hyperglycemic emergency. What is the best plan?",
+      "choices": ["Reassure and return in one year", "Start a shared management plan and arrange timely follow-up", "Order head imaging"],
+      "answer": "Start a shared management plan and arrange timely follow-up.",
+      "explanation": "Newly recognized diabetes needs timely education, management and monitoring, so a one-year return is unsafe. Follow-up checks the response and screens for complications."
+    }
+  ]
+}

@@ -156,7 +156,7 @@ Learners see the scenario summary, action labels, references (title, organizatio
 
 ## 13. Review content: knowledge components and prompts
 
-Graded misses become review cards only for cases that have a remediation file. Currently only `respiratory` has one. The other cases record each miss as `unmapped`, and learners see "Review not yet authored for this case". The model, rules and scheduler are described in [remediation.md](remediation.md).
+Graded misses become review cards only for cases that have a remediation file. All five current cases have one. A case without one records each miss as `unmapped`, and learners see "Review not yet authored for this case". The model, rules and scheduler are described in [remediation.md](remediation.md).
 
 **Checklist for adding review content to a case** (`<id>` is the scenario id):
 

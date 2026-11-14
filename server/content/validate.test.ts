@@ -354,9 +354,9 @@ describe('remediation sidecars', () => {
   const rem = (raw: RawPackage) => raw.remediation.respiratory as Json
   const remCodes = (raw: RawPackage) => validatePackage(raw).errors.map((e) => e.code)
 
-  it('ships remediation for respiratory only, and every possible miss there is mapped', () => {
+  it('ships remediation for every case, and every possible miss is mapped', () => {
     const pkg = validatePackage(fresh(), { strict: true }).package!
-    expect(Object.keys(pkg.remediation)).toEqual(['respiratory'])
+    expect(Object.keys(pkg.remediation).sort()).toEqual(['asthma', 'chest-pressure', 'dysuria', 'metabolic', 'respiratory'])
     expect(pkg.knowledge?.components.length).toBeGreaterThan(0)
   })
   it('rejects a rubric item with no mapping', () => {

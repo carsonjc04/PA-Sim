@@ -1,0 +1,88 @@
+{
+  "scenarioId": "chest-pressure",
+  "remediationVersion": "0.1.0",
+  "provenance": "author-proposed-unreviewed",
+  "mappings": {
+    "routine": { "kcIds": ["acs-emergency-activation"] },
+    "routine-exam": { "kcIds": ["acs-assessment-without-delaying-ems"] },
+    "outpatient": { "kcIds": ["acs-emergency-activation"] },
+    "omit-ems": { "kcIds": ["acs-emergency-activation"] },
+    "gerd": { "kcIds": ["suspected-acs-recognition"] },
+    "musculoskeletal": { "kcIds": ["suspected-acs-recognition"] },
+    "guessed-correct": { "kcIds": ["suspected-acs-recognition"] },
+    "self-drive": { "kcIds": ["acs-safe-transport-handoff"] },
+    "discharge": { "kcIds": ["acs-emergency-activation"] },
+    "no-ems": { "kcIds": ["acs-emergency-activation"] },
+    "self-transport": { "kcIds": ["acs-safe-transport-handoff"] }
+  },
+  "prompts": [
+    {
+      "id": "acs-recognition-differential",
+      "kcId": "suspected-acs-recognition",
+      "type": "differential",
+      "front": "A 64-year-old with hypertension, diabetes and high cholesterol has heavy central chest pressure that began with exertion 25 minutes ago and radiates to the left arm, with nausea and sweating. What is the leading concern?",
+      "choices": ["Gastroesophageal reflux", "Suspected acute coronary syndrome", "Musculoskeletal chest pain"],
+      "answer": "Suspected acute coronary syndrome.",
+      "explanation": "Exertional central pressure with radiation, diaphoresis, nausea and risk factors is concerning for ACS, which makes this a time-sensitive emergency."
+    },
+    {
+      "id": "acs-recognition-recall",
+      "kcId": "suspected-acs-recognition",
+      "type": "recall",
+      "front": "Which features of a chest pressure presentation make suspected acute coronary syndrome the leading concern?",
+      "answer": "Exertional onset, central pressure with radiation, diaphoresis, nausea and cardiovascular risk factors.",
+      "explanation": "Together these are concerning for ACS. Recognize the time-sensitive emergency while you gather focused information."
+    },
+    {
+      "id": "acs-activation-recall",
+      "kcId": "acs-emergency-activation",
+      "type": "recall",
+      "front": "In a primary care clinic, what takes priority when a patient has ongoing symptoms of suspected acute coronary syndrome?",
+      "answer": "Activating EMS and arranging emergency transfer, ahead of any routine outpatient workup.",
+      "explanation": "Emergency disposition takes priority over completing a routine outpatient workup. Outpatient testing and routine follow-up are not an adequate response to ongoing suspected ACS."
+    },
+    {
+      "id": "acs-activation-next-step",
+      "kcId": "acs-emergency-activation",
+      "type": "next-best-step",
+      "front": "A patient in clinic has ongoing exertional chest pressure with sweating and nausea. What is the next best step?",
+      "choices": ["Order outpatient stress testing and send the patient home", "Activate EMS and arrange emergency transfer", "Complete a routine outpatient workup, then decide", "Discharge with routine outpatient follow-up"],
+      "answer": "Activate EMS and arrange emergency transfer.",
+      "explanation": "Suspected ACS requires emergency activation rather than outpatient completion. Routine outpatient disposition is unsafe while symptoms are ongoing."
+    },
+    {
+      "id": "acs-no-delay-recall",
+      "kcId": "acs-assessment-without-delaying-ems",
+      "type": "recall",
+      "front": "In suspected acute coronary syndrome in clinic, how should the exam and ECG fit around EMS activation?",
+      "answer": "Immediately assess airway, breathing, circulation and vital signs, do a focused cardiopulmonary exam, and obtain an ECG if available while EMS is activated, without delaying it.",
+      "explanation": "ECG acquisition should not delay EMS activation, and neither should a lengthy routine exam. Assess immediate stability without losing time."
+    },
+    {
+      "id": "acs-no-delay-next-step",
+      "kcId": "acs-assessment-without-delaying-ems",
+      "type": "next-best-step",
+      "front": "Your clinic can obtain an ECG for a patient with suspected acute coronary syndrome, but setting it up will take several minutes. What is the best approach?",
+      "choices": ["Obtain the ECG first, then decide whether to call EMS", "Activate EMS now and obtain the ECG while awaiting transport", "Complete a comprehensive routine exam first"],
+      "answer": "Activate EMS now and obtain the ECG while awaiting transport.",
+      "explanation": "ECG acquisition should not delay EMS activation. Obtain it while transfer is activated, and monitor the patient while awaiting transport."
+    },
+    {
+      "id": "acs-transport-recall",
+      "kcId": "acs-safe-transport-handoff",
+      "type": "recall",
+      "front": "How should a symptomatic patient with suspected acute coronary syndrome get from clinic to the emergency department, and what should the receiving team be told?",
+      "answer": "By EMS with monitoring, never driving themselves, with a focused handoff of history, findings, ECG, medicines and allergies.",
+      "explanation": "A symptomatic patient with suspected ACS should not self-transport. Safe monitored transfer and a focused handoff are part of the plan."
+    },
+    {
+      "id": "acs-transport-next-step",
+      "kcId": "acs-safe-transport-handoff",
+      "type": "next-best-step",
+      "front": "A patient with suspected acute coronary syndrome offers to drive themselves to the emergency department to save time. What is the best response?",
+      "choices": ["Agree and give directions to the emergency department", "Do not allow them to drive; activate EMS for monitored transfer", "Discharge with routine outpatient follow-up"],
+      "answer": "Do not allow them to drive; activate EMS for monitored transfer.",
+      "explanation": "The patient should not drive themselves during a suspected cardiac emergency. EMS transfer keeps the patient monitored on the way."
+    }
+  ]
+}

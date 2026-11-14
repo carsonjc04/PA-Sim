@@ -1,0 +1,86 @@
+{
+  "scenarioId": "asthma",
+  "remediationVersion": "0.1.0",
+  "provenance": "author-proposed-unreviewed",
+  "mappings": {
+    "delay": { "kcIds": ["asthma-treatment-without-delay"] },
+    "reassure": { "kcIds": ["asthma-objective-severity-assessment"] },
+    "delay-test": { "kcIds": ["asthma-treatment-without-delay"] },
+    "omit-vitals": { "kcIds": ["asthma-objective-severity-assessment"] },
+    "pneumonia": { "kcIds": ["asthma-exacerbation-recognition"] },
+    "pe": { "kcIds": ["asthma-exacerbation-recognition"] },
+    "guessed-correct": { "kcIds": ["asthma-exacerbation-recognition"] },
+    "discharge": { "kcIds": ["asthma-disposition-after-reassessment"] },
+    "unsafe-discharge": { "kcIds": ["asthma-disposition-after-reassessment"] }
+  },
+  "prompts": [
+    {
+      "id": "asthma-severity-recall",
+      "kcId": "asthma-objective-severity-assessment",
+      "type": "recall",
+      "front": "In an acute asthma exacerbation, which assessments quantify severity before you decide disposition?",
+      "answer": "Ability to speak and work of breathing; respiratory rate, pulse and oxygen saturation; lung auscultation for wheeze and air movement; and peak flow when feasible without delaying treatment.",
+      "explanation": "Vitals and oxygenation are essential in an acute exacerbation. Quantify severity before deciding disposition; a reassuring impression is not a substitute for objective measurement."
+    },
+    {
+      "id": "asthma-severity-next-step",
+      "kcId": "asthma-objective-severity-assessment",
+      "type": "next-best-step",
+      "front": "A patient with worsening wheeze after a cold can speak only in short sentences. Nothing has been measured yet. What is the next best step?",
+      "choices": ["Document a reassuring exam", "Obtain respiratory rate, pulse and oxygen saturation, and assess air movement", "Schedule a routine follow-up next week", "Complete extensive testing before deciding"],
+      "answer": "Obtain respiratory rate, pulse and oxygen saturation, and assess air movement.",
+      "explanation": "Speech and work of breathing are a start, but vitals and oxygenation are essential in an acute exacerbation. Objective measures quantify severity before any disposition decision."
+    },
+    {
+      "id": "asthma-recognition-differential",
+      "kcId": "asthma-exacerbation-recognition",
+      "type": "differential",
+      "front": "Young adult, wheeze since a cold, rescue inhaler every two hours with only brief relief, respiratory rate 30, oxygen saturation 91%, diffuse expiratory wheeze with reduced air movement, peak flow 48% of personal best, no focal findings. Which is most likely?",
+      "choices": ["Pneumonia", "Moderate acute asthma exacerbation", "Pulmonary embolism"],
+      "answer": "Moderate acute asthma exacerbation.",
+      "explanation": "Increased work of breathing, low oxygen saturation, reduced peak flow and wheeze support an exacerbation, here triggered by a cold."
+    },
+    {
+      "id": "asthma-recognition-recall",
+      "kcId": "asthma-exacerbation-recognition",
+      "type": "recall",
+      "front": "Which findings support an acute asthma exacerbation?",
+      "answer": "Increased work of breathing, low oxygen saturation, reduced peak flow and wheeze.",
+      "explanation": "These findings together support an exacerbation. A history of a trigger and of rescue inhaler use with little relief fits the same picture."
+    },
+    {
+      "id": "asthma-delay-recall",
+      "kcId": "asthma-treatment-without-delay",
+      "type": "recall",
+      "front": "During an acute asthma exacerbation, what should not delay treatment?",
+      "answer": "Routine follow-up planning and extensive or low-yield testing. Measure peak flow only when feasible without delaying treatment, and reserve imaging for focal findings or another suspected diagnosis.",
+      "explanation": "Current severity requires immediate assessment and treatment. Reassess the response while treating rather than waiting for test results."
+    },
+    {
+      "id": "asthma-delay-next-step",
+      "kcId": "asthma-treatment-without-delay",
+      "type": "next-best-step",
+      "front": "An adult with an acute asthma exacerbation has mild accessory muscle use and oxygen saturation 91% on room air. What is the next best step?",
+      "choices": ["Wait for extensive testing before treatment", "Give prompt inhaled bronchodilator treatment and reassess", "Schedule a routine follow-up next week", "Order chest imaging first"],
+      "answer": "Give prompt inhaled bronchodilator treatment and reassess.",
+      "explanation": "Urgent asthma treatment should not be delayed for low-yield testing. Treat promptly, then reassess breathing and oxygenation."
+    },
+    {
+      "id": "asthma-disposition-recall",
+      "kcId": "asthma-disposition-after-reassessment",
+      "type": "recall",
+      "front": "After initial treatment of an acute asthma exacerbation, what determines disposition?",
+      "answer": "The response to treatment and objective severity on reassessment. Escalate to emergency care if severe compromise persists or worsens.",
+      "explanation": "Treat and reassess; disposition depends on response and objective severity. Unresolved severe compromise requires escalation rather than discharge."
+    },
+    {
+      "id": "asthma-disposition-next-step",
+      "kcId": "asthma-disposition-after-reassessment",
+      "type": "next-best-step",
+      "front": "After initial bronchodilator treatment, a patient's severe respiratory compromise has not resolved. What is the best disposition?",
+      "choices": ["Discharge with routine follow-up next week", "Escalate to emergency care", "Discharge with an updated asthma action plan"],
+      "answer": "Escalate to emergency care.",
+      "explanation": "Unresolved severe compromise requires escalation rather than discharge. Controller review, an updated action plan and close follow-up come after the acute episode."
+    }
+  ]
+}

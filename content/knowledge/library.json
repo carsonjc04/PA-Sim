@@ -1,5 +1,5 @@
 {
-  "libraryVersion": "0.1.0",
+  "libraryVersion": "0.2.0",
   "provenance": "author-proposed-unreviewed",
   "objectives": [
     {
@@ -21,6 +21,46 @@
       "id": "uncomplicated-uri-management",
       "statement": "Manage an uncomplicated viral respiratory illness with supportive care, antibiotic stewardship, an appropriate setting of care and clear return precautions.",
       "panceTasks": ["clinical-intervention", "pharmaceutical-therapeutics", "health-maintenance-education-prevention"]
+    },
+    {
+      "id": "acute-asthma-assessment",
+      "statement": "Recognize an acute asthma exacerbation and quantify its severity objectively.",
+      "panceTasks": ["history-taking-physical-examination", "formulating-the-most-likely-diagnosis"]
+    },
+    {
+      "id": "acute-asthma-management",
+      "statement": "Treat an acute asthma exacerbation without delay, reassess the response and base disposition on objective severity.",
+      "panceTasks": ["clinical-intervention", "pharmaceutical-therapeutics"]
+    },
+    {
+      "id": "suspected-acs-recognition",
+      "statement": "Recognize suspected acute coronary syndrome in primary care and assess stability without delaying emergency activation.",
+      "panceTasks": ["history-taking-physical-examination", "using-diagnostic-laboratory-studies", "formulating-the-most-likely-diagnosis"]
+    },
+    {
+      "id": "suspected-acs-disposition",
+      "statement": "Prioritize emergency activation and safe, monitored transfer over a routine outpatient workup for suspected acute coronary syndrome.",
+      "panceTasks": ["clinical-intervention"]
+    },
+    {
+      "id": "dysuria-assessment",
+      "statement": "Distinguish acute uncomplicated cystitis from upper-tract infection and alternate causes using a focused history, exam and urine testing.",
+      "panceTasks": ["history-taking-physical-examination", "using-diagnostic-laboratory-studies", "formulating-the-most-likely-diagnosis"]
+    },
+    {
+      "id": "uncomplicated-cystitis-management",
+      "statement": "Plan safe, individualized treatment of acute uncomplicated cystitis with return precautions and follow-up.",
+      "panceTasks": ["pharmaceutical-therapeutics", "clinical-intervention"]
+    },
+    {
+      "id": "new-diabetes-evaluation",
+      "statement": "Recognize newly presenting type 2 diabetes, screen for hyperglycemic emergency and complete a focused baseline evaluation.",
+      "panceTasks": ["history-taking-physical-examination", "using-diagnostic-laboratory-studies", "formulating-the-most-likely-diagnosis"]
+    },
+    {
+      "id": "new-diabetes-management",
+      "statement": "Start a timely, patient-centered management plan for newly recognized type 2 diabetes.",
+      "panceTasks": ["clinical-intervention", "health-maintenance-education-prevention"]
     }
   ],
   "components": [
@@ -86,6 +126,125 @@
       "objectiveIds": ["uncomplicated-uri-management"],
       "panceTasks": ["clinical-intervention"],
       "organSystems": ["pulmonary-system"]
+    },
+    {
+      "id": "asthma-objective-severity-assessment",
+      "label": "Objective severity assessment in acute asthma",
+      "objectiveIds": ["acute-asthma-assessment"],
+      "panceTasks": ["history-taking-physical-examination"],
+      "organSystems": ["pulmonary-system"]
+    },
+    {
+      "id": "asthma-exacerbation-recognition",
+      "label": "Recognizing an acute asthma exacerbation",
+      "objectiveIds": ["acute-asthma-assessment"],
+      "panceTasks": ["formulating-the-most-likely-diagnosis"],
+      "organSystems": ["pulmonary-system"]
+    },
+    {
+      "id": "asthma-treatment-without-delay",
+      "label": "Treating acute asthma without delay",
+      "objectiveIds": ["acute-asthma-management"],
+      "panceTasks": ["clinical-intervention"],
+      "organSystems": ["pulmonary-system"]
+    },
+    {
+      "id": "asthma-disposition-after-reassessment",
+      "label": "Disposition after reassessment in acute asthma",
+      "objectiveIds": ["acute-asthma-management"],
+      "panceTasks": ["clinical-intervention"],
+      "organSystems": ["pulmonary-system"]
+    },
+    {
+      "id": "suspected-acs-recognition",
+      "label": "Recognizing suspected acute coronary syndrome",
+      "objectiveIds": ["suspected-acs-recognition"],
+      "panceTasks": ["formulating-the-most-likely-diagnosis"],
+      "organSystems": ["cardiovascular-system"]
+    },
+    {
+      "id": "acs-assessment-without-delaying-ems",
+      "label": "Stability assessment and ECG without delaying EMS",
+      "objectiveIds": ["suspected-acs-recognition"],
+      "panceTasks": ["history-taking-physical-examination", "using-diagnostic-laboratory-studies"],
+      "organSystems": ["cardiovascular-system"]
+    },
+    {
+      "id": "acs-emergency-activation",
+      "label": "Emergency activation over outpatient workup in suspected ACS",
+      "objectiveIds": ["suspected-acs-disposition"],
+      "panceTasks": ["clinical-intervention"],
+      "organSystems": ["cardiovascular-system"]
+    },
+    {
+      "id": "acs-safe-transport-handoff",
+      "label": "Safe transport and handoff in suspected ACS",
+      "objectiveIds": ["suspected-acs-disposition"],
+      "panceTasks": ["clinical-intervention"],
+      "organSystems": ["cardiovascular-system"]
+    },
+    {
+      "id": "dysuria-upper-tract-screen",
+      "label": "Screening for upper-tract infection in dysuria",
+      "objectiveIds": ["dysuria-assessment"],
+      "panceTasks": ["history-taking-physical-examination"],
+      "organSystems": ["genitourinary-system", "infectious-diseases"]
+    },
+    {
+      "id": "uncomplicated-cystitis-recognition",
+      "label": "Recognizing acute uncomplicated cystitis",
+      "objectiveIds": ["dysuria-assessment"],
+      "panceTasks": ["formulating-the-most-likely-diagnosis"],
+      "organSystems": ["genitourinary-system", "infectious-diseases"]
+    },
+    {
+      "id": "focused-workup-uncomplicated-dysuria",
+      "label": "Focused workup for uncomplicated dysuria",
+      "objectiveIds": ["dysuria-assessment"],
+      "panceTasks": ["using-diagnostic-laboratory-studies"],
+      "organSystems": ["genitourinary-system"]
+    },
+    {
+      "id": "cystitis-treatment-safety-check",
+      "label": "Medication safety checks before treating cystitis",
+      "objectiveIds": ["uncomplicated-cystitis-management"],
+      "panceTasks": ["pharmaceutical-therapeutics"],
+      "organSystems": ["genitourinary-system", "infectious-diseases"]
+    },
+    {
+      "id": "cystitis-treatment-plan",
+      "label": "A complete plan for symptomatic cystitis",
+      "objectiveIds": ["uncomplicated-cystitis-management"],
+      "panceTasks": ["clinical-intervention"],
+      "organSystems": ["genitourinary-system", "infectious-diseases"]
+    },
+    {
+      "id": "hyperglycemic-emergency-screen",
+      "label": "Screening for hyperglycemic emergency",
+      "objectiveIds": ["new-diabetes-evaluation"],
+      "panceTasks": ["history-taking-physical-examination"],
+      "organSystems": ["endocrine-system"]
+    },
+    {
+      "id": "type-2-diabetes-recognition",
+      "label": "Recognizing newly presenting type 2 diabetes",
+      "objectiveIds": ["new-diabetes-evaluation"],
+      "panceTasks": ["formulating-the-most-likely-diagnosis"],
+      "organSystems": ["endocrine-system"]
+    },
+    {
+      "id": "new-diabetes-focused-workup",
+      "label": "Focused workup of suspected new diabetes",
+      "objectiveIds": ["new-diabetes-evaluation"],
+      "panceTasks": ["using-diagnostic-laboratory-studies"],
+      "organSystems": ["endocrine-system"]
+    },
+    {
+      "id": "new-diabetes-timely-management",
+      "label": "Timely, shared management of new type 2 diabetes",
+      "objectiveIds": ["new-diabetes-management"],
+      "panceTasks": ["clinical-intervention", "health-maintenance-education-prevention"],
+      "organSystems": ["endocrine-system"]
     }
   ]
 }
