@@ -2,9 +2,9 @@
 
 Every graded miss in a submitted encounter gets a traceable remediation state. Where review content has been authored, the miss also becomes a spaced-retrieval card in **Today's review**. Misses lead to retrieval practice rather than another passive explanation.
 
-> **Status (2026-10-10).**
-> - Review content exists only for **respiratory**. It is AI-drafted (`author-proposed-unreviewed`) and needs PA or clinical review.
-> - The other four cases record each miss as `unmapped` and show "Review not yet authored for this case".
+> **Status (2026-11-13).**
+> - Review content exists for all five cases. All of it is AI-drafted (`author-proposed-unreviewed`) and needs PA or clinical review. The asthma, chest-pressure, dysuria and metabolic prompts (added 2026-11-13) are derived only from each case's authored text: responses, `unsafeReason`s, omission feedback, diagnosis reasoning, teaching points and plan options.
+> - A case without a remediation file still records each miss as `unmapped` and shows "Review not yet authored for this case".
 > - Scheduling parameters are product defaults. They have not been tuned on student data.
 
 ## 1. Flow
@@ -170,8 +170,8 @@ The only instrumentation this feature adds. It exists to evaluate whether the lo
 
 ## 8. Known limitations and open decisions
 
-- Respiratory prompts and KC mappings need PA or clinical review before they are relied on. The UI labels them as draft.
+- All prompts and KC mappings need PA or clinical review before they are relied on. The UI labels them as draft.
 - Error-type rules 3 and 6 are heuristics; review them with a PA educator.
 - FSRS weights are defaults. Revisit once enough `retention` events exist.
 - Guessed-correct is not captured in voice sessions.
-- Remediation for the other four cases is not authored yet. See the checklist in `docs/case-authoring-guide.md` §13.
+- The four newer cases' prompts are partly patient-specific vignettes, because their authored content is too sparse to support generic prompts without adding new clinical claims. A reviewer may want to generalize them.

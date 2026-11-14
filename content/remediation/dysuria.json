@@ -1,0 +1,102 @@
+{
+  "scenarioId": "dysuria",
+  "remediationVersion": "0.1.0",
+  "provenance": "author-proposed-unreviewed",
+  "mappings": {
+    "pelvic": { "kcIds": ["focused-workup-uncomplicated-dysuria"] },
+    "ct": { "kcIds": ["focused-workup-uncomplicated-dysuria"] },
+    "omit-pyelo": { "kcIds": ["dysuria-upper-tract-screen"] },
+    "omit-allergy": { "kcIds": ["cystitis-treatment-safety-check"] },
+    "pyelo": { "kcIds": ["dysuria-upper-tract-screen", "uncomplicated-cystitis-recognition"] },
+    "vaginitis": { "kcIds": ["uncomplicated-cystitis-recognition"] },
+    "guessed-correct": { "kcIds": ["uncomplicated-cystitis-recognition"] },
+    "no-treatment": { "kcIds": ["cystitis-treatment-plan"] }
+  },
+  "prompts": [
+    {
+      "id": "upper-tract-recall",
+      "kcId": "dysuria-upper-tract-screen",
+      "type": "recall",
+      "front": "In a patient with dysuria, which symptoms and signs screen for upper-tract infection (pyelonephritis)?",
+      "answer": "Fever, chills, back or flank pain and vomiting on history, and flank or costovertebral angle tenderness on exam.",
+      "explanation": "Fever and flank pain screening helps identify pyelonephritis. When the screen is negative and symptoms are lower urinary only, the picture fits cystitis without systemic features."
+    },
+    {
+      "id": "upper-tract-discrimination",
+      "kcId": "dysuria-upper-tract-screen",
+      "type": "discrimination",
+      "front": "Which patient with dysuria most needs evaluation for upper-tract infection?",
+      "choices": ["Dysuria and frequency, afebrile, mild suprapubic discomfort, no flank tenderness", "Dysuria with fever, flank pain and vomiting"],
+      "answer": "The patient with fever, flank pain and vomiting.",
+      "explanation": "Fever and flank pain screening helps identify pyelonephritis. Fever, flank pain and vomiting are also the reasons a patient treated for cystitis should return urgently."
+    },
+    {
+      "id": "cystitis-differential",
+      "kcId": "uncomplicated-cystitis-recognition",
+      "type": "differential",
+      "front": "A 24-year-old has one day of dysuria and frequency. No fever, flank pain, vomiting, vaginal discharge or pelvic pain; negative pregnancy test; no costovertebral angle tenderness. Urinalysis shows leukocyte esterase, nitrites and pyuria. Which is most likely?",
+      "choices": ["Pyelonephritis", "Acute uncomplicated cystitis", "Vaginitis or cervicitis"],
+      "answer": "Acute uncomplicated cystitis.",
+      "explanation": "Lower urinary symptoms, supportive urine findings and no systemic features fit cystitis. The negative upper-tract screen and the absence of vaginal or pelvic symptoms leave cystitis as the best fit."
+    },
+    {
+      "id": "cystitis-recall",
+      "kcId": "uncomplicated-cystitis-recognition",
+      "type": "recall",
+      "front": "Which combination of findings supports acute uncomplicated cystitis?",
+      "answer": "Lower urinary symptoms such as dysuria and frequency, supportive urine findings (leukocyte esterase, nitrites, pyuria) and no systemic features such as fever, flank pain or vomiting.",
+      "explanation": "The history distinguishes lower urinary symptoms from systemic or alternate causes, and the urinalysis then supports the diagnosis."
+    },
+    {
+      "id": "dysuria-workup-recall",
+      "kcId": "focused-workup-uncomplicated-dysuria",
+      "type": "recall",
+      "front": "In a stable patient with uncomplicated dysuria, which testing is appropriate, and what is not routinely needed?",
+      "answer": "A urinalysis, pregnancy testing when clinically appropriate, and a urine culture based on context and local guidance. Imaging and a pelvic exam are not routine without concerning features.",
+      "explanation": "Imaging is not a routine first step for a stable presentation, and an invasive exam is not routinely needed when there are no vaginal or pelvic symptoms."
+    },
+    {
+      "id": "dysuria-workup-next-step",
+      "kcId": "focused-workup-uncomplicated-dysuria",
+      "type": "next-best-step",
+      "front": "A stable patient has one day of dysuria and frequency, no vaginal or pelvic symptoms, and no fever or flank pain. Which test is most appropriate?",
+      "choices": ["CT imaging", "Urinalysis", "Pelvic exam today"],
+      "answer": "Urinalysis.",
+      "explanation": "Choose context-appropriate urine testing. CT is not a routine first step for this stable presentation, and a pelvic exam is not routinely needed from this history."
+    },
+    {
+      "id": "cystitis-safety-recall",
+      "kcId": "cystitis-treatment-safety-check",
+      "type": "recall",
+      "front": "Before choosing treatment for cystitis, which patient factors should you check?",
+      "answer": "Current medicines, medication and antibiotic allergies, kidney function, pregnancy status and local guidance.",
+      "explanation": "Treatment choices should be checked against allergies, kidney function, pregnancy status and local guidance. Medication and allergy review should inform any treatment plan."
+    },
+    {
+      "id": "cystitis-safety-next-step",
+      "kcId": "cystitis-treatment-safety-check",
+      "type": "next-best-step",
+      "front": "You have diagnosed acute uncomplicated cystitis and are about to choose treatment. What should you do first?",
+      "choices": ["Prescribe without further questions", "Review medicines and allergies, and consider kidney function, pregnancy status and local guidance", "Order CT imaging", "Perform a pelvic exam"],
+      "answer": "Review medicines and allergies, and consider kidney function, pregnancy status and local guidance.",
+      "explanation": "An evidence-aligned first-line approach depends on allergies, kidney function and local guidance. Medication and allergy review should inform any treatment plan."
+    },
+    {
+      "id": "cystitis-plan-recall",
+      "kcId": "cystitis-treatment-plan",
+      "type": "recall",
+      "front": "What are the parts of a complete plan for symptomatic acute uncomplicated cystitis?",
+      "answer": "Evidence-aligned first-line treatment, fluids and symptom relief, urgent return precautions for fever, flank pain, vomiting or worsening illness, and follow-up and culture-result instructions when applicable.",
+      "explanation": "The findings support a symptomatic infection that needs a treatment plan. Reassurance without treatment or follow-up leaves it unaddressed."
+    },
+    {
+      "id": "cystitis-plan-next-step",
+      "kcId": "cystitis-treatment-plan",
+      "type": "next-best-step",
+      "front": "A symptomatic patient has lower urinary symptoms and a urinalysis that supports cystitis. Which plan is best?",
+      "choices": ["Reassurance without treatment or follow-up", "First-line treatment checked against allergies and kidney function, symptom relief, return precautions and follow-up", "CT imaging before deciding"],
+      "answer": "First-line treatment checked against allergies and kidney function, symptom relief, return precautions and follow-up.",
+      "explanation": "The findings support a symptomatic infection requiring a treatment plan. Return urgently for fever, flank pain, vomiting or worsening illness."
+    }
+  ]
+}

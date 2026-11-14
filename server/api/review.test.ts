@@ -312,16 +312,61 @@ describe('leakage', () => {
 })
 
 describe('cases without authored remediation', () => {
+  // Every shipped case is authored now; remove one sidecar from the cached package to keep the path covered.
   it('records every miss as unmapped and creates no cards', async () => {
-    const sel = fixture('dysuria', 'partial-credit')
-    const id = await play('alice', 'dysuria', sel)
-    const rem = (await as('alice').remediation(id)).body as AttemptRemediation
-    expect(rem.authored).toBe(false)
-    expect(rem.items.length).toBe(deriveMisses(pkg.scenarios.find((s) => s.id === 'dysuria')!, sel).length)
-    expect(rem.items.length).toBeGreaterThan(0)
-    for (const item of rem.items) expect(item).toMatchObject({ status: 'unmapped', cards: [] })
-    expect(await count('SELECT count(*) AS n FROM review_cards')).toBe(0)
+    const saved = pkg.remediation.dysuria
+    delete pkg.remediation.dysuria
+    try {
+      const sel = fixture('dysuria', 'partial-credit')
+      const id = await play('alice', 'dysuria', sel)
+      const rem = (await as('alice').remediation(id)).body as AttemptRemediation
+      expect(rem.authored).toBe(false)
+      expect(rem.items.length).toBe(deriveMisses(pkg.scenarios.find((s) => s.id === 'dysuria')!, sel).length)
+      expect(rem.items.length).toBeGreaterThan(0)
+      for (const item of rem.items) expect(item).toMatchObject({ status: 'unmapped', cards: [] })
+      expect(await count('SELECT count(*) AS n FROM review_cards')).toBe(0)
+    } finally {
+      pkg.remediation.dysuria = saved
+    }
   })
+})
+
+describe('authored review content for the asthma, chest-pressure, dysuria and metabolic cases', () => {
+  for (const scenarioId of ['asthma', 'chest-pressure', 'dysuria', 'metabolic']) {
+    it(`${scenarioId}: links every miss to a draft review card and schedules it like respiratory`, async () => {
+      const sel = fixture(scenarioId, 'wrong-path')
+      const id = await play('alice', scenarioId, sel, 'sure')
+      const rem = (await as('alice').remediation(id)).body as AttemptRemediation
+      expect(rem.authored).toBe(true)
+      expect(rem.draftContent).toBe(true)
+      expect(rem.items.length).toBe(deriveMisses(pkg.scenarios.find((s) => s.id === scenarioId)!, sel, 'sure').length)
+      expect(rem.items.length).toBeGreaterThan(0)
+      for (const item of rem.items) {
+        expect(item.status, item.rubricItemId).toBe('linked')
+        expect(item.cards.length).toBeGreaterThan(0)
+        for (const card of item.cards) expect(card.dueToday).toBe(true)
+      }
+
+      const res = (await as('alice').session('all')).body as ReviewSessionResponse
+      const prompts = new Set(pkg.remediation[scenarioId].prompts.map((p) => p.id))
+      expect(res.session!.items.length).toBeGreaterThan(0)
+      for (const item of res.session!.items) {
+        expect(prompts.has(item.prompt.id)).toBe(true)
+        expect(item.reason.code).toBe('new-miss')
+        expect(item.source?.attemptId).toBe(id)
+      }
+
+      const item = res.session!.items[0]
+      const rated = await as('alice').review(item.cardId, { sessionId: res.session!.id, promptId: item.prompt.id, rating: 3 })
+      expect(rated.status).toBe(200)
+      const body = rated.body as SubmitReviewResponse
+      expect(body.nextDueInDays).toBeGreaterThanOrEqual(1)
+      expect(Date.parse(body.nextDue)).toBeGreaterThanOrEqual(dayEnd(localDay(clock, TZ), TZ).getTime())
+      const card = (await db.pool.query('SELECT reps, fsrs_state, due_reason, algorithm_version, params_id FROM review_cards WHERE id = $1', [item.cardId])).rows[0]
+      expect(card).toMatchObject({ reps: 1, fsrs_state: 2, due_reason: { code: 'scheduled' }, params_id: getScheduler().paramsId })
+      expect(card.algorithm_version).toBe(getScheduler().algorithmVersion)
+    })
+  }
 })
 
 describe('guessed-correct', () => {

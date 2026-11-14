@@ -79,6 +79,26 @@
   ],
   "remediation": [
     {
+      "scenarioId": "asthma",
+      "remediationVersion": "0.1.0",
+      "fingerprint": "f0c5ccc649599fc0f130e06e79dcd691fda8cd93e1efafa98bb309e16ac8f78d"
+    },
+    {
+      "scenarioId": "chest-pressure",
+      "remediationVersion": "0.1.0",
+      "fingerprint": "913f48eef324c1a859fbfbb82e80dc0555d0b04236459b749aae1c9af40eceac"
+    },
+    {
+      "scenarioId": "dysuria",
+      "remediationVersion": "0.1.0",
+      "fingerprint": "1a8552989d3760720dbc01e257ee712ef32e3c83d0389ddd36debd0cbe5bfbec"
+    },
+    {
+      "scenarioId": "metabolic",
+      "remediationVersion": "0.1.0",
+      "fingerprint": "d0129a0d1b1f1f3489713ea6c7cc416d613e8db46c0d80902e87d4f500011b7f"
+    },
+    {
       "scenarioId": "respiratory",
       "remediationVersion": "0.1.0",
       "fingerprint": "af9fc4643a3aa9fc5b815fe5bae403468dd79d6d7c8aab7bec6dae181637370f"
